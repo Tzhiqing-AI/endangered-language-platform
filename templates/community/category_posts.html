@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - 分类帖子{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="mb-3">
+                <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>返回社区
+                </a>
+            </div>
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'Community:community_home' %}">社区论坛</a></li>
+                    <li class="breadcrumb-item active">{{ category.name }}</li>
+                </ol>
+            </nav>
+
+            <h2 class="mb-4">
+                <i class="bi {{ category.icon }} me-2"></i>{{ category.name }}
+                <small class="text-muted">({{ posts.paginator.count }} 篇帖子)</small>
+            </h2>
+
+            {% if posts %}
+            {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>
+                        <a href="{% url 'Community:post_detail' post_id=post.id %}">{{ post.title }}</a>
+                        {% if post.is_pinned %}<span class="badge bg-danger ms-2">置顶</span>{% endif %}
+                    </h5>
+                    <p class="text-muted">{{ post.content|truncatewords:30 }}</p>
+                    <small class="text-muted">
+                        <i class="bi bi-person me-1"></i>{{ post.author.name }}
+                        <i class="bi bi-clock ms-2 me-1"></i>{{ post.created_at|date:"Y-m-d" }}
+                        <i class="bi bi-eye ms-2 me-1"></i>{{ post.view_count }}
+                        <i class="bi bi-chat ms-2 me-1"></i>{{ post.reply_count }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if posts.has_other_pages %}
+            <nav>
+                <ul class="pagination">
+                    {% if posts.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ posts.previous_page_number }}">上一页</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ posts.number }} / {{ posts.paginator.num_pages }}</span></li>
+                    {% if posts.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ posts.next_page_number }}">下一页</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-inbox me-2"></i>该分类暂无帖子
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

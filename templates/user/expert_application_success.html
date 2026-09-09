@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}专家申请成功 - 濒危语言保护平台{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-check-circle me-2"></i>申请已提交</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <i class="bi bi-hourglass-split" style="font-size: 4rem; color: #f59e0b;"></i>
+                    </div>
+                    <h5>您的专家申请已成功提交！</h5>
+                    <p class="text-muted">管理员将在1-3个工作日内审核您的申请。审核结果将通过系统消息通知您，请留意消息中心。</p>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'User:profile' %}" class="btn btn-primary">
+                            <i class="bi bi-person me-2"></i>查看我的资料
+                        </a>
+                        <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-house me-2"></i>返回社区首页
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

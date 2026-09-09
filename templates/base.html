@@ -1,0 +1,1083 @@
+{% load static %}
+{% load custom_tags %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>{% block title %}濒危语言保护管理系统{% endblock %}</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'image/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap-5.3.0-alpha1-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap-icons-1.13.1/font/bootstrap-icons.min.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-900: #0f172a;
+            --primary-800: #1e293b;
+            --primary-700: #334155;
+            --primary-600: #475569;
+            --primary-500: #64748b;
+            --primary-400: #94a3b8;
+            --primary-300: #cbd5e1;
+            --primary-200: #e2e8f0;
+            --primary-100: #f1f5f9;
+            --primary-50: #f8fafc;
+            --accent-600: #4f46e5;
+            --accent-500: #6366f1;
+            --accent-400: #818cf8;
+            --accent-100: #e0e7ff;
+            --warm-500: #f59e0b;
+            --warm-400: #fbbf24;
+            --warm-100: #fef3c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --navbar-height: 72px;
+            --footer-height: 80px;
+            --content-max-width: 1440px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-2xl: 20px;
+            --radius-full: 9999px;
+            --shadow-xs: 0 1px 2px 0 rgba(0,0,0,0.03);
+            --shadow-sm: 0 1px 3px 0 rgba(0,0,0,0.05), 0 1px 2px -1px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+            --shadow-2xl: 0 25px 50px -12px rgba(0,0,0,0.15);
+            --transition-fast: 0.15s ease-in-out;
+            --transition-base: 0.3s ease-in-out;
+            --transition-slow: 0.5s ease-in-out;
+            --transition-bounce: 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);
+            --border-color: rgba(15,23,42,0.08);
+            --border-light: rgba(15,23,42,0.04);
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--primary-50);
+            color: var(--primary-800);
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+            overflow-x: hidden;
+        }
+
+        h1, .h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.025em; color: var(--primary-900); }
+        h2, .h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.02em; color: var(--primary-900); }
+        h3, .h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; letter-spacing: -0.01em; color: var(--primary-800); }
+        h4, .h4 { font-size: 1.125rem; font-weight: 600; line-height: 1.4; color: var(--primary-800); }
+        h5, .h5 { font-size: 1rem; font-weight: 600; line-height: 1.5; color: var(--primary-700); }
+        h6, .h6 { font-size: 0.875rem; font-weight: 600; line-height: 1.5; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em; }
+        p { font-size: 0.9375rem; line-height: 1.7; color: var(--primary-600); }
+        .text-caption { font-size: 0.75rem; line-height: 1.5; color: var(--primary-500); letter-spacing: 0.025em; }
+        .text-small { font-size: 0.875rem; line-height: 1.6; color: var(--primary-500); }
+
+        a {
+            color: #a78bfa;
+            text-decoration: none;
+            transition: var(--transition-base);
+        }
+
+        a:hover {
+            color: #8b5cf6;
+        }
+
+        /* ========== 顶部导航栏 ========== */
+        .navbar-main {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1030;
+            padding: 0 var(--space-6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition-base);
+        }
+        .navbar-main.scrolled {
+            background: rgba(255,255,255,0.95);
+            box-shadow: var(--shadow-md);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            color: var(--primary-900) !important;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+            transition: var(--transition-base);
+        }
+        .navbar-brand:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+        .navbar-brand i {
+            font-size: 1.5rem;
+            color: var(--accent-500);
+            transition: var(--transition-base);
+        }
+        .navbar-brand:hover i {
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        /* 导航菜单 */
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-item {
+            position: relative;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            color: var(--primary-600);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+        }
+        .nav-link i {
+            font-size: 1.125rem;
+            transition: var(--transition-base);
+        }
+        .nav-link:hover {
+            background: var(--primary-50);
+            color: var(--primary-800);
+        }
+        .nav-link:hover i {
+            transform: translateY(-2px);
+            color: var(--accent-500);
+        }
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--accent-100) 0%, rgba(99,102,241,0.08) 100%);
+            color: var(--accent-600);
+            font-weight: 600;
+        }
+        .nav-link.active i {
+            color: var(--accent-500);
+        }
+
+        /* 导航栏右侧操作区 */
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            color: var(--primary-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            padding: var(--space-2);
+            border-radius: var(--radius-lg);
+            transition: var(--transition-base);
+        }
+        .user-info:hover {
+            background: var(--primary-50);
+        }
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-base);
+        }
+        .user-info:hover .avatar {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+        .user-info .avatar-img {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-lg);
+            object-fit: cover;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-base);
+        }
+        .user-info:hover .avatar-img {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-logout {
+            color: var(--primary-500);
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition-base);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .btn-logout:hover {
+            background: var(--error);
+            border-color: var(--error);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-login {
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+            border: none;
+            padding: var(--space-2) var(--space-5);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: var(--transition-base);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            opacity: 0.95;
+        }
+
+        /* 移动端菜单按钮 */
+        .navbar-toggler-custom {
+            background: transparent;
+            border: none;
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+            cursor: pointer;
+            display: none;
+        }
+        .navbar-toggler-custom:hover {
+            background: var(--primary-100);
+        }
+        .navbar-toggler-custom i {
+            font-size: 1.5rem;
+            color: var(--primary-700);
+            transition: var(--transition-base);
+        }
+        .navbar-toggler-custom:hover i {
+            color: var(--primary-900);
+        }
+
+        /* 移动端下拉菜单 */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+            z-index: 1025;
+            padding: var(--space-4);
+            max-height: calc(100vh - var(--navbar-height));
+            overflow-y: auto;
+        }
+        .mobile-menu.show {
+            display: block;
+        }
+        .mobile-menu .nav-link {
+            padding: var(--space-3) var(--space-4);
+            font-size: 1rem;
+        }
+        .mobile-menu .nav-link i {
+            width: 24px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            margin-top: var(--navbar-height);
+            padding: var(--space-8);
+            min-height: calc(100vh - var(--navbar-height) - var(--footer-height));
+            max-width: var(--content-max-width);
+            margin-left: auto;
+            margin-right: auto;
+            transition: var(--transition-base);
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-base);
+            overflow: hidden;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-light);
+            padding: var(--space-5) var(--space-6);
+        }
+        .card-body {
+            padding: var(--space-6);
+        }
+
+        /* 表格样式 */
+        .table-container {
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            background: var(--primary-50);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--primary-700);
+            text-transform: uppercase;
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            padding: var(--space-4) var(--space-5);
+            white-space: nowrap;
+        }
+        .table tbody td {
+            padding: var(--space-4) var(--space-5);
+            color: var(--primary-600);
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+        .table tbody tr {
+            transition: var(--transition-fast);
+        }
+        .table tbody tr:hover {
+            background: var(--primary-50);
+        }
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+            padding: var(--space-2) var(--space-4);
+            font-size: 0.875rem;
+            letter-spacing: -0.01em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+            border: none;
+            color: #fff;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            opacity: 0.95;
+        }
+        .btn-secondary {
+            background: var(--primary-100);
+            border: none;
+            color: var(--primary-700);
+        }
+        .btn-secondary:hover {
+            background: var(--primary-200);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--primary-600);
+        }
+        .btn-outline:hover {
+            border-color: var(--accent-500);
+            color: var(--accent-500);
+            background: var(--accent-100);
+        }
+        .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: 0.8125rem;
+        }
+        .btn-lg {
+            padding: var(--space-3) var(--space-6);
+            font-size: 1rem;
+        }
+
+        /* 表单样式 */
+        .form-control, .form-select {
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+            font-size: 0.9375rem;
+            transition: var(--transition-base);
+            background: #fff;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-500);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+            outline: none;
+        }
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-700);
+            margin-bottom: var(--space-2);
+        }
+
+        /* 页脚 */
+        .footer-main {
+            padding: var(--space-8) var(--space-6);
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .footer-content {
+            max-width: var(--content-max-width);
+            margin: 0 auto;
+        }
+        .footer-brand {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--primary-900);
+            margin-bottom: var(--space-2);
+            letter-spacing: -0.02em;
+        }
+        .footer-tagline {
+            font-size: 0.75rem;
+            color: var(--primary-400);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: var(--space-4);
+        }
+        .footer-copyright {
+            font-size: 0.8125rem;
+            color: var(--primary-400);
+        }
+
+        /* 提示消息 */
+        .alert-container {
+            position: fixed;
+            top: calc(var(--navbar-height) + var(--space-4));
+            right: var(--space-6);
+            z-index: 2000;
+            max-width: 400px;
+        }
+        .alert-custom {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: var(--space-4) var(--space-5);
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            animation: slideInRight 0.4s ease-out;
+        }
+        .alert-custom.alert-success { border-left: 4px solid var(--success); }
+        .alert-custom.alert-error { border-left: 4px solid var(--error); }
+        .alert-custom.alert-warning { border-left: 4px solid var(--warning); }
+        .alert-custom.alert-info { border-left: 4px solid var(--info); }
+        .alert-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        .alert-success .alert-icon { color: var(--success); }
+        .alert-error .alert-icon { color: var(--error); }
+        .alert-warning .alert-icon { color: var(--warning); }
+        .alert-info .alert-icon { color: var(--info); }
+        .alert-content {
+            flex: 1;
+            font-size: 0.875rem;
+            color: var(--primary-700);
+            line-height: 1.5;
+        }
+        .alert-close {
+            background: none;
+            border: none;
+            color: var(--primary-400);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.125rem;
+            transition: var(--transition-fast);
+        }
+        .alert-close:hover {
+            color: var(--primary-700);
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: var(--space-6);
+            right: var(--space-6);
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: var(--transition-base);
+            z-index: 1040;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+        }
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .back-to-top:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+        .back-to-top i {
+            font-size: 1.25rem;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--primary-50);
+            border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-300);
+            border-radius: var(--radius-full);
+            border: 2px solid var(--primary-50);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-400);
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 1199.98px) {
+            .main-content {
+                padding: var(--space-6);
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-main {
+                padding: 0 var(--space-4);
+            }
+            .navbar-toggler-custom {
+                display: flex;
+            }
+            .nav-menu {
+                display: none;
+            }
+            .main-content {
+                padding: var(--space-5);
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            h1, .h1 { font-size: 1.75rem; }
+            h2, .h2 { font-size: 1.375rem; }
+            h3, .h3 { font-size: 1.125rem; }
+            .main-content {
+                padding: var(--space-4);
+            }
+            .alert-container {
+                left: var(--space-4);
+                right: var(--space-4);
+                max-width: none;
+            }
+            .footer-main {
+                padding: var(--space-6) var(--space-4);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .navbar-brand span {
+                display: none;
+            }
+            .user-info span {
+                display: none;
+            }
+            .nav-link span {
+                display: none;
+            }
+            .nav-link {
+                padding: var(--space-2) var(--space-3);
+            }
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        }
+        .shadow-soft {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        /* ============================================
+           子模板扩展区域
+           ============================================ */
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    {% block header %}
+    <header class="navbar-main" id="navbarMain">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'Dashboard:language' %}" class="navbar-brand">
+                <i class="bi bi-globe"></i>
+                <span>濒危语言保护平台</span>
+            </a>
+        </div>
+
+        <!-- 桌面端导航菜单 -->
+        <nav class="d-none d-lg-block">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:language' %}" class="nav-link {% if request.resolver_match.url_name == 'language' %}active{% endif %}">
+                        <i class="bi bi-house-door"></i>
+                        <span>首页概览</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:language_list' %}" class="nav-link {% if request.resolver_match.url_name == 'language_list' %}active{% endif %}">
+                        <i class="bi bi-table"></i>
+                        <span>数据管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:language_search' %}" class="nav-link {% if request.resolver_match.url_name == 'language_search' %}active{% endif %}">
+                        <i class="bi bi-search"></i>
+                        <span>精准查询</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:language_translation' %}" class="nav-link {% if request.resolver_match.url_name == 'language_translation' %}active{% endif %}">
+                        <i class="bi bi-translate"></i>
+                        <span>语言翻译</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:language_visualization' %}" class="nav-link {% if request.resolver_match.url_name == 'language_visualization' %}active{% endif %}">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span>数据可视化</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:language_chat' %}" class="nav-link {% if request.resolver_match.url_name == 'language_chat' %}active{% endif %}">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>智能问答</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Community:community_home' %}" class="nav-link {% if request.resolver_match.namespace == 'Community' %}active{% endif %}">
+                        <i class="bi bi-people"></i>
+                        <span>社区论坛</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Dashboard:nlp_page' %}" class="nav-link {% if request.resolver_match.url_name == 'nlp_page' or request.resolver_match.url_name == 'nlp_process' %}active{% endif %}">
+                        <i class="bi bi-cpu"></i>
+                        <span>NLP处理</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 移动端菜单按钮 -->
+        <button class="navbar-toggler-custom d-lg-none" type="button" id="mobileMenuToggle" aria-label="切换菜单">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <div class="navbar-actions">
+            {% if username %}
+                <div class="dropdown">
+                    <a href="#" class="user-info" title="进入个人中心" data-bs-toggle="dropdown">
+                        {% get_user_avatar username as avatar_url %}
+                        {% if avatar_url %}
+                        <img src="{{ avatar_url }}" alt="头像" class="avatar-img">
+                        {% else %}
+                        <div class="avatar">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        {% endif %}
+                        <span class="d-none d-md-inline">{{ name }}</span>
+                        <i class="bi bi-chevron-down ms-1 small"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'User:profile' %}">
+                            <i class="bi bi-person me-2"></i>个人中心
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'User:expert_application_status' %}">
+                            <i class="bi bi-award me-2"></i>我的专家申请
+                        </a></li>
+                        {% if is_admin %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'User:expert_management' %}">
+                            <i class="bi bi-shield-check me-2"></i>专家认证管理
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'User:logout' %}?next={{ request.get_full_path|urlencode }}">
+                            <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                        </a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'User:login' %}" class="btn-login">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span class="d-none d-sm-inline">登录</span>
+                </a>
+            {% endif %}
+            {% block navbar_extra %}{% endblock %}
+        </div>
+    </header>
+
+    <!-- 移动端下拉菜单 -->
+    <div class="mobile-menu" id="mobileMenu">
+        <ul class="nav-menu" style="flex-direction: column; gap: var(--space-2);">
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language' %}" class="nav-link {% if request.resolver_match.url_name == 'language' %}active{% endif %}">
+                    <i class="bi bi-house-door"></i>
+                    <span>首页概览</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_list' %}" class="nav-link {% if request.resolver_match.url_name == 'language_list' %}active{% endif %}">
+                    <i class="bi bi-table"></i>
+                    <span>数据管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_search' %}" class="nav-link {% if request.resolver_match.url_name == 'language_search' %}active{% endif %}">
+                    <i class="bi bi-search"></i>
+                    <span>精准查询</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_translation' %}" class="nav-link {% if request.resolver_match.url_name == 'language_translation' %}active{% endif %}">
+                    <i class="bi bi-translate"></i>
+                    <span>语言翻译</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_visualization' %}" class="nav-link {% if request.resolver_match.url_name == 'language_visualization' %}active{% endif %}">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span>数据可视化</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_chat' %}" class="nav-link {% if request.resolver_match.url_name == 'language_chat' %}active{% endif %}">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>智能问答</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Community:community_home' %}" class="nav-link {% if request.resolver_match.namespace == 'Community' %}active{% endif %}">
+                    <i class="bi bi-people"></i>
+                    <span>社区论坛</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    {% endblock %}
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}
+    <footer class="footer-main">
+        <div class="footer-content">
+            <div class="footer-brand">濒危语言保护平台</div>
+            <div class="footer-tagline">Preserving Global Linguistic Heritage</div>
+            <div class="footer-copyright">
+                &copy; {% now "Y" %} 濒危语言保护平台 · 守护人类文明的多元记忆
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+            <div class="alert-custom alert-{{ message.tags }}">
+                <i class="bi bi-info-circle alert-icon"></i>
+                <div class="alert-content">{{ message }}</div>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 登录提示模态框 -->
+    <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: var(--radius-xl); border: none; box-shadow: var(--shadow-2xl);">
+                <div class="modal-header border-0" style="padding: var(--space-6) var(--space-6) 0;">
+                    <h5 class="modal-title" id="loginRequiredModalLabel" style="font-weight: 700; color: var(--primary-900); font-size: 1.25rem; display: flex; align-items: center; gap: var(--space-2);">
+                        <i class="bi bi-exclamation-circle" style="color: var(--warning);"></i>
+                        请先登录
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding: var(--space-5) var(--space-6);">
+                    <p style="color: var(--primary-600); line-height: 1.7; margin: 0;">
+                        您需要先登录才能继续操作。登录后，您可以享受更多功能，包括语言数据管理、翻译工具、数据可视化和智能问答服务。
+                    </p>
+                </div>
+                <div class="modal-footer border-0" style="padding: 0 var(--space-6) var(--space-6); gap: var(--space-3);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: var(--radius-md); font-weight: 500;">
+                        稍后再说
+                    </button>
+                    <a href="{% url 'User:login' %}" class="btn btn-primary" style="border-radius: var(--radius-md);">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        立即登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="back-to-top" id="backToTop" aria-label="返回顶部">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'bootstrap-5.3.0-alpha1-dist/js/bootstrap.bundle.min.js' %}"></script>
+
+    <script>
+        // 导航栏滚动效果
+        const navbar = document.getElementById('navbarMain');
+        let lastScrollY = window.scrollY;
+
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 10) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+            lastScrollY = window.scrollY;
+        });
+
+        // 移动端菜单切换
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuToggle?.addEventListener('click', function() {
+            mobileMenu.classList.toggle('show');
+            const icon = this.querySelector('i');
+            if (mobileMenu.classList.contains('show')) {
+                icon.classList.remove('bi-list');
+                icon.classList.add('bi-x-lg');
+            } else {
+                icon.classList.remove('bi-x-lg');
+                icon.classList.add('bi-list');
+            }
+        });
+
+        // 点击菜单项后关闭移动端菜单
+        mobileMenu?.querySelectorAll('.nav-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                mobileMenu.classList.remove('show');
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('bi-x-lg');
+                icon.classList.add('bi-list');
+            });
+        });
+
+        // 返回顶部按钮
+        const backToTopBtn = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 400) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+
+        backToTopBtn?.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // 自动关闭提示消息
+        setTimeout(function() {
+            document.querySelectorAll('.alert-custom').forEach(function(alert) {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100px)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+
+        // 高亮当前页面导航项
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(function(link) {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        // 检查是否显示登录提示模态框
+        const loginRequiredModal = document.getElementById('loginRequiredModal');
+        if (loginRequiredModal) {
+            {% if not username %}
+            // 未登录状态，页面加载后显示模态框
+            window.addEventListener('DOMContentLoaded', function() {
+                const currentPath = window.location.pathname;
+                // 不需要登录提示的页面：首页、社区论坛、NLP处理
+                const exemptPaths = ['/Dashboard/language/', '/Community/', '/Dashboard/nlp/'];
+                const needsLoginModal = !exemptPaths.some(path => currentPath.startsWith(path));
+
+                if (needsLoginModal) {
+                    setTimeout(function() {
+                        const modal = new bootstrap.Modal(loginRequiredModal);
+                        modal.show();
+                    }, 300);
+                }
+            });
+            {% endif %}
+        }
+
+        // AJAX 全局错误处理 - 未登录时显示登录提示
+        $(document).ajaxError(function(event, xhr) {
+            if (xhr.status === 401 || xhr.status === 403) {
+                const modal = new bootstrap.Modal(loginRequiredModal);
+                modal.show();
+            }
+        });
+
+        // 导航链接点击检测 - 需要登录的页面点击前拦截
+        {% if not username %}
+        document.querySelectorAll('.nav-link, .user-info').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (!href) return;
+
+                // 需要登录的页面路径（社区功能也需登录）
+                const loginRequiredPaths = [
+                    '/Dashboard/language_list/',
+                    '/Dashboard/language_search/',
+                    '/Dashboard/language_translation/',
+                    '/Dashboard/language_visualization/',
+                    '/Dashboard/language_chat/',
+                    '/Dashboard/nlp/',
+                    '/Community/create/',
+                    '/Community/edit/',
+                    '/Community/delete/',
+                    '/Community/reply/',
+                    '/Community/like/',
+                    '/Community/collect/',
+                    '/Community/follow/',
+                    '/Community/messages/',
+                    '/User/'
+                ];
+                // 豁免路径（首页和社区首页不需要登录）
+                const exemptPaths = ['/Dashboard/language/', '/Community/'];
+
+                const needsLogin = loginRequiredPaths.some(path => href.includes(path));
+                const isExempt = exemptPaths.some(path => href.startsWith(path));
+
+                if (needsLogin && !isExempt) {
+                    e.preventDefault();
+                    const modal = new bootstrap.Modal(loginRequiredModal);
+                    modal.show();
+                    return false;
+                }
+            });
+        });
+        {% endif %}
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

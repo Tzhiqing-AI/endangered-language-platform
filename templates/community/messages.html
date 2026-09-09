@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}我的消息 - 社区论坛{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="mb-3">
+                <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>返回社区
+                </a>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-bell me-2"></i>我的消息</h2>
+                {% if unread_count > 0 %}
+                <button class="btn btn-outline-primary btn-mark-read">
+                    <i class="bi bi-check-all me-1"></i>全部标为已读
+                </button>
+                {% endif %}
+            </div>
+
+            {% if messages %}
+            <div class="list-group">
+                {% for msg in messages %}
+                <div class="list-group-item {% if not msg.is_read %}fw-bold{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge bg-{% if msg.msg_type == 'like' %}danger{% elif msg.msg_type == 'reply' %}primary{% elif msg.msg_type == 'follow' %}success{% else %}secondary{% endif %} me-2">
+                                {{ msg.get_msg_type_display }}
+                            </span>
+                            {% if msg.sender %}
+                            <a href="{% url 'Community:user_profile' user_id=msg.sender.username %}" class="text-decoration-none">{{ msg.sender.name }}</a>
+                            {% endif %}
+                            <span>{{ msg.content }}</span>
+                            <small class="text-muted d-block mt-1">{{ msg.created_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+                        {% if msg.post %}
+                        <a href="{% url 'Community:post_detail' post_id=msg.post.id %}" class="btn btn-sm btn-outline-secondary">
+                            查看
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-inbox me-2"></i>暂无消息
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('.btn-mark-read').click(function() {
+    $.post('{% url "Community:mark_read_messages" %}', {
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+    }, function(res) {
+        if (res.success) {
+            location.reload();
+        }
+    });
+});
+</script>
+{% endblock %}

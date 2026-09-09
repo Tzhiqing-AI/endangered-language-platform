@@ -1,0 +1,1156 @@
+{% extends 'base.html' %}
+{% load static custom_tags %}
+
+{% block title %}语言数据管理 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 页面标题区域 */
+    .page-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0 -2rem 2rem -2rem;
+        padding: 3rem 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header-custom::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .breadcrumb-custom {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .breadcrumb-custom .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+    }
+
+    .breadcrumb-custom .breadcrumb-item.active {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* 统计卡片 */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .stat-card.danger::before {
+        background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+    }
+
+    .stat-card.endangered::before {
+        background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .stat-card.seriously::before {
+        background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+    }
+
+    .stat-card.extinct::before {
+        background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card .stat-icon {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .stat-card.danger .stat-icon {
+        background: rgba(249, 115, 22, 0.1);
+        color: #f97316;
+    }
+
+    .stat-card.endangered .stat-icon {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .stat-card.seriously .stat-icon {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+
+    .stat-card.extinct .stat-icon {
+        background: rgba(153, 27, 27, 0.1);
+        color: #991b1b;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    /* 操作按钮区域 */
+    .action-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        position: relative;
+        z-index: 10;
+    }
+
+    .action-btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        z-index: 10;
+        pointer-events: auto !important;
+    }
+
+    .action-btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .action-btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .action-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .action-btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .action-btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .action-btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .action-btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    /* 图表卡片 */
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .chart-card-body {
+        padding: 1.5rem;
+    }
+
+    .chart-container {
+        height: 400px;
+    }
+
+    /* 数据表格 */
+    .data-table-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    .data-table-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .data-table-title {
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .data-table-count {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    .data-table {
+        margin: 0;
+    }
+
+    .data-table thead th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.25rem;
+        white-space: nowrap;
+    }
+
+    .data-table tbody td {
+        padding: 1rem 1.25rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9375rem;
+        color: #475569;
+    }
+
+    .data-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* 濒危程度徽章 */
+    .endangerment-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    .badge-unsafe {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .badge-danger {
+        background: rgba(249, 115, 22, 0.1);
+        color: #ea580c;
+    }
+
+    .badge-endangered {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .badge-seriously {
+        background: rgba(220, 38, 38, 0.1);
+        color: #b91c1c;
+    }
+
+    .badge-extinct {
+        background: rgba(153, 27, 27, 0.1);
+        color: #991b1b;
+    }
+
+    /* 分页 */
+    .pagination-container {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .pagination {
+        gap: 0.375rem;
+    }
+
+    .page-link {
+        border: none;
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
+        color: #64748b;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .page-link:hover {
+        background: #f1f5f9;
+        color: #667eea;
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .page-item.disabled .page-link {
+        color: #cbd5e1;
+        background: transparent;
+    }
+
+    /* 空状态 */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #94a3b8;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 1400px) {
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header-custom {
+            padding: 2rem 1.5rem;
+            margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .action-bar {
+            padding: 0.875rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8125rem;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        .data-table-header {
+            padding: 1rem;
+        }
+
+        .data-table thead th,
+        .data-table tbody td {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 400px) {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* 确保模态框正确显示 */
+    .modal {
+        z-index: 1060 !important;
+    }
+    .modal-backdrop {
+        z-index: 1055 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="page-header-custom">
+    <div class="container page-header-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="page-title"><i class="bi bi-table me-3"></i>数据管理</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-custom">
+                        <li class="breadcrumb-item"><a href="javascript:history.back()">返回</a></li>
+                        <li class="breadcrumb-item active">数据管理</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-2">
+                <!-- 标签页切换 -->
+                <div class="btn-group" role="group">
+                    <a href="{% url 'Dashboard:language_list' %}" class="btn btn-light {% if request.resolver_match.url_name == 'language_list' %}active{% endif %}">
+                        <i class="bi bi-globe me-1"></i>语言数据
+                    </a>
+                    {% if is_admin %}
+                    <a href="{% url 'Dashboard:user_management' %}" class="btn btn-light {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}">
+                        <i class="bi bi-people me-1"></i>用户数据
+                    </a>
+                    {% endif %}
+                </div>
+                <a href="{% url 'Dashboard:language_search' %}" class="btn btn-outline-light">
+                    <i class="bi bi-search me-2"></i>高级搜索
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 统计卡片 -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-exclamation-circle"></i>
+        </div>
+        <div class="stat-number">{{ data.unsafe|default:0 }}</div>
+        <div class="stat-label">不安全</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-number">{{ data.danger|default:0 }}</div>
+        <div class="stat-label">危险</div>
+    </div>
+    <div class="stat-card endangered">
+        <div class="stat-icon">
+            <i class="bi bi-x-octagon"></i>
+        </div>
+        <div class="stat-number">{{ data.endangered|default:0 }}</div>
+        <div class="stat-label">濒危</div>
+    </div>
+    <div class="stat-card seriously">
+        <div class="stat-icon">
+            <i class="bi bi-heartbreak"></i>
+        </div>
+        <div class="stat-number">{{ data.seriously_endangered|default:0 }}</div>
+        <div class="stat-label">垂危</div>
+    </div>
+    <div class="stat-card extinct">
+        <div class="stat-icon">
+            <i class="bi bi-circle"></i>
+        </div>
+        <div class="stat-number">{{ data.extinct|default:0 }}</div>
+        <div class="stat-label">灭绝</div>
+    </div>
+</div>
+
+<!-- 图表展示 -->
+<div class="chart-card">
+    <div class="chart-card-header">
+        <i class="bi bi-pie-chart text-primary"></i>
+        <span>濒危程度分布统计</span>
+    </div>
+    <div class="chart-card-body">
+        <div id="chart-container" class="chart-container"></div>
+    </div>
+</div>
+
+<!-- 操作按钮 - 仅管理员可见 -->
+{% if is_admin %}
+<div class="action-bar">
+    <button type="button" class="action-btn action-btn-success" onclick="showModal('addModal')">
+        <i class="bi bi-plus-lg"></i> 新增语言
+    </button>
+    <button type="button" class="action-btn action-btn-primary" onclick="showModal('fileModal')">
+        <i class="bi bi-upload"></i> CSV批量导入
+    </button>
+</div>
+{% endif %}
+
+<!-- 数据表格 -->
+<div class="data-table-card">
+    <div class="data-table-header">
+        <div class="data-table-title">
+            <i class="bi bi-list-ul text-primary"></i>
+            语言数据列表
+            <span class="data-table-count">(共 {{ paginator.count }} 条记录)</span>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>语言名称</th>
+                    <th>濒危程度</th>
+                    <th>使用者数量</th>
+                    <th>趋势</th>
+                    <th>代际传承</th>
+                    <th>语言家族</th>
+                    <th>国家/地区</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for language in languages %}
+                <tr data-language-id="{{ language.language_id }}">
+                    <td><strong class="row-number">{{ forloop.counter }}</strong></td>
+                    <td><strong class="text-dark"><a href="{% url 'Dashboard:language_detail' language.language_id %}" style="color: #6366f1; text-decoration: none;">{{ language.language_name }}</a></strong></td>
+                    <td>
+                        {% if language.level_of_endangerment == 'unsafe' %}
+                            <span class="endangerment-badge badge-unsafe"><i class="bi bi-exclamation-circle"></i> 不安全</span>
+                        {% elif language.level_of_endangerment == 'danger' %}
+                            <span class="endangerment-badge badge-danger"><i class="bi bi-exclamation-triangle"></i> 危险</span>
+                        {% elif language.level_of_endangerment == 'endangered' %}
+                            <span class="endangerment-badge badge-endangered"><i class="bi bi-x-octagon"></i> 濒危</span>
+                        {% elif language.level_of_endangerment == 'seriously_endangered' %}
+                            <span class="endangerment-badge badge-seriously"><i class="bi bi-heartbreak"></i> 垂危</span>
+                        {% elif language.level_of_endangerment == 'extinct' %}
+                            <span class="endangerment-badge badge-extinct"><i class="bi bi-circle"></i> 灭绝</span>
+                        {% else %}
+                            <span class="endangerment-badge badge-danger">{{ language.level_of_endangerment }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ language.number_of_speakers|default:"-" }}</td>
+                    <td>
+                        {% if language.speaker_trends == 'Increasing' %}
+                            <span class="text-success"><i class="bi bi-arrow-up-circle-fill"></i> 增加</span>
+                        {% elif language.speaker_trends == 'Decreasing' %}
+                            <span class="text-danger"><i class="bi bi-arrow-down-circle-fill"></i> 减少</span>
+                        {% else %}
+                            <span class="text-muted"><i class="bi bi-dash-circle"></i> 稳定</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ language.intergenerational_transmission|default:"-" }}</td>
+                    <td>{{ language.language_family|default:"-" }}</td>
+                    <td>{{ language.country|default:"-" }}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="openUpdateModal({{ forloop.counter }})" title="编辑">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="openDeleteModal({{ forloop.counter }})" title="删除">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h5>暂无数据</h5>
+                            <p>点击"新增语言"或"CSV批量导入"添加数据</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if paginator.num_pages > 1 %}
+    <div class="pagination-container">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                    </li>
+                {% endif %}
+
+                {% for num in paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 新增模态框 -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-lg me-2"></i>新增濒危语言</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">语言名称 *</label>
+                            <input type="text" class="form-control" name="language_name" required placeholder="请输入语言名称">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">濒危程度 *</label>
+                            <select class="form-select" name="level_of_endangerment" required>
+                                <option value="unsafe">不安全</option>
+                                <option value="danger">危险</option>
+                                <option value="endangered">濒危</option>
+                                <option value="seriously_endangered">垂危</option>
+                                <option value="extinct">灭绝</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">使用者数量</label>
+                            <input type="number" class="form-control" name="number_of_speakers" placeholder="请输入使用者数量">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">使用者趋势</label>
+                            <select class="form-select" name="speaker_trends">
+                                <option value="Stable">稳定</option>
+                                <option value="Increasing">增加中</option>
+                                <option value="Decreasing">减少中</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">代际传承</label>
+                            <select class="form-select" name="intergenerational_transmission">
+                                <option value="many">多数</option>
+                                <option value="some">一些</option>
+                                <option value="few">少数</option>
+                                <option value="none">无</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">语言家族</label>
+                            <input type="text" class="form-control" name="language_family" placeholder="请输入语言家族">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">国家/地区</label>
+                            <input type="text" class="form-control" name="country" placeholder="请输入国家或地区">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">详细信息</label>
+                        <textarea class="form-control" name="additional_notes" rows="3" placeholder="请输入详细信息"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success" name="addBtn">
+                        <i class="bi bi-check-lg me-1"></i>确认添加
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- 修改模态框 -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>修改濒危语言</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        您正在修改第 <strong id="updateConfirmNumber"></strong> 行对应的语言数据
+                    </div>
+                    <input type="hidden" name="language_id" id="updateLanguageId">
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">语言名称</label>
+                            <input type="text" class="form-control" name="language_name" id="updateLanguageName" placeholder="请输入语言名称">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">濒危程度</label>
+                            <select class="form-select" name="level_of_endangerment" id="updateLevelOfEndangerment">
+                                <option value="">-- 不修改 --</option>
+                                <option value="unsafe">不安全</option>
+                                <option value="danger">危险</option>
+                                <option value="endangered">濒危</option>
+                                <option value="seriously_endangered">垂危</option>
+                                <option value="extinct">灭绝</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">使用者数量</label>
+                            <input type="number" class="form-control" name="number_of_speakers" id="updateNumberOfSpeakers" placeholder="请输入使用者数量">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">使用者趋势</label>
+                            <select class="form-select" name="speaker_trends" id="updateSpeakerTrends">
+                                <option value="">-- 不修改 --</option>
+                                <option value="Stable">稳定</option>
+                                <option value="Increasing">增加中</option>
+                                <option value="Decreasing">减少中</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">代际传承</label>
+                            <select class="form-select" name="intergenerational_transmission" id="updateIntergenerationalTransmission">
+                                <option value="">-- 不修改 --</option>
+                                <option value="many">多数</option>
+                                <option value="some">一些</option>
+                                <option value="few">少数</option>
+                                <option value="none">无</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">语言家族</label>
+                            <input type="text" class="form-control" name="language_family" id="updateLanguageFamily" placeholder="请输入语言家族">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">国家/地区</label>
+                            <input type="text" class="form-control" name="country" id="updateCountry" placeholder="请输入国家或地区">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">详细信息</label>
+                        <textarea class="form-control" name="additional_notes" id="updateAdditionalNotes" rows="3" placeholder="请输入详细信息"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-warning" name="updateBtn">
+                        <i class="bi bi-check-lg me-1"></i>确认修改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- 删除模态框 -->
+<form method="post">
+    {% csrf_token %}
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-trash me-2"></i>删除濒危语言</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>警告：</strong>此操作不可撤销，删除后数据将无法恢复！
+                    </div>
+                    <div class="mb-3">
+                        <p>您确定要删除第 <strong id="deleteConfirmNumber"></strong> 行对应的语言数据吗？</p>
+                        <input type="hidden" name="language_id" id="deleteLanguageId">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger" name="deleteBtn">
+                        <i class="bi bi-trash me-1"></i>确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- CSV导入模态框 -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal fade" id="fileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload me-2"></i>CSV批量导入</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>格式要求：</strong><br>
+                        1. CSV文件编码：UTF-8 或 GBK<br>
+                        2. 第一行为表头，将被自动跳过<br>
+                        3. 数据列：语言名称,濒危程度,使用者数量,趋势,代际传承,语言家族,国家,详细信息
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">选择CSV文件 *</label>
+                        <input type="file" class="form-control" name="myFile" accept=".csv,.txt" required>
+                        <div class="form-text">支持 .csv 和 .txt 格式，文件大小不超过 10MB</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary" name="fileBtn">
+                        <i class="bi bi-upload me-1"></i>开始导入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/echarts.js' %}"></script>
+<script>
+    // 清理模态框残留状态
+    function cleanupModal() {
+        // 移除所有残留的 backdrop
+        var backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(b) { b.remove(); });
+        // 移除 body 上的 modal-open class
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+        document.body.style.removeProperty('overflow');
+    }
+
+    // 模态框显示函数
+    function showModal(id, rowNumber) {
+        // 先清理之前的残留状态
+        cleanupModal();
+
+        var modal = document.getElementById(id);
+        if (modal && typeof bootstrap !== 'undefined') {
+            // 如果是删除模态框，需要处理行号到真实ID的转换
+            if (id === 'deleteModal' && rowNumber) {
+                var row = document.querySelector('tr[data-language-id]');
+                // 找到对应行号的那一行
+                var rows = document.querySelectorAll('table tbody tr[data-language-id]');
+                var targetRow = rows[rowNumber - 1];
+                if (targetRow) {
+                    var realId = targetRow.getAttribute('data-language-id');
+                    document.getElementById('deleteRowNumber').value = rowNumber;
+                    document.getElementById('deleteLanguageId').value = realId;
+                }
+            }
+
+            var bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+
+            // 监听隐藏事件，确保清理
+            modal.addEventListener('hidden.bs.modal', function() {
+                cleanupModal();
+            }, { once: true });
+        }
+    }
+
+    // 设置删除模态框的行号
+    function setDeleteRow(rowNumber) {
+        document.getElementById('deleteConfirmNumber').textContent = rowNumber;
+        // 找到对应行的真实language_id
+        var rows = document.querySelectorAll('table tbody tr[data-language-id]');
+        var targetRow = rows[rowNumber - 1];
+        if (targetRow) {
+            var realId = targetRow.getAttribute('data-language-id');
+            document.getElementById('deleteLanguageId').value = realId;
+        }
+    }
+
+    // 打开删除模态框
+    function openDeleteModal(rowNumber) {
+        cleanupModal();
+        setDeleteRow(rowNumber);
+        var modal = document.getElementById('deleteModal');
+        if (modal && typeof bootstrap !== 'undefined') {
+            var bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            modal.addEventListener('hidden.bs.modal', function() {
+                cleanupModal();
+            }, { once: true });
+        }
+    }
+
+    // 打开修改模态框
+    function openUpdateModal(rowNumber) {
+        cleanupModal();
+
+        // 找到对应行的真实language_id
+        var rows = document.querySelectorAll('table tbody tr[data-language-id]');
+        var targetRow = rows[rowNumber - 1];
+        if (!targetRow) {
+            alert('未找到对应的语言数据');
+            return;
+        }
+
+        var realId = targetRow.getAttribute('data-language-id');
+        document.getElementById('updateConfirmNumber').textContent = rowNumber;
+        document.getElementById('updateLanguageId').value = realId;
+
+        // 填充表单数据
+        var cells = targetRow.querySelectorAll('td');
+        // language_name
+        var nameCell = cells[1];
+        if (nameCell) {
+            document.getElementById('updateLanguageName').value = nameCell.textContent.trim();
+        }
+
+        // level_of_endangerment - 从badge中获取
+        var levelCell = cells[2];
+        var levelValue = '';
+        if (levelCell) {
+            if (levelCell.querySelector('.badge-unsafe')) levelValue = 'unsafe';
+            else if (levelCell.querySelector('.badge-danger')) levelValue = 'danger';
+            else if (levelCell.querySelector('.badge-endangered')) levelValue = 'endangered';
+            else if (levelCell.querySelector('.badge-seriously')) levelValue = 'seriously_endangered';
+            else if (levelCell.querySelector('.badge-extinct')) levelValue = 'extinct';
+        }
+        document.getElementById('updateLevelOfEndangerment').value = levelValue;
+
+        // number_of_speakers
+        var speakersCell = cells[3];
+        if (speakersCell) {
+            var speakersText = speakersCell.textContent.trim().replace(/,/g, '').replace(/-/g, '');
+            document.getElementById('updateNumberOfSpeakers').value = speakersText;
+        }
+
+        // speaker_trends
+        var trendsCell = cells[4];
+        var trendsValue = '';
+        if (trendsCell) {
+            if (trendsCell.querySelector('.text-success')) trendsValue = 'Increasing';
+            else if (trendsCell.querySelector('.text-danger')) trendsValue = 'Decreasing';
+            else trendsValue = 'Stable';
+        }
+        document.getElementById('updateSpeakerTrends').value = trendsValue;
+
+        // intergenerational_transmission
+        var transmitCell = cells[5];
+        if (transmitCell) {
+            var transmitText = transmitCell.textContent.trim();
+            var transmitValue = '';
+            if (transmitText.includes('多数')) transmitValue = 'many';
+            else if (transmitText.includes('一些')) transmitValue = 'some';
+            else if (transmitText.includes('少数')) transmitValue = 'few';
+            else if (transmitText.includes('无')) transmitValue = 'none';
+            document.getElementById('updateIntergenerationalTransmission').value = transmitValue;
+        }
+
+        // language_family
+        var familyCell = cells[6];
+        if (familyCell) {
+            document.getElementById('updateLanguageFamily').value = familyCell.textContent.trim().replace(/-$/g, '');
+        }
+
+        // country
+        var countryCell = cells[7];
+        if (countryCell) {
+            document.getElementById('updateCountry').value = countryCell.textContent.trim().replace(/-$/g, '');
+        }
+
+        var modal = document.getElementById('updateModal');
+        if (modal && typeof bootstrap !== 'undefined') {
+            var bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            modal.addEventListener('hidden.bs.modal', function() {
+                cleanupModal();
+            }, { once: true });
+        }
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 为所有模态框添加隐藏事件监听
+        var modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', function() {
+                cleanupModal();
+            });
+        });
+
+        // 删除模态框打开时，自动填入hidden字段
+        var deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                if (button) {
+                    var rowNumber = button.getAttribute('data-row-number');
+                    if (rowNumber) {
+                        setDeleteRow(parseInt(rowNumber));
+                    }
+                }
+            });
+        }
+    });
+
+    // ECharts 图表初始化
+    window.addEventListener('load', function() {
+        var chartDom = document.getElementById('chart-container');
+        if (chartDom && typeof echarts !== 'undefined') {
+            var myChart = echarts.init(chartDom);
+            myChart.setOption({
+                title: {
+                    text: '濒危语言统计分布',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'normal', color: '#1e293b' }
+                },
+                tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+                legend: {
+                    orient: 'vertical',
+                    right: '5%',
+                    top: 'center',
+                    data: ['不安全', '危险', '濒危', '垂危', '灭绝']
+                },
+                series: [{
+                    name: '濒危语言',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['40%', '50%'],
+                    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+                    label: { show: true, position: 'outside', formatter: '{b}\n{c} ({d}%)', fontSize: 12 },
+                    data: [
+                        { value: {{ data.unsafe|default:0 }}, name: '不安全', itemStyle: { color: '#f59e0b' } },
+                        { value: {{ data.danger|default:0 }}, name: '危险', itemStyle: { color: '#f97316' } },
+                        { value: {{ data.endangered|default:0 }}, name: '濒危', itemStyle: { color: '#ef4444' } },
+                        { value: {{ data.seriously_endangered|default:0 }}, name: '垂危', itemStyle: { color: '#dc2626' } },
+                        { value: {{ data.extinct|default:0 }}, name: '灭绝', itemStyle: { color: '#991b1b' } }
+                    ]
+                }]
+            });
+            window.addEventListener('resize', function() { myChart.resize(); });
+        }
+    });
+</script>
+{% endblock %}

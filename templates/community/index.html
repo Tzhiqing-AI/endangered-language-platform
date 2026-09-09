@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}社区论坛 - 濒危语言保护{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-people me-2"></i>社区论坛</h2>
+                <div class="d-flex gap-2">
+                    <form action="{% url 'Community:search_posts' %}" method="get" class="d-flex gap-2">
+                        <input type="text" name="keyword" class="form-control" placeholder="语义搜索帖子..." style="width: 220px;">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                    {% if name %}
+                    <a href="{% url 'Community:messages' %}" class="btn btn-outline-primary position-relative">
+                        <i class="bi bi-bell"></i>
+                        {% if unread_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ unread_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'Community:create_post' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>发布帖子
+                    </a>
+                    {% else %}
+                    <a href="{% url 'User:login' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>登录后发帖
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#latest">
+                        <i class="bi bi-clock me-1"></i>最新
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#hot">
+                        <i class="bi bi-fire me-1"></i>热门
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="latest">
+                    {% if latest_posts %}
+                    {% for post in latest_posts %}
+                    <div class="card mb-3 post-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="post-info flex-grow-1">
+                                    <h5 class="post-title">
+                                        <a href="{% url 'Community:post_detail' post_id=post.id %}">{{ post.title }}</a>
+                                        {% if post.is_pinned %}
+                                        <span class="badge bg-danger ms-2">置顶</span>
+                                        {% endif %}
+                                        {% if post.is_essence %}
+                                        <span class="badge bg-warning ms-1">精华</span>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="post-preview text-muted">{{ post.content|truncatewords:30 }}</p>
+                                    <div class="post-meta">
+                                        <span class="me-3">
+                                            <i class="bi bi-person me-1"></i>{{ post.author.name }}
+                                        </span>
+                                        <span class="me-3">
+                                            <i class="bi bi-clock me-1"></i>{{ post.created_at|date:"Y-m-d" }}
+                                        </span>
+                                        <span class="me-3">
+                                            <i class="bi bi-eye me-1"></i>{{ post.view_count }}
+                                        </span>
+                                        <span class="me-3">
+                                            <i class="bi bi-chat me-1"></i>{{ post.reply_count }}
+                                        </span>
+                                        <span>
+                                            <i class="bi bi-heart me-1"></i>{{ post.like_count }}
+                                        </span>
+                                    </div>
+                                    {% if post.related_language %}
+                                    <div class="mt-2">
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-globe me-1"></i>{{ post.related_language.language_name }}
+                                        </span>
+                                        <span class="badge bg-secondary">{{ post.language_level }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>暂无帖子，快来发表第一篇吧！
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="hot">
+                    {% if hot_posts %}
+                    {% for post in hot_posts %}
+                    <div class="card mb-3 post-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="post-info flex-grow-1">
+                                    <h5 class="post-title">
+                                        <a href="{% url 'Community:post_detail' post_id=post.id %}">{{ post.title }}</a>
+                                        <span class="badge bg-primary ms-2">🔥 {{ forloop.counter }}</span>
+                                    </h5>
+                                    <div class="post-meta">
+                                        <span class="me-3">
+                                            <i class="bi bi-eye me-1"></i>{{ post.view_count }}
+                                        </span>
+                                        <span class="me-3">
+                                            <i class="bi bi-chat me-1"></i>{{ post.reply_count }}
+                                        </span>
+                                        <span>
+                                            <i class="bi bi-heart me-1"></i>{{ post.like_count }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>暂无热门帖子
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-grid me-2"></i>论坛分类
+                </div>
+                <div class="card-body">
+                    {% if categories %}
+                    <div class="list-group list-group-flush">
+                        {% for cat in categories %}
+                        <a href="{% url 'Community:category_posts' category_id=cat.id %}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi {{ cat.icon }} me-2"></i>{{ cat.name }}</span>
+                            <span class="badge bg-primary rounded-pill">{{ cat.post_count }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">暂无分类</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-tags me-2"></i>热门标签
+                </div>
+                <div class="card-body">
+                    {% if top_tags %}
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for tag in top_tags %}
+                        <a href="{% url 'Community:tag_posts' tag_id=tag.id %}" class="badge p-2" style="background-color: {{ tag.color }}; color: white;">
+                            {{ tag.name }} ({{ tag.post_count }})
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">暂无标签</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-person-plus me-2"></i>活跃用户
+                </div>
+                <div class="card-body">
+                    {% if active_users %}
+                    <div class="list-group list-group-flush">
+                        {% for user in active_users %}
+                        <a href="{% url 'Community:user_profile' user_id=user.id %}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-person-circle me-2"></i>{{ user.name }}</span>
+                            <span class="text-muted">{{ user.followers_count }} 粉丝</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">暂无活跃用户</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.post-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-base);
+}
+.post-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+.post-title a {
+    color: var(--primary-800);
+    text-decoration: none;
+}
+.post-title a:hover {
+    color: var(--accent-500);
+}
+.post-meta {
+    font-size: 0.875rem;
+    color: var(--primary-500);
+}
+.post-preview {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+    .post-card {
+        padding: 12px;
+    }
+    .post-preview {
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+</style>
+{% endblock %}

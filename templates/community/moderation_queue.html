@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}内容审核队列 - 濒危语言保护平台{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-3">
+        <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>返回社区
+        </a>
+    </div>
+    <h2 class="mb-4"><i class="bi bi-shield-check me-2"></i>内容审核队列</h2>
+
+    {% if user.expert == 1 %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>作为专家，您可以审核普通用户发布的内容。
+    </div>
+    {% endif %}
+
+    <ul class="nav nav-tabs mt-3" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending">
+                <i class="bi bi-clock me-1"></i>待审核
+                <span class="badge bg-warning">{{ pending_posts|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#history">
+                <i class="bi bi-history me-1"></i>审核历史
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+        <div class="tab-pane fade show active" id="pending">
+            {% if pending_posts %}
+            <div class="list-group">
+                {% for post in pending_posts %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5>
+                                <a href="{% url 'Community:post_detail' post_id=post.id %}" class="text-decoration-none">
+                                    {{ post.title }}
+                                </a>
+                                {% if post.is_expert_verified %}
+                                <span class="badge bg-success ms-2"><i class="bi bi-check-circle"></i> 已验证</span>
+                                {% endif %}
+                            </h5>
+                            <p class="mb-1 text-muted">{{ post.content|truncatechars:150 }}</p>
+                            <small class="text-secondary">
+                                作者：{{ post.author.name|default:post.author.username }}
+                                {% if post.author.expert == 1 %}
+                                <span class="badge bg-warning text-dark ms-1"><i class="bi bi-award"></i> 专家</span>
+                                {% endif %}
+                                | 发布时间：{{ post.created_at|date:"Y-m-d H:i" }}
+                                {% if post.category %}
+                                | 分类：{{ post.category.name }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="btn-group-vertical ms-3">
+                            <button class="btn btn-success btn-sm approve-btn"
+                                data-type="post" data-id="{{ post.id }}">
+                                <i class="bi bi-check-lg"></i> 通过
+                            </button>
+                            <button class="btn btn-danger btn-sm reject-btn"
+                                data-type="post" data-id="{{ post.id }}">
+                                <i class="bi bi-x-lg"></i> 拒绝
+                            </button>
+                            <button class="btn btn-secondary btn-sm hide-btn"
+                                data-type="post" data-id="{{ post.id }}">
+                                <i class="bi bi-eye-slash"></i> 隐藏
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-success mt-3">
+                <i class="bi bi-check-circle me-2"></i>暂无待审核内容，所有内容都已处理完毕。
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="history">
+            {% if moderation_history %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>操作</th>
+                            <th>内容类型</th>
+                            <th>内容ID</th>
+                            <th>原因</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mod in moderation_history %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{% if mod.action == 'approve' %}success{% elif mod.action == 'reject' %}danger{% else %}secondary{% endif %}">
+                                    {{ mod.get_action_display }}
+                                </span>
+                            </td>
+                            <td>{{ mod.content_type }}</td>
+                            <td>{{ mod.content_id }}</td>
+                            <td>{{ mod.reason|default:"-" }}</td>
+                            <td>{{ mod.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary mt-3">
+                <i class="bi bi-inbox me-2"></i>暂无审核历史记录。
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.approve-btn, .reject-btn, .hide-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const type = btn.dataset.type;
+        const id = btn.dataset.id;
+        const action = btn.classList.contains('approve-btn') ? 'approve' :
+                       btn.classList.contains('reject-btn') ? 'reject' : 'hide';
+
+        const reason = prompt('请输入操作原因（可选）：') || '';
+
+        try {
+            const response = await fetch('{% url "Community:moderate_content" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `type=${type}&id=${id}&action=${action}&reason=${encodeURIComponent(reason)}`
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '操作失败');
+            }
+        } catch (error) {
+            alert('网络错误，请重试');
+        }
+    });
+});
+</script>
+{% endblock %}

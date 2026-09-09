@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}页面未找到 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-page {
+        min-height: calc(100vh - var(--navbar-height) - var(--footer-height) - 100px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: var(--space-8);
+    }
+
+    .error-code {
+        font-size: 8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: var(--space-4);
+        letter-spacing: -0.05em;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-800);
+        margin-bottom: var(--space-3);
+    }
+
+    .error-message {
+        font-size: 1rem;
+        color: var(--primary-500);
+        margin-bottom: var(--space-8);
+        max-width: 400px;
+    }
+
+    .error-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: var(--radius-2xl);
+        background: var(--primary-50);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: var(--space-6);
+    }
+
+    .error-icon i {
+        font-size: 4rem;
+        color: var(--primary-300);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-icon">
+        <i class="bi bi-geo-alt"></i>
+    </div>
+    <div class="error-code">404</div>
+    <h1 class="error-title">页面未找到</h1>
+    <p class="error-message">
+        抱歉，您访问的页面不存在或已被移除。
+        让我们回到首页吧。
+    </p>
+    <a href="{% url 'Dashboard:language' %}" class="btn btn-primary btn-lg">
+        <i class="bi bi-house-door"></i>
+        返回首页
+    </a>
+</div>
+{% endblock %}

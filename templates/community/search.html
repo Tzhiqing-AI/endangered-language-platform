@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}搜索帖子 - 社区论坛{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-badge-semantic {
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    .search-badge-keyword {
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    .similarity-bar {
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        overflow: hidden;
+        width: 80px;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 6px;
+    }
+    .similarity-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #10b981);
+        border-radius: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="mb-3">
+                <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>返回社区
+                </a>
+            </div>
+            <h2 class="mb-4"><i class="bi bi-search me-2"></i>智能搜索</h2>
+
+            <form method="get" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="keyword" class="form-control" placeholder="输入关键词，支持语义搜索..." value="{{ form.keyword.value|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="category" class="form-select">
+                            <option value="">全部分类</option>
+                            {% for cat in form.category.field.choices %}
+                            {% if cat.0 %}
+                            <option value="{{ cat.0 }}" {% if form.category.value == cat.0 %}selected{% endif %}>{{ cat.1 }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="tags" class="form-select">
+                            <option value="">全部标签</option>
+                            {% for tag in form.tags.field.choices %}
+                            {% if tag.0 %}
+                            <option value="{{ tag.0 }}" {% if form.tags.value == tag.0 %}selected{% endif %}>{{ tag.1 }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search me-1"></i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            {% if keyword %}
+            <div class="alert alert-light border mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-cpu text-primary"></i>
+                <span>搜索方式：<strong>ChromaDB 语义检索</strong> + MySQL 关键词匹配（混合搜索）</span>
+            </div>
+            {% endif %}
+
+            {% if posts %}
+            <p class="text-muted mb-3">共找到 {{ posts.paginator.count }} 篇帖子</p>
+
+            {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5>
+                                <a href="{% url 'Community:post_detail' post_id=post.id %}">{{ post.title }}</a>
+                            </h5>
+                            <p class="text-muted mb-2">{{ post.content|truncatewords:30 }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>{{ post.author.name }}
+                                <i class="bi bi-clock ms-2 me-1"></i>{{ post.created_at|date:"Y-m-d" }}
+                                <i class="bi bi-eye ms-2 me-1"></i>{{ post.view_count }}
+                                <i class="bi bi-chat ms-2 me-1"></i>{{ post.reply_count }}
+                            </small>
+                            {% if post.tags.all %}
+                            <div class="mt-1">
+                                {% for tag in post.tags.all %}
+                                <span class="badge bg-light text-dark border">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if post.search_score is not None %}
+                        <div class="text-end ms-3">
+                            <span class="search-badge-semantic">语义匹配</span>
+                            <div class="mt-1">
+                                <small class="text-muted">相关度 {{ post.search_score }}%</small>
+                                <div class="similarity-bar"><div class="similarity-fill" style="width: {{ post.search_score }}%"></div></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if posts.has_other_pages %}
+            <nav>
+                <ul class="pagination">
+                    {% if posts.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ posts.previous_page_number }}&keyword={{ keyword }}">上一页</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ posts.number }} / {{ posts.paginator.num_pages }}</span></li>
+                    {% if posts.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ posts.next_page_number }}&keyword={{ keyword }}">下一页</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-search me-2"></i>未找到相关帖子
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-cpu me-2"></i>搜索说明</div>
+                <div class="card-body">
+                    <p class="small mb-2"><strong>语义搜索（ChromaDB）</strong></p>
+                    <p class="small text-muted">输入"方言保护"，能匹配到"吴语"相关帖子。基于中文向量模型 text2vec-base-chinese，理解词语语义。</p>
+                    <hr>
+                    <p class="small mb-2"><strong>关键词匹配（MySQL）</strong></p>
+                    <p class="small text-muted">传统的 LIKE 模糊匹配，精确查找包含关键词的帖子。</p>
+                    <hr>
+                    <p class="small text-muted mb-0">两种方式结果自动合并去重，语义匹配优先展示。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

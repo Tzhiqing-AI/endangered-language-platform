@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}发布帖子 - 社区论坛{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'Community:community_home' %}">社区论坛</a></li>
+                    <li class="breadcrumb-item active">发布帖子</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-pencil-square me-2"></i>发布新帖子
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">标题 <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">分类</label>
+                                {{ form.category }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">标签</label>
+                                {{ form.tags }}
+                                <small class="text-muted">按住Ctrl可多选</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">关联濒危语言</label>
+                            {{ form.related_language }}
+                            <small class="text-muted">选择后可让更多人看到这篇帖子与哪种濒危语言相关</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">濒危等级</label>
+                            {{ form.language_level }}
+                            <small class="text-muted">如：极危、濒危、易危等</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">内容 <span class="text-danger">*</span></label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                            <div class="text-danger small">{{ form.content.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>返回
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>发布帖子
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: var(--radius-md);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-500);
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+    .form-control, .form-select {
+        font-size: 16px; /* 防止 iOS 自动缩放 */
+    }
+}
+</style>
+{% endblock %}

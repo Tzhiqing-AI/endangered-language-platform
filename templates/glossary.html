@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}术语表管理 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .glossary-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2.5rem 0;
+        color: white;
+    }
+
+    .glossary-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .glossary-main {
+        padding: 2rem 0;
+    }
+
+    .glossary-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .glossary-card-header {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .glossary-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .glossary-table th {
+        background: #f8fafc;
+        padding: 0.875rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .glossary-table td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .glossary-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .badge-approved {
+        background: #dcfce7;
+        color: #16a34a;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #d97706;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .search-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-bar input, .search-bar select {
+        flex: 1;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="glossary-header">
+    <div class="container">
+        <h1><i class="bi bi-book"></i> 术语表管理</h1>
+        <p>管理濒危语言专业术语，提高翻译准确性</p>
+    </div>
+</section>
+
+<section class="glossary-main">
+    <div class="container">
+        <!-- 搜索和筛选 -->
+        <div class="search-bar">
+            <form method="get" style="display: flex; gap: 1rem; width: 100%;">
+                <input type="text" name="search" class="form-control" placeholder="搜索术语或翻译..."
+                       value="{{ search }}">
+                <select name="category" class="form-select" style="max-width: 200px;">
+                    <option value="">所有分类</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if cat == category_filter %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+            </form>
+        </div>
+
+        <!-- 术语列表 -->
+        <div class="glossary-card">
+            <div class="glossary-card-header">
+                <span><i class="bi bi-list-ul"></i> 术语列表 ({{ glossaries|length }})</span>
+                <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addGlossaryModal">
+                    <i class="bi bi-plus"></i> 添加术语
+                </button>
+            </div>
+            {% if glossaries %}
+            <table class="glossary-table">
+                <thead>
+                    <tr>
+                        <th>术语</th>
+                        <th>翻译</th>
+                        <th>语言</th>
+                        <th>分类</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for glossary in glossaries %}
+                    <tr>
+                        <td><strong>{{ glossary.term }}</strong></td>
+                        <td>{{ glossary.translation }}</td>
+                        <td>{{ glossary.language|default:"-" }}</td>
+                        <td>{{ glossary.category|default:"-" }}</td>
+                        <td>
+                            {% if glossary.is_approved %}
+                            <span class="badge-approved">已审核</span>
+                            {% else %}
+                            <span class="badge-pending">待审核</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if is_admin and not glossary.is_approved %}
+                            <button class="btn btn-sm btn-success approve-btn" data-id="{{ glossary.id }}">
+                                <i class="bi bi-check"></i>
+                            </button>
+                            {% endif %}
+                            {% if glossary.username == username or is_admin %}
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ glossary.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-book" style="font-size: 4rem;"></i>
+                <h3 style="margin-top: 1rem;">暂无术语</h3>
+                <p>点击"添加术语"按钮开始添加</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- 添加术语弹窗 -->
+<div class="modal fade" id="addGlossaryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加术语</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addGlossaryForm">
+                    <div class="mb-3">
+                        <label class="form-label">术语 *</label>
+                        <input type="text" class="form-control" name="term" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">翻译 *</label>
+                        <input type="text" class="form-control" name="translation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">所属语言</label>
+                        <input type="text" class="form-control" name="language" placeholder="如：满语、鄂温克语">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分类</label>
+                        <input type="text" class="form-control" name="category" placeholder="如：语言学、文化、地理">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">说明</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="submitGlossary">添加</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+// 添加术语
+document.getElementById('submitGlossary').addEventListener('click', async function() {
+    const form = document.getElementById('addGlossaryForm');
+    const formData = new FormData(form);
+    formData.append('action', 'add');
+
+    try {
+        const response = await fetch('/Dashboard/glossary/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || '添加失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('请求失败');
+    }
+});
+
+// 审核术语
+document.querySelectorAll('.approve-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        const formData = new FormData();
+        formData.append('action', 'approve');
+        formData.append('id', id);
+
+        try {
+            const response = await fetch('/Dashboard/glossary/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || '审核失败');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+
+// 删除术语
+document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        if (!confirm('确定要删除这个术语吗？')) return;
+
+        const id = this.dataset.id;
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', id);
+
+        try {
+            const response = await fetch('/Dashboard/glossary/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || '删除失败');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

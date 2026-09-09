@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}声望排行榜 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rank-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2.5rem 0;
+        color: white;
+    }
+
+    .rank-main {
+        padding: 2rem 0;
+    }
+
+    .rank-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .rank-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .rank-table th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .rank-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rank-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .rank-number {
+        width: 50px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .rank-1 { color: #f59e0b; }
+    .rank-2 { color: #94a3b8; }
+    .rank-3 { color: #cd7f32; }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .user-role {
+        font-size: 0.75rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        margin-left: 0.5rem;
+    }
+
+    .role-expert {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .role-admin {
+        background: #fce7f3;
+        color: #db2777;
+    }
+
+    .score-bar {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 100px;
+    }
+
+    .score-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #818cf8);
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>返回社区
+    </a>
+</div>
+<section class="rank-header">
+    <div class="container">
+        <h1><i class="bi bi-trophy"></i> 声望排行榜</h1>
+        <p>根据用户贡献计算的声望分数排行</p>
+    </div>
+</section>
+
+<section class="rank-main">
+    <div class="container">
+        <div class="rank-card">
+            <table class="rank-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>用户</th>
+                        <th>声望分数</th>
+                        <th>帖子数</th>
+                        <th>收到点赞</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in top_users %}
+                    <tr>
+                        <td class="rank-number {% if forloop.counter <= 3 %}rank-{{ forloop.counter }}{% endif %}">
+                            {% if forloop.counter == 0 %}🥇{% elif forloop.counter == 1 %}🥈{% elif forloop.counter == 2 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                        </td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">{{ user.username|first|upper }}</div>
+                                <div>
+                                    <span class="user-name">
+                                        <a href="{% url 'Community:user_profile' user.username %}" style="color: inherit; text-decoration: none;">
+                                            {{ user.name|default:user.username }}
+                                        </a>
+                                    </span>
+                                    {% if user.expert == 1 %}
+                                    <span class="user-role role-expert">专家</span>
+                                    {% endif %}
+                                    {% if user.admin == 1 %}
+                                    <span class="user-role role-admin">管理员</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <strong>{{ user.reputation_score }}</strong>
+                                <div class="score-bar">
+                                    <div class="score-bar-fill" style="width: {% widthratio user.reputation_score top_users.0.reputation_score 100 %}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.post_count|default:0 }}</td>
+                        <td>{{ user.total_likes|default:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

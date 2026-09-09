@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 濒危语言保护平台</title>
+    <link rel="stylesheet" href="{% static 'bootstrap-5.3.0-alpha1-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap-icons-1.13.1/font/bootstrap-icons.min.css' %}">
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'bootstrap-5.3.0-alpha1-dist/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px 35px;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .register-header .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .register-header .icon-wrapper i {
+            font-size: 36px;
+            color: white;
+        }
+
+        .register-header h2 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .register-header p {
+            color: #718096;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 18px;
+            z-index: 10;
+            transition: color 0.3s;
+        }
+
+        .form-group input {
+            padding: 14px 14px 14px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            background: white;
+            outline: none;
+        }
+
+        .form-group input:focus + .input-icon,
+        .form-group input:focus ~ .input-icon {
+            color: #667eea;
+        }
+
+        .form-group.name-group input {
+            padding-left: 48px;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+            margin-top: 10px;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #a0aec0;
+            font-size: 13px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .login-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .alert-message {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .input-error {
+            border-color: #ff6b6b !important;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .register-card {
+                padding: 28px 20px;
+            }
+            .register-header h2 {
+                font-size: 22px;
+            }
+            .register-header .icon-wrapper {
+                width: 64px;
+                height: 64px;
+            }
+            .register-header .icon-wrapper i {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <div class="icon-wrapper">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <h2>用户注册</h2>
+                <p>加入濒危语言保护大家庭</p>
+            </div>
+
+            {% if message %}
+                <div class="alert-message">
+                    <i class="bi bi-exclamation-circle-fill"></i> {{ message }}
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'User:register' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next|default:'' }}">
+
+                <div class="form-group">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" class="form-control" placeholder="请输入用户名" required autofocus name="username">
+                </div>
+
+                <div class="form-group">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" class="form-control" placeholder="请输入密码" required name="password">
+                </div>
+
+                <div class="form-group">
+                    <i class="bi bi-lock-fill input-icon"></i>
+                    <input type="password" class="form-control" placeholder="请确认密码" required name="confirm_password">
+                </div>
+
+                <div class="form-group name-group">
+                    <i class="bi bi-badge-tm input-icon"></i>
+                    <input type="text" class="form-control" placeholder="请输入您的名称（选填）" name="name">
+                </div>
+
+                <button type="submit" class="btn-register">
+                    <i class="bi bi-check-lg"></i> 立即注册
+                </button>
+
+                <div class="divider"><span>或</span></div>
+
+                <div class="login-link">
+                    已有账号？<a href="{% url 'User:login' %}">立即登录</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

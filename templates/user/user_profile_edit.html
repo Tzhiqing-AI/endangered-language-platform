@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}编辑资料 - 濒危语言保护管理系统{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-pencil me-2"></i>编辑资料
+        </h2>
+        <a href="/User/profile/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回个人中心
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- 左侧菜单（共享侧边栏） -->
+        {% include "user/_sidebar.html" with active_menu="edit" %}
+
+        <!-- 右侧表单 -->
+        <div class="col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>修改个人信息
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/User/profile/edit/">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">昵称</label>
+                            <input type="text" name="name" class="form-control"
+                                   value="{{ user.name|default:'' }}"
+                                   placeholder="请输入昵称" maxlength="20">
+                            <div class="form-text">长度不超过20个字符</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">个人简介</label>
+                            <textarea name="bio" class="form-control" rows="4"
+                                      placeholder="介绍一下自己吧" maxlength="500">{{ profile.bio|default:'' }}</textarea>
+                            <div class="form-text">长度不超过500个字符</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">手机号</label>
+                                <input type="text" name="phone" class="form-control"
+                                       value="{{ profile.phone|default:'' }}"
+                                       placeholder="请输入手机号" maxlength="20">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">所在地</label>
+                                <input type="text" name="location" class="form-control"
+                                       value="{{ profile.location|default:'' }}"
+                                       placeholder="请输入所在地" maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">个人网站</label>
+                            <input type="url" name="website" class="form-control"
+                                   value="{{ profile.website|default:'' }}"
+                                   placeholder="https://example.com" maxlength="200">
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check2 me-1"></i>保存修改
+                            </button>
+                            <a href="/Dashboard/language/" class="btn btn-outline-secondary">返回首页</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

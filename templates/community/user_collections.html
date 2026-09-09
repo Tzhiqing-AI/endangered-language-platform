@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}我的收藏 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .collections-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2.5rem 0;
+        color: white;
+    }
+
+    .collections-main {
+        padding: 2rem 0;
+    }
+
+    .collection-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1rem;
+        padding: 1.25rem;
+        transition: all 0.2s;
+    }
+
+    .collection-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .collection-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .collection-title a {
+        color: #1e293b;
+        text-decoration: none;
+    }
+
+    .collection-title a:hover {
+        color: #6366f1;
+    }
+
+    .collection-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.875rem;
+        color: #64748b;
+        flex-wrap: wrap;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="collections-header">
+    <div class="container">
+        <h1><i class="bi bi-bookmark-heart"></i> 我的收藏</h1>
+        <p>查看您收藏的所有帖子</p>
+    </div>
+</section>
+
+<section class="collections-main">
+    <div class="container">
+        {% if collects %}
+            {% for collect in collects %}
+            <div class="collection-card">
+                <div class="collection-title">
+                    <a href="{% url 'Community:post_detail' collect.post.id %}">{{ collect.post.title }}</a>
+                </div>
+                <div class="collection-meta">
+                    <span><i class="bi bi-person"></i> {{ collect.post.author.username }}</span>
+                    <span><i class="bi bi-clock"></i> 收藏于 {{ collect.created_at|date:"Y-m-d H:i" }}</span>
+                    <span><i class="bi bi-eye"></i> {{ collect.post.view_count }} 浏览</span>
+                    <span><i class="bi bi-heart"></i> {{ collect.post.like_count }} 点赞</span>
+                    {% if collect.post.category %}
+                    <span><i class="bi bi-folder"></i> {{ collect.post.category.name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- 分页 -->
+            {% if collects.has_other_pages %}
+            <nav style="margin-top: 2rem;">
+                <ul class="pagination justify-content-center">
+                    {% if collects.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ collects.previous_page_number }}">上一页</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in collects.paginator.page_range %}
+                    <li class="page-item {% if num == collects.number %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if collects.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ collects.next_page_number }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-bookmark" style="font-size: 4rem;"></i>
+            <h3 style="margin-top: 1rem;">暂无收藏</h3>
+            <p>浏览社区帖子时，点击收藏按钮即可收藏</p>
+            <a href="{% url 'Community:community_home' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="bi bi-arrow-left"></i> 返回社区
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

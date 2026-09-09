@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}修改头像 - 濒危语言保护管理系统{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-camera me-2"></i>修改头像
+        </h2>
+        <a href="/User/profile/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回个人中心
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- 左侧菜单（共享侧边栏） -->
+        {% include "user/_sidebar.html" with active_menu="avatar" %}
+
+        <!-- 右侧内容 -->
+        <div class="col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-image me-2"></i>上传新头像
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- 头像预览 -->
+                    <div class="text-center mb-4">
+                        <div class="avatar-preview d-inline-block">
+                            {% if profile.avatar %}
+                            <img id="avatar-preview" src="{{ profile.avatar.url }}" alt="头像预览"
+                                 class="rounded-circle shadow"
+                                 style="width: 180px; height: 180px; object-fit: cover;">
+                            {% else %}
+                            <div id="avatar-preview" class="rounded-circle shadow d-flex align-items-center justify-content-center bg-secondary"
+                                 style="width: 180px; height: 180px;">
+                                <i class="bi bi-person-fill text-white" style="font-size: 90px;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form method="post" action="/User/profile/avatar/" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label">选择图片</label>
+                            <input type="file" name="avatar" class="form-control"
+                                   id="avatar-input" accept="image/*" required>
+                            <div class="form-text">
+                                支持 JPG、PNG、GIF、WebP 格式，文件大小不超过 2MB
+                            </div>
+                        </div>
+
+                        <!-- 预览提示 -->
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-1"></i>
+                            选择图片后可以预览头像效果，确认无误后点击"上传头像"按钮
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload me-1"></i>上传头像
+                            </button>
+                            <a href="/Dashboard/language/" class="btn btn-outline-secondary">返回首页</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 头像规范 -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-question-circle me-2"></i>头像规范
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">支持格式：JPG、PNG、GIF、WebP</li>
+                        <li class="mb-2">文件大小：不超过 2MB</li>
+                        <li class="mb-2">建议尺寸：正方形图片效果最佳</li>
+                        <li>上传的头像会自动进行裁剪和压缩</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('avatar-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatar-preview');
+            if (preview.tagName === 'DIV') {
+                // 如果预览是 div，创建 img 元素替换
+                const img = document.createElement('img');
+                img.id = 'avatar-preview';
+                img.src = e.target.result;
+                img.className = 'rounded-circle shadow';
+                img.style.cssText = 'width: 180px; height: 180px; object-fit: cover;';
+                preview.parentNode.replaceChild(img, preview);
+            } else {
+                preview.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

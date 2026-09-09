@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.name }} - 用户主页{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3">
+        <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>返回社区
+        </a>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle fs-1 text-muted mb-3"></i>
+                    <h4>{{ profile_user.name }}</h4>
+                    <p class="text-muted mb-3">暂无简介</p>
+                    <p class="small text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        注册于 {{ profile_user.regtime|date:"Y-m-d" }}
+                    </p>
+                    <div class="d-flex justify-content-center gap-4 mb-3">
+                        <div>
+                            <strong>{{ posts.paginator.count }}</strong>
+                            <small class="text-muted d-block">帖子</small>
+                        </div>
+                        <div>
+                            <strong>{{ followers_count }}</strong>
+                            <small class="text-muted d-block">粉丝</small>
+                        </div>
+                        <div>
+                            <strong>{{ following_count }}</strong>
+                            <small class="text-muted d-block">关注</small>
+                        </div>
+                    </div>
+                    {% if name and profile_user.username != request.session.username %}
+                    <button class="btn btn-outline-primary btn-follow {% if is_following %}active{% endif %}" data-user-id="{{ profile_user.username }}">
+                        <i class="bi bi-person-{% if is_following %}check{% else %}plus{% endif %} me-1"></i>
+                        {% if is_following %}已关注{% else %}关注{% endif %}
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'Community:social_graph' user_id=profile_user.username %}" class="btn btn-outline-info d-block mt-2">
+                        <i class="bi bi-diagram-3 me-1"></i>查看社交图谱
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#posts">
+                        <i class="bi bi-file-text me-1"></i>帖子
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#replies">
+                        <i class="bi bi-chat-left me-1"></i>回复
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#collects">
+                        <i class="bi bi-bookmark me-1"></i>收藏
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#footprints">
+                        <i class="bi bi-clock-history me-1"></i>足迹
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade show active" id="posts">
+                    {% if posts %}
+                    {% for post in posts %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5><a href="{% url 'Community:post_detail' post_id=post.id %}">{{ post.title }}</a></h5>
+                            <p class="text-muted mb-2">{{ post.content|truncatewords:30 }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ post.created_at|date:"Y-m-d" }}
+                                <i class="bi bi-eye ms-2 me-1"></i>{{ post.view_count }}
+                                <i class="bi bi-chat ms-2 me-1"></i>{{ post.reply_count }}
+                                <i class="bi bi-heart ms-2 me-1"></i>{{ post.like_count }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">暂无帖子</div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="replies">
+                    {% if replies %}
+                    {% for reply in replies %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="mb-2">{{ reply.content|truncatewords:50 }}</p>
+                            <small class="text-muted">
+                                回复了 <a href="{% url 'Community:post_detail' post_id=reply.post.id %}">{{ reply.post.title }}</a>
+                                · {{ reply.created_at|date:"Y-m-d" }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">暂无回复</div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="collects">
+                    {% if collects %}
+                    {% for collect in collects %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5><a href="{% url 'Community:post_detail' post_id=collect.post.id %}">{{ collect.post.title }}</a></h5>
+                            <small class="text-muted">
+                                收藏于 {{ collect.created_at|date:"Y-m-d" }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">暂无收藏</div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="footprints">
+                    {% if footprint_items %}
+                    <table class="table table-hover">
+                        <tbody>
+                            {% for item in footprint_items %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'Community:post_detail' post_id=item.post.id %}" class="fw-semibold">{{ item.post.title|truncatechars:40 }}</a>
+                                    <br><small class="text-muted">{{ item.post.author.name }} · {{ item.post.content|truncatewords:15 }}</small>
+                                </td>
+                                <td class="text-end text-nowrap align-middle">
+                                    <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.viewed_at|date:"m-d H:i" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-clock-history me-2"></i>暂无浏览足迹
+                        <br><small class="text-muted">浏览帖子后，足迹会记录在这里</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('.btn-follow').click(function() {
+    const userId = $(this).data('user-id');
+    $.post('/Community/user/' + userId + '/follow/', {
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+    }, function(res) {
+        if (res.success) {
+            location.reload();
+        }
+    });
+});
+</script>
+{% endblock %}

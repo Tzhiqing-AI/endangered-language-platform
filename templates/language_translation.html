@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}濒危语言翻译 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .translation-page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0 -2rem 2rem -2rem;
+        padding: 3rem 2rem;
+        color: white;
+        position: relative;
+        z-index: 1;
+    }
+    .translation-panels {
+        display: grid;
+        grid-template-columns: 1fr 60px 1fr;
+        gap: 0;
+        align-items: stretch;
+        margin-bottom: 2rem;
+    }
+    .translation-panel {
+        background: #ffffff;
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: box-shadow 0.3s;
+    }
+    .translation-panel:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .translation-panel:focus-within {
+        border-color: var(--accent-500, #6366f1);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .panel-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--primary-400, #94a3b8);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .panel-label i {
+        font-size: 1rem;
+        color: var(--accent-500, #6366f1);
+    }
+    .translation-textarea {
+        flex: 1;
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        outline: none;
+        resize: none;
+        font-size: 1.0625rem;
+        line-height: 1.7;
+        color: var(--primary-800, #1e293b);
+        background: #ffffff;
+        padding: 0.75rem;
+        border-radius: 8px;
+        transition: all 0.3s;
+        pointer-events: auto !important;
+        z-index: 2;
+        position: relative;
+    }
+    .translation-textarea:focus {
+        border-color: var(--accent-500, #6366f1);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .translation-textarea::placeholder {
+        color: var(--primary-300, #cbd5e1);
+    }
+    .result-text {
+        flex: 1;
+        font-size: 1.0625rem;
+        line-height: 1.7;
+        color: var(--primary-800, #1e293b);
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .swap-btn-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .swap-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        z-index: 10;
+        position: relative;
+    }
+    .swap-btn:hover {
+        transform: scale(1.1) rotate(180deg);
+        box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+    }
+    .swap-btn i {
+        font-size: 1.25rem;
+    }
+    .translate-action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        position: relative;
+        z-index: 2;
+    }
+    .translate-btn {
+        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 2.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        z-index: 5;
+    }
+    .translate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+    }
+    .translate-btn:active {
+        transform: translateY(0);
+    }
+    .char-count {
+        font-size: 0.8125rem;
+        color: var(--primary-400, #94a3b8);
+    }
+    .copy-btn {
+        background: transparent;
+        border: 1.5px solid var(--border-color, rgba(15,23,42,0.08));
+        color: var(--primary-500, #64748b);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    .copy-btn:hover {
+        border-color: var(--accent-500, #6366f1);
+        color: var(--accent-500, #6366f1);
+        background: rgba(99,102,241,0.05);
+    }
+    .result-panel-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-light, rgba(15,23,42,0.04));
+    }
+    .quick-phrases {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 2;
+    }
+    .quick-phrases-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--primary-700, #334155);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .quick-phrases-title i {
+        color: var(--accent-500, #6366f1);
+    }
+    .phrase-chip {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: var(--primary-50, #f8fafc);
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        color: var(--primary-600, #475569);
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 0.25rem;
+    }
+    .phrase-chip:hover {
+        background: rgba(99,102,241,0.08);
+        border-color: var(--accent-500, #6366f1);
+        color: var(--accent-600, #4f46e5);
+        transform: translateY(-1px);
+    }
+    @keyframes translatePulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .translating .result-text {
+        animation: translatePulse 1s ease-in-out infinite;
+    }
+    @media (max-width: 767.98px) {
+        .translation-panels {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        .swap-btn-wrapper {
+            transform: rotate(90deg);
+        }
+        .translation-page-header {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="translation-page-header">
+    <div class="container position-relative" style="z-index:2;">
+        <h1 class="mb-2" style="font-size:2.25rem; font-weight:800; letter-spacing:-0.02em;"><i class="bi bi-translate me-3"></i>濒危语言翻译</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                <li class="breadcrumb-item"><a href="javascript:history.back()" style="color:rgba(255,255,255,0.8);">返回</a></li>
+                <li class="breadcrumb-item active" style="color:rgba(255,255,255,0.6);">语言翻译</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<form action="" method="post" id="translationForm" style="position: relative; z-index: 2;">
+    {% csrf_token %}
+    <div class="translate-action-bar">
+        <div class="d-flex align-items-center gap-3">
+            <button type="submit" class="translate-btn">
+                <i class="bi bi-lightning-charge-fill"></i> 开始翻译
+            </button>
+            <span class="char-count" id="charCount">0 字</span>
+        </div>
+    </div>
+
+    <div class="translation-panels">
+        <div class="translation-panel" style="position: relative; z-index: 2;">
+            <div class="panel-label">
+                <i class="bi bi-pencil-square"></i> 输入原文
+            </div>
+            <textarea class="translation-textarea" name="language_text" id="sourceText" placeholder="请输入需要翻译的濒危语言内容..." oninput="updateCharCount()">{{ language_text|default:'' }}</textarea>
+        </div>
+
+        <div class="swap-btn-wrapper" style="position: relative; z-index: 3;">
+            <button type="button" class="swap-btn" title="交换语言" onclick="swapText()">
+                <i class="bi bi-arrow-left-right"></i>
+            </button>
+        </div>
+
+        <div class="translation-panel" id="resultPanel" style="position: relative; z-index: 2;">
+            <div class="panel-label">
+                <i class="bi bi-chat-square-text"></i> 翻译结果
+            </div>
+            <div class="result-text" id="resultText">
+                {% if result %}{{ result }}{% else %}<span style="color:var(--primary-300, #cbd5e1);">翻译结果将显示在这里...</span>{% endif %}
+            </div>
+            {% if result %}
+            <div class="result-panel-footer">
+                <button type="button" class="copy-btn" onclick="copyResult()">
+                    <i class="bi bi-clipboard"></i> 复制
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+<div class="quick-phrases">
+    <div class="quick-phrases-title">
+        <i class="bi bi-chat-quote"></i> 常用翻译短语
+    </div>
+    <div>
+        <span class="phrase-chip" onclick="setPhrase('你好')">你好</span>
+        <span class="phrase-chip" onclick="setPhrase('谢谢')">谢谢</span>
+        <span class="phrase-chip" onclick="setPhrase('这个用你们的语言怎么说')">这个用你们的语言怎么说</span>
+        <span class="phrase-chip" onclick="setPhrase('再见')">再见</span>
+        <span class="phrase-chip" onclick="setPhrase('请帮助我保护我们的语言')">请帮助我保护我们的语言</span>
+        <span class="phrase-chip" onclick="setPhrase('我们的语言正在消失')">我们的语言正在消失</span>
+    </div>
+</div>
+
+<script>
+function updateCharCount() {
+    var textarea = document.getElementById('sourceText');
+    if (textarea) {
+        var text = textarea.value;
+        var charCount = document.getElementById('charCount');
+        if (charCount) {
+            charCount.textContent = text.length + ' 字';
+        }
+    }
+}
+
+function swapText() {
+    var source = document.getElementById('sourceText');
+    var resultEl = document.getElementById('resultText');
+    if (source && resultEl) {
+        var resultText = resultEl.textContent.trim();
+        if (resultText && resultText !== '翻译结果将显示在这里...') {
+            source.value = resultText;
+            updateCharCount();
+            source.focus();
+        }
+    }
+}
+
+function copyResult() {
+    var resultText = document.getElementById('resultText');
+    if (resultText) {
+        var text = resultText.textContent;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(function() {
+                var btn = document.querySelector('.copy-btn');
+                if (btn) {
+                    btn.innerHTML = '<i class="bi bi-check-lg"></i> 已复制';
+                    setTimeout(function() {
+                        if (btn) {
+                            btn.innerHTML = '<i class="bi bi-clipboard"></i> 复制';
+                        }
+                    }, 2000);
+                }
+            }).catch(function(err) {
+                console.error('复制失败:', err);
+            });
+        }
+    }
+}
+
+function setPhrase(text) {
+    var textarea = document.getElementById('sourceText');
+    if (textarea) {
+        textarea.value = text;
+        updateCharCount();
+        textarea.focus();
+    }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    updateCharCount();
+
+    var textarea = document.getElementById('sourceText');
+    if (textarea) {
+        textarea.style.pointerEvents = 'auto';
+        textarea.style.userSelect = 'auto';
+        textarea.tabIndex = 0;
+    }
+
+    var buttons = document.querySelectorAll('button');
+    buttons.forEach(function(button) {
+        button.style.pointerEvents = 'auto';
+        button.style.userSelect = 'auto';
+    });
+
+    var phraseChips = document.querySelectorAll('.phrase-chip');
+    phraseChips.forEach(function(chip) {
+        chip.style.pointerEvents = 'auto';
+        chip.style.userSelect = 'auto';
+    });
+});
+</script>
+{% endblock %}

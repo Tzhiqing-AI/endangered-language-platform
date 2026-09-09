@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>濒危语言保护平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* 动态背景 */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* 背景渐变球体 */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.25;
+            animation: float 25s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #667eea 0%, #764ba2 40%, transparent 70%);
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #f093fb 0%, #f5576c 40%, transparent 70%);
+            bottom: 15%;
+            right: 8%;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, #4facfe 0%, #00f2fe 40%, transparent 70%);
+            top: 60%;
+            left: 70%;
+            animation-delay: -13s;
+        }
+
+        .orb-4 {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #43e97b 0%, #38f9d7 40%, transparent 70%);
+            top: 20%;
+            right: 25%;
+            animation-delay: -19s;
+        }
+
+        .orb-5 {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #a8c0ff 0%, #8fd3f4 40%, transparent 70%);
+            top: 75%;
+            left: 20%;
+            animation-delay: -4s;
+        }
+
+        .orb-6 {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #d299c2 0%, #fef9d7 40%, transparent 70%);
+            top: 35%;
+            left: 85%;
+            animation-delay: -11s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            15% {
+                transform: translate(40px, -60px) rotate(45deg) scale(1.1);
+            }
+            30% {
+                transform: translate(-80px, 30px) rotate(120deg) scale(0.9);
+            }
+            45% {
+                transform: translate(25px, 80px) rotate(200deg) scale(1.05);
+            }
+            60% {
+                transform: translate(-50px, -25px) rotate(280deg) scale(0.95);
+            }
+            75% {
+                transform: translate(60px, 50px) rotate(340deg) scale(1.08);
+            }
+        }
+
+        /* 光线效果 */
+        .light-rays {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background:
+                linear-gradient(125deg, transparent 45%, rgba(255,255,255,0.015) 48%, transparent 50%),
+                linear-gradient(245deg, transparent 45%, rgba(255,255,255,0.01) 48%, transparent 50%),
+                linear-gradient(325deg, transparent 45%, rgba(255,255,255,0.012) 48%, transparent 50%);
+            background-size: 300% 300%;
+            animation: lightMove 25s infinite linear;
+        }
+
+        @keyframes lightMove {
+            0% {
+                background-position: 0% 0%, 0% 0%, 0% 0%;
+            }
+            100% {
+                background-position: 100% 100%, 100% 100%, 100% 100%;
+            }
+        }
+
+        /* 主内容区域 */
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 液态玻璃卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 30px;
+            padding: 60px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.25),
+                inset 0 0 60px rgba(255, 255, 255, 0.03);
+            animation: glassPulse 6s infinite ease-in-out;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(
+                45deg,
+                transparent 35%,
+                rgba(102, 126, 234, 0.15) 45%,
+                rgba(118, 75, 162, 0.15) 55%,
+                transparent 65%
+            );
+            border-radius: 32px;
+            z-index: -1;
+            animation: borderGlow 5s infinite ease-in-out;
+        }
+
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.04),
+                transparent
+            );
+            transform: skewX(-20deg);
+            animation: shimmer 12s infinite;
+        }
+
+        @keyframes glassPulse {
+            0%, 100% {
+                box-shadow:
+                    0 8px 32px rgba(0, 0, 0, 0.25),
+                    inset 0 0 60px rgba(255, 255, 255, 0.03);
+            }
+            50% {
+                box-shadow:
+                    0 8px 40px rgba(102, 126, 234, 0.1),
+                    inset 0 0 80px rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+            100% { opacity: 0.3; }
+        }
+
+        @keyframes shimmer {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+
+        /* 图标 */
+        .icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .icon-inner {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            box-shadow:
+                0 8px 30px rgba(102, 126, 234, 0.3),
+                inset 0 -3px 15px rgba(0, 0, 0, 0.15);
+            animation: iconFloat 4s infinite ease-in-out;
+        }
+
+        .icon::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #4facfe);
+            border-radius: 35px;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(15px);
+            animation: iconGlow 4s infinite ease-in-out;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes iconGlow {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.05); }
+        }
+
+        /* 标题 */
+        .title {
+            font-size: 40px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ffffff 0%, #c8d6ff 50%, #ffffff 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            animation: titleShine 8s infinite linear;
+            letter-spacing: 2px;
+        }
+
+        @keyframes titleShine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 35px;
+            letter-spacing: 3px;
+        }
+
+        /* 提示文字 */
+        .hint {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 25px;
+            animation: hintPulse 3s infinite ease-in-out;
+            letter-spacing: 1px;
+        }
+
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ===== 装饰效果容器 ===== */
+        .effects-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* ===== 上升粒子 ===== */
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: particleFloat 18s infinite linear;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 萤火虫效果 ===== */
+        .firefly {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px rgba(255, 255, 200, 0.8);
+            animation: fireflyGlow 3s infinite ease-in-out;
+        }
+
+        @keyframes fireflyGlow {
+            0%, 100% {
+                opacity: 0;
+                transform: translate(0, 0);
+            }
+            20% {
+                opacity: 0.9;
+            }
+            50% {
+                opacity: 0.4;
+                transform: translate(30px, -20px);
+            }
+            80% {
+                opacity: 0.8;
+            }
+        }
+
+        /* ===== 流星效果 ===== */
+        .meteor {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(45deg, #fff, transparent);
+            border-radius: 50%;
+            animation: meteorFall 3s infinite linear;
+            opacity: 0;
+        }
+
+        .meteor::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-80deg);
+            width: 100px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent);
+            transform-origin: left center;
+        }
+
+        @keyframes meteorFall {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) rotate(45deg);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(calc(-100vw - 100px), calc(100vh + 100px)) rotate(45deg);
+            }
+        }
+
+        /* ===== 纤维丝效果 ===== */
+        .fiber {
+            position: absolute;
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: fiberFloat 12s infinite linear;
+        }
+
+        @keyframes fiberFloat {
+            0% {
+                transform: translateX(-100px) translateY(0) rotate(var(--rotation));
+                opacity: 0;
+            }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% {
+                transform: translateX(110vw) translateY(50px) rotate(var(--rotation));
+                opacity: 0;
+            }
+        }
+
+        /* ===== 气泡效果 ===== */
+        .bubble {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent);
+            animation: bubbleRise 15s infinite linear;
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(100vh) scale(0.5);
+                opacity: 0;
+            }
+            10% { opacity: 0.6; }
+            95% { opacity: 0.6; }
+            100% {
+                transform: translateY(-20vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* 鼠标跟随光效 */
+        .mouse-follower {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 6;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* 点击涟漪效果 */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 100;
+            animation: rippleExpand 1s ease-out forwards;
+        }
+
+        @keyframes rippleExpand {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 200vmax;
+                height: 200vmax;
+                opacity: 0;
+            }
+        }
+
+        /* 加载动画 */
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            animation: loadingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes loadingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景球体 -->
+    <div class="background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+        <div class="orb orb-5"></div>
+        <div class="orb orb-6"></div>
+    </div>
+
+    <!-- 光线效果 -->
+    <div class="light-rays"></div>
+
+    <!-- 装饰效果容器 -->
+    <div class="effects-container" id="effectsContainer"></div>
+
+    <!-- 鼠标跟随光效 -->
+    <div class="mouse-follower" id="mouseFollower"></div>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div class="glass-card">
+            <div class="icon">
+                <div class="icon-inner">🌍</div>
+            </div>
+            <h1 class="title">濒危语言保护平台</h1>
+            <p class="subtitle">ENDANGERED LANGUAGE PROTECTION</p>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <p class="hint">点击任意处进入首页</p>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('effectsContainer');
+
+        // ===== 上升粒子 =====
+        for (let i = 0; i < 50; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 18 + 's';
+            p.style.animationDuration = (12 + Math.random() * 10) + 's';
+            p.style.width = (3 + Math.random() * 5) + 'px';
+            p.style.height = p.style.width;
+            p.style.opacity = 0.5 + Math.random() * 0.4;
+            container.appendChild(p);
+        }
+
+        // ===== 萤火虫 =====
+        for (let i = 0; i < 25; i++) {
+            const f = document.createElement('div');
+            f.className = 'firefly';
+            f.style.left = Math.random() * 100 + '%';
+            f.style.top = Math.random() * 100 + '%';
+            f.style.animationDelay = Math.random() * 5 + 's';
+            f.style.animationDuration = (2 + Math.random() * 3) + 's';
+            f.style.width = (2 + Math.random() * 3) + 'px';
+            f.style.height = f.style.width;
+            const hue = Math.random() > 0.5 ? '50, 255, 200' : '255, 255, 200';
+            f.style.boxShadow = `0 0 10px 2px rgba(${hue}, 0.6)`;
+            container.appendChild(f);
+        }
+
+        // ===== 流星 =====
+        for (let i = 0; i < 5; i++) {
+            const m = document.createElement('div');
+            m.className = 'meteor';
+            m.style.left = (60 + Math.random() * 40) + '%';
+            m.style.top = Math.random() * 40 + '%';
+            m.style.animationDelay = (3 + Math.random() * 10) + 's';
+            m.style.animationDuration = (1.65 + Math.random() * 1.65) + 's';
+            container.appendChild(m);
+        }
+
+        // ===== 纤维丝 =====
+        for (let i = 0; i < 15; i++) {
+            const fb = document.createElement('div');
+            fb.className = 'fiber';
+            fb.style.top = (10 + Math.random() * 80) + '%';
+            fb.style.setProperty('--rotation', (-10 + Math.random() * 20) + 'deg');
+            fb.style.animationDelay = Math.random() * 15 + 's';
+            fb.style.animationDuration = (10 + Math.random() * 8) + 's';
+            fb.style.width = (40 + Math.random() * 60) + 'px';
+            const colors = [
+                'rgba(102, 126, 234, 0.4)',
+                'rgba(240, 147, 251, 0.4)',
+                'rgba(79, 172, 254, 0.4)',
+                'rgba(255, 255, 255, 0.3)'
+            ];
+            fb.style.background = `linear-gradient(90deg, transparent, ${colors[i % colors.length]}, transparent)`;
+            container.appendChild(fb);
+        }
+
+        // ===== 气泡 =====
+        for (let i = 0; i < 20; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            b.style.left = Math.random() * 100 + '%';
+            b.style.animationDelay = Math.random() * 15 + 's';
+            b.style.animationDuration = (12 + Math.random() * 8) + 's';
+            b.style.width = (5 + Math.random() * 15) + 'px';
+            b.style.height = b.style.width;
+            container.appendChild(b);
+        }
+
+        // 鼠标跟随效果
+        const mouseFollower = document.getElementById('mouseFollower');
+        let mouseX = 0, mouseY = 0;
+        let followerX = 0, followerY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateFollower() {
+            followerX += (mouseX - followerX) * 0.08;
+            followerY += (mouseY - followerY) * 0.08;
+            mouseFollower.style.left = followerX + 'px';
+            mouseFollower.style.top = followerY + 'px';
+            requestAnimationFrame(animateFollower);
+        }
+        animateFollower();
+
+        // 点击效果
+        document.body.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = e.clientX + 'px';
+            ripple.style.top = e.clientY + 'px';
+            document.body.appendChild(ripple);
+
+            setTimeout(() => {
+                ripple.remove();
+                window.location.href = '/Dashboard/language/';
+            }, 500);
+        });
+
+        mouseFollower.style.opacity = '0';
+        document.body.addEventListener('mouseenter', () => {
+            mouseFollower.style.opacity = '1';
+        });
+        document.body.addEventListener('mouseleave', () => {
+            mouseFollower.style.opacity = '0';
+        });
+    </script>
+</body>
+</html>

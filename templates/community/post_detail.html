@@ -1,0 +1,598 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - 社区论坛{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="mb-3">
+                <a href="{% url 'Community:community_home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>返回社区
+                </a>
+            </div>
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'Community:community_home' %}">社区论坛</a></li>
+                    {% if post.category %}
+                    <li class="breadcrumb-item"><a href="{% url 'Community:category_posts' category_id=post.category.id %}">{{ post.category.name }}</a></li>
+                    {% endif %}
+                    <li class="breadcrumb-item active">{{ post.title|truncatechars:20 }}</li>
+                </ol>
+            </nav>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ post.title }}</h4>
+                        <small class="text-muted">
+                            <i class="bi bi-person me-1"></i>{{ post.author.name }}
+                            {% if post.author.expert == 1 %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-award"></i> 专家</span>{% endif %}
+                            <i class="bi bi-clock ms-2 me-1"></i>{{ post.created_at|date:"Y-m-d H:i" }}
+                            <i class="bi bi-eye ms-2 me-1"></i>{{ post.view_count }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if post.is_pinned %}<span class="badge bg-danger">置顶</span>{% endif %}
+                        {% if post.is_essence %}<span class="badge bg-warning">精华</span>{% endif %}
+                        {% if post.is_expert_verified %}<span class="badge bg-success">专家验证</span>{% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if post.related_language %}
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-globe me-2"></i>
+                        关联语言：{{ post.related_language.language_name }}
+                        <span class="badge bg-secondary ms-2">{{ related_language_label }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="post-content mb-4">
+                        {{ post.content|linebreaks }}
+                    </div>
+
+                    {% if post.tags.exists %}
+                    <div class="mb-4">
+                        {% for tag in post.tags.all %}
+                        <a href="{% url 'Community:tag_posts' tag_id=tag.id %}" class="badge me-1" style="background-color: {{ tag.color }}; color: white;">
+                            {{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-like {% if is_liked %}active{% endif %}" data-post-id="{{ post.id }}">
+                                <i class="bi bi-heart{% if is_liked %}-fill{% endif %} me-1"></i>
+                                <span id="like-count">{{ post.like_count }}</span>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-collect {% if is_collected %}active{% endif %}" data-post-id="{{ post.id }}">
+                                <i class="bi bi-bookmark{% if is_collected %}-fill{% endif %} me-1"></i>收藏
+                            </button>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal">
+                                <i class="bi bi-flag me-1"></i>举报
+                            </button>
+                        </div>
+
+                        {% if name and post.author.username == request.session.username %}
+                        <div>
+                            <a href="{% url 'Community:edit_post' post_id=post.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil me-1"></i>编辑
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-post" data-post-id="{{ post.id }}">
+                                <i class="bi bi-trash me-1"></i>删除
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-chat-left-text me-2"></i>回复 ({{ post.reply_count }})
+                </div>
+                <div class="card-body">
+                    {% if not post.is_closed %}
+                    {% if name %}
+                    <form action="{% url 'Community:create_reply' post_id=post.id %}" method="post" class="mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="parent_id" id="reply-parent-id" value="">
+                        <div class="mb-3">
+                            <textarea name="content" class="form-control" rows="3" placeholder="写下你的回复..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>发布回复
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-warning mb-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        请<a href="{% url 'User:login' %}">登录</a>后参与讨论
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-secondary mb-4">
+                        <i class="bi bi-lock me-2"></i>该帖子已关闭评论
+                    </div>
+                    {% endif %}
+
+                    <div class="replies-list">
+                        {% for reply in replies %}
+                        <div class="reply-item mb-4 p-3 border rounded" id="reply-{{ reply.id }}">
+                            <div class="d-flex">
+                                <div class="reply-avatar me-3">
+                                    <i class="bi bi-person-circle fs-3 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong><a href="{% url 'Community:user_profile' user_id=reply.author.username %}" class="text-decoration-none">{{ reply.author.name }}</a></strong>
+                                            <small class="text-muted ms-2">{{ reply.created_at|date:"Y-m-d H:i" }}</small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-reply-like {% if reply.is_liked %}active{% endif %}" data-reply-id="{{ reply.id }}">
+                                                <i class="bi bi-heart{% if reply.is_liked %}-fill{% endif %}"></i>
+                                                <span>{{ reply.like_count }}</span>
+                                            </button>
+                                            {% if name %}
+                                            <button class="btn btn-outline-secondary btn-reply" data-reply-id="{{ reply.id }}" data-author-name="{{ reply.author.name }}">
+                                                <i class="bi bi-reply"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="reply-content mt-2">{{ reply.content|linebreaks }}</div>
+
+                                    {% if reply.children_list %}
+                                    <div class="reply-children mt-3 ms-4 border-start ps-3">
+                                        {% for child in reply.children_list %}
+                                        <div class="mb-2" id="reply-{{ child.id }}">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <strong><a href="{% url 'Community:user_profile' user_id=child.author.username %}" class="text-decoration-none">{{ child.author.name }}</a></strong>
+                                                    <small class="text-muted ms-2">{{ child.created_at|date:"Y-m-d H:i" }}</small>
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary btn-reply-like {% if child.is_liked %}active{% endif %}" data-reply-id="{{ child.id }}">
+                                                        <i class="bi bi-heart{% if child.is_liked %}-fill{% endif %}"></i>
+                                                        <span>{{ child.like_count }}</span>
+                                                    </button>
+                                                    {% if name %}
+                                                    <button class="btn btn-outline-secondary btn-reply" data-reply-id="{{ reply.id }}" data-author-name="{{ child.author.name }}">
+                                                        <i class="bi bi-reply"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="mt-1">{{ child.content|linebreaks }}</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-chat-dots fs-1 d-block mb-2"></i>
+                            暂无回复，快来抢沙发吧！
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-person me-2"></i>作者信息
+                </div>
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle fs-1 text-muted mb-3"></i>
+                    <h5><a href="{% url 'Community:user_profile' user_id=post.author.username %}" class="text-decoration-none">{{ post.author.name }}</a></h5>
+                    <p class="text-muted mb-3">{{ post.author.bio|default:"暂无简介" }}</p>
+                    {% if name and post.author.username != request.session.username %}
+                    <button class="btn btn-outline-primary btn-follow {% if is_following_author %}active{% endif %}" data-user-id="{{ post.author.username }}">
+                        <i class="bi bi-person-{% if is_following_author %}check{% else %}plus{% endif %} me-1"></i>
+                        {% if is_following_author %}已关注{% else %}关注{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if related_posts %}
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-cpu me-2"></i>语义推荐
+                    <small class="float-end opacity-75">ChromaDB</small>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for rp in related_posts %}
+                    <a href="{% url 'Community:post_detail' post_id=rp.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold" style="font-size: 0.9rem;">{{ rp.title|truncatechars:25 }}</div>
+                                <small class="text-muted">
+                                    <i class="bi bi-eye me-1"></i>{{ rp.view_count }}
+                                    <i class="bi bi-heart ms-2 me-1"></i>{{ rp.like_count }}
+                                </small>
+                            </div>
+                            {% if rp.search_score %}
+                            <span class="badge bg-success bg-opacity-10 text-success" style="font-size: 0.7rem;">
+                                {{ rp.search_score }}%
+                            </span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-flag me-2"></i>举报帖子</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="report-form" action="{% url 'Community:report_post' post_id=post.id %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">举报原因</label>
+                        <select name="reason" class="form-select" required>
+                            <option value="">请选择</option>
+                            <option value="spam">垃圾广告</option>
+                            <option value="violence">暴力色情</option>
+                            <option value="harassment">骚扰辱骂</option>
+                            <option value="fake">虚假信息</option>
+                            <option value="copyright">侵权</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">详细描述</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="请详细描述问题..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">提交举报</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.post-content {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--primary-700);
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+.reply-content {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* 移动端操作栏响应式 */
+@media (max-width: 576px) {
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start !important;
+    }
+    .btn-group {
+        width: 100%;
+        display: flex;
+    }
+    .btn-group .btn {
+        flex: 1;
+        font-size: 0.8125rem;
+        padding: 8px 12px;
+    }
+}
+</style>
+
+<script>
+// CSRF 工具函数：从 cookie 读取 csrftoken
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrftoken = getCookie('csrftoken');
+
+// 通用 AJAX POST 函数（同时兼容 jQuery 与原生 fetch）
+function ajaxPost(url, successMsg, errorMsg, onSuccess) {
+    // 优先用 jQuery，失败时回退到 fetch
+    if (typeof jQuery !== 'undefined' && jQuery.ajax) {
+        return jQuery.ajax({
+            url: url,
+            type: 'POST',
+            data: { csrfmiddlewaretoken: csrftoken },
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            dataType: 'json'
+        }).done(function(res) {
+            if (res && res.success) {
+                showToast(successMsg, 'success');
+                if (typeof onSuccess === 'function') onSuccess(res);
+            } else {
+                var msg = (res && (res.message || res.detail)) || errorMsg;
+                showToast(msg, 'error');
+            }
+        }).fail(function(xhr) {
+            handleAjaxError(xhr, errorMsg);
+        });
+    } else {
+        // 原生 fetch 回退
+        return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: 'csrfmiddlewaretoken=' + encodeURIComponent(csrftoken)
+        }).then(function(r) {
+            return r.json().then(function(data) { return { ok: r.ok, data: data }; });
+        }).then(function(out) {
+            if (out.ok && out.data && out.data.success) {
+                showToast(successMsg, 'success');
+                if (typeof onSuccess === 'function') onSuccess(out.data);
+            } else {
+                var msg = (out.data && (out.data.message || out.data.detail)) || errorMsg;
+                showToast(msg, 'error');
+            }
+        }).catch(function(err) {
+            showToast(errorMsg, 'error');
+        });
+    }
+}
+
+function handleAjaxError(xhr, errorMsg) {
+    var msg = errorMsg;
+    if (xhr.status === 401) {
+        msg = '请先登录后再操作';
+        setTimeout(function() { window.location.href = '/User/login/?next=' + encodeURIComponent(window.location.pathname); }, 800);
+    } else if (xhr.status === 403) {
+        try { msg = JSON.parse(xhr.responseText).message || '权限不足'; } catch(e) { msg = '权限不足'; }
+    } else if (xhr.status === 404) {
+        msg = '资源不存在';
+    } else if (xhr.responseText) {
+        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+    }
+    showToast(msg, 'error');
+}
+
+// 简易 Toast 提示
+function showToast(message, type) {
+    type = type || 'success';
+    var bg = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#3b82f6');
+    var icon = type === 'success' ? 'check-circle-fill' : (type === 'error' ? 'x-circle-fill' : 'info-circle-fill');
+    var $t = $('<div class="post-detail-toast" style="position:fixed;top:80px;right:24px;z-index:9999;'
+        + 'background:' + bg + ';color:#fff;padding:12px 18px;border-radius:10px;'
+        + 'box-shadow:0 8px 24px rgba(0,0,0,0.18);font-size:0.9375rem;font-weight:500;'
+        + 'display:flex;align-items:center;gap:8px;opacity:0;transform:translateX(20px);transition:all 0.3s;">'
+        + '<i class="bi bi-' + icon + '"></i><span></span></div>');
+    $t.find('span').text(message);
+    $('body').append($t);
+    setTimeout(function() { $t.css({ opacity: 1, transform: 'translateX(0)' }); }, 10);
+    setTimeout(function() {
+        $t.css({ opacity: 0, transform: 'translateX(20px)' });
+        setTimeout(function() { $t.remove(); }, 300);
+    }, 2200);
+}
+
+$(document).ready(function() {
+    // 点赞帖子
+    $(document).on('click', '.btn-like', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var postId = $btn.data('post-id');
+        if (!postId) { showToast('帖子ID缺失', 'error'); return; }
+        var liked = $btn.hasClass('active');
+        ajaxPost(
+            '/Community/post/' + postId + '/like/',
+            liked ? '已取消点赞' : '点赞成功',
+            '操作失败，请稍后重试',
+            function(res) {
+                $btn.toggleClass('active');
+                var $icon = $btn.find('i');
+                if (res.is_liked) {
+                    $icon.removeClass('bi-heart').addClass('bi-heart-fill');
+                } else {
+                    $icon.removeClass('bi-heart-fill').addClass('bi-heart');
+                }
+                if (typeof res.like_count !== 'undefined') {
+                    $btn.find('#like-count').text(res.like_count);
+                }
+            }
+        );
+    });
+
+    // 收藏帖子
+    $(document).on('click', '.btn-collect', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var postId = $btn.data('post-id');
+        if (!postId) { showToast('帖子ID缺失', 'error'); return; }
+        var collected = $btn.hasClass('active');
+        ajaxPost(
+            '/Community/post/' + postId + '/collect/',
+            collected ? '已取消收藏' : '收藏成功',
+            '操作失败，请稍后重试',
+            function(res) {
+                $btn.toggleClass('active');
+                var $icon = $btn.find('i');
+                if (res.is_collected) {
+                    $icon.removeClass('bi-bookmark').addClass('bi-bookmark-fill');
+                } else {
+                    $icon.removeClass('bi-bookmark-fill').addClass('bi-bookmark');
+                }
+            }
+        );
+    });
+
+    // 关注作者
+    $(document).on('click', '.btn-follow', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var userId = $btn.data('user-id');
+        if (!userId) { showToast('用户ID缺失', 'error'); return; }
+        var following = $btn.hasClass('active');
+        ajaxPost(
+            '/Community/user/' + encodeURIComponent(userId) + '/follow/',
+            following ? '已取消关注' : '关注成功',
+            '关注失败，请稍后重试',
+            function(res) {
+                $btn.toggleClass('active');
+                var $icon = $btn.find('i');
+                var $text = $btn.find('span');
+                if (res.is_following) {
+                    $icon.removeClass('bi-person-plus').addClass('bi-person-check');
+                    if ($text.length === 0) {
+                        $btn.contents().filter(function() {
+                            return this.nodeType === 3 && this.nodeValue.trim();
+                        }).remove();
+                        $btn.append(' <span>已关注</span>');
+                    } else {
+                        $text.text('已关注');
+                    }
+                } else {
+                    $icon.removeClass('bi-person-check').addClass('bi-person-plus');
+                    if ($text.length === 0) {
+                        $btn.contents().filter(function() {
+                            return this.nodeType === 3 && this.nodeValue.trim();
+                        }).remove();
+                        $btn.append(' <span>关注</span>');
+                    } else {
+                        $text.text('关注');
+                    }
+                }
+            }
+        );
+    });
+
+    // 点赞回复
+    $(document).on('click', '.btn-reply-like', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var replyId = $btn.data('reply-id');
+        if (!replyId) { showToast('回复ID缺失', 'error'); return; }
+        var liked = $btn.hasClass('active');
+        ajaxPost(
+            '/Community/reply/' + replyId + '/like/',
+            liked ? '已取消点赞' : '点赞成功',
+            '操作失败，请稍后重试',
+            function(res) {
+                $btn.toggleClass('active');
+                var $icon = $btn.find('i');
+                var $count = $btn.find('span');
+                if (res.is_liked) {
+                    $icon.removeClass('bi-heart').addClass('bi-heart-fill');
+                } else {
+                    $icon.removeClass('bi-heart-fill').addClass('bi-heart');
+                }
+                if ($count.length && res.like_count !== undefined) {
+                    $count.text(res.like_count);
+                }
+            }
+        );
+    });
+
+    // 回复某人
+    $(document).on('click', '.btn-reply', function(e) {
+        e.preventDefault();
+        var authorName = $(this).data('author-name');
+        var $form = $('form').has('textarea[name="content"]');
+        if (!$form.length) return;
+        var $textarea = $form.find('textarea[name="content"]');
+        var $parent = $('#reply-parent-id');
+        var replyId = $(this).data('reply-id');
+        if ($parent.length) { $parent.val(replyId || ''); }
+        var mention = authorName ? '@' + authorName + ' ' : '';
+        $textarea.val(mention).focus();
+        $('html, body').animate({ scrollTop: $form.offset().top - 100 }, 300);
+    });
+
+    // 删除帖子
+    $(document).on('click', '.btn-delete-post', function(e) {
+        e.preventDefault();
+        if (!confirm('确定要删除这篇帖子吗？')) return;
+        var postId = $(this).data('post-id');
+        ajaxPost(
+            '/Community/post/' + postId + '/delete/',
+            '删除成功',
+            '删除失败',
+            function() {
+                window.location.href = '/Community/';
+            }
+        );
+    });
+
+    // 举报帖子（AJAX 提交表单，阻止原生跳转）
+    $(document).on('submit', '#report-form', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $btn = $form.find('button[type="submit"]');
+        var origText = $btn.html();
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>提交中...');
+        var url = $form.attr('action');
+        var data = $form.serialize();
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            dataType: 'json'
+        }).done(function(res) {
+            if (res && res.success) {
+                showToast(res.message || '举报已提交，我们会尽快处理', 'success');
+                // 关闭模态框
+                var modal = bootstrap.Modal.getInstance(document.getElementById('reportModal'));
+                if (modal) modal.hide();
+                // 重置表单
+                $form[0].reset();
+            } else {
+                showToast((res && (res.message || res.detail)) || '提交失败，请稍后重试', 'error');
+            }
+        }).fail(function(xhr) {
+            handleAjaxError(xhr, '提交失败，请稍后重试');
+        }).always(function() {
+            $btn.prop('disabled', false).html(origText);
+        });
+    });
+});
+</script>
+{% endblock %}

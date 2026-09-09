@@ -1,0 +1,1305 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}智能问答助手 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       Chat App Layout - Three Column Design
+       ============================================ */
+
+    .chat-app {
+        display: flex;
+        height: calc(100vh - var(--navbar-height) - var(--footer-height) - 32px);
+        min-height: 600px;
+        gap: 0;
+        overflow: hidden;
+        background: #ffffff;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* ============================================
+       Column 1: Session List Sidebar (col-xl-2)
+       ============================================ */
+    .chat-sidebar {
+        background: var(--primary-50);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        overflow: hidden;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .chat-sidebar-header {
+        padding: var(--space-5);
+        border-bottom: 1px solid var(--border-light);
+        background: #ffffff;
+        flex-shrink: 0;
+        min-height: 80px;
+    }
+
+    .btn-new-session {
+        width: 100%;
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        color: white;
+        border: none;
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: var(--transition-base);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        box-shadow: var(--shadow-sm);
+        letter-spacing: -0.01em;
+    }
+
+    .btn-new-session:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        opacity: 0.95;
+    }
+
+    .btn-new-session:active {
+        transform: translateY(0);
+    }
+
+    .chat-session-list {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: var(--space-3);
+        max-height: calc(100vh - var(--navbar-height) - var(--footer-height) - 160px);
+        scroll-behavior: smooth;
+    }
+
+    .chat-session-list::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .chat-session-list::-webkit-scrollbar-track {
+        background: var(--primary-50);
+        border-radius: var(--radius-full);
+    }
+
+    .chat-session-list::-webkit-scrollbar-thumb {
+        background: var(--primary-300);
+        border-radius: var(--radius-full);
+        border: 2px solid var(--primary-50);
+        transition: background 0.2s ease;
+    }
+
+    .chat-session-list::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-400);
+    }
+
+    .chat-session-item {
+        padding: var(--space-3) var(--space-4);
+        margin-bottom: var(--space-1);
+        border-radius: var(--radius-lg);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: var(--transition-base);
+        background: transparent;
+    }
+
+    .chat-session-item:hover {
+        background: #ffffff;
+        border-color: var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .chat-session-item.active {
+        background: #ffffff;
+        border-color: rgba(99, 102, 241, 0.15);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .session-title {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--primary-800);
+        margin-bottom: var(--space-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+    }
+
+    .chat-session-item.active .session-title {
+        color: var(--accent-600);
+    }
+
+    .session-preview {
+        font-size: 0.75rem;
+        color: var(--primary-400);
+        margin-bottom: var(--space-1);
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+    }
+
+    .session-time {
+        font-size: 0.6875rem;
+        color: var(--primary-300);
+        font-weight: 500;
+    }
+
+    .chat-empty-sidebar {
+        text-align: center;
+        padding: var(--space-8) var(--space-4);
+        color: var(--primary-400);
+    }
+
+    .chat-empty-sidebar i {
+        font-size: 2.5rem;
+        margin-bottom: var(--space-3);
+        opacity: 0.3;
+        display: block;
+        color: var(--accent-500);
+    }
+
+    .chat-empty-sidebar .empty-text {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--primary-600);
+        margin-bottom: var(--space-1);
+    }
+
+    .chat-empty-sidebar .empty-subtext {
+        font-size: 0.75rem;
+        color: var(--primary-400);
+    }
+
+    /* ============================================
+       Column 2: Messages Area (col-xl-7)
+       ============================================ */
+    .chat-messages-area {
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-right: 1px solid var(--border-color);
+        overflow: hidden;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .chat-messages-header {
+        padding: var(--space-4) var(--space-6);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        flex-shrink: 0;
+        min-height: 64px;
+    }
+
+    .chat-messages-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary-800);
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        letter-spacing: -0.02em;
+    }
+
+    .chat-messages-title-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .chat-header-actions {
+        display: flex;
+        gap: var(--space-2);
+    }
+
+    .chat-header-action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        background: transparent;
+        color: var(--primary-500);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+        font-size: 1rem;
+    }
+
+    .chat-header-action-btn:hover {
+        background: var(--primary-50);
+        color: var(--primary-800);
+        border-color: rgba(99, 102, 241, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: var(--space-6);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-5);
+        min-width: 0;
+        background: #ffffff;
+        max-height: calc(100vh - var(--navbar-height) - var(--footer-height) - 120px);
+        scroll-behavior: smooth;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: var(--primary-50);
+        border-radius: var(--radius-full);
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--primary-300);
+        border-radius: var(--radius-full);
+        border: 2px solid var(--primary-50);
+        transition: background 0.2s ease;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-400);
+    }
+
+    .chat-msg {
+        display: flex;
+        animation: chatMsgIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes chatMsgIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .chat-msg-user {
+        justify-content: flex-end;
+    }
+
+    .chat-msg-ai {
+        justify-content: flex-start;
+    }
+
+    .chat-msg-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .chat-msg-ai .chat-msg-avatar {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        margin-right: 0.75rem;
+    }
+
+    .chat-msg-user .chat-msg-avatar {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        margin-left: 0.75rem;
+        order: 2;
+    }
+
+    .chat-msg-content {
+        display: flex;
+        flex-direction: column;
+        max-width: 75%;
+    }
+
+    .chat-msg-user .chat-msg-content {
+        align-items: flex-end;
+    }
+
+    .chat-msg-bubble {
+        padding: var(--space-4) var(--space-5);
+        border-radius: var(--radius-xl);
+        line-height: 1.7;
+        word-break: break-word;
+        font-size: 0.9375rem;
+        letter-spacing: -0.01em;
+    }
+
+    .chat-msg-ai .chat-msg-bubble {
+        background: var(--primary-50);
+        border: 1px solid var(--border-color);
+        color: var(--primary-700);
+        border-top-left-radius: var(--radius-sm);
+    }
+
+    .chat-msg-user .chat-msg-bubble {
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        color: #ffffff;
+        border-top-right-radius: var(--radius-sm);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* 错误消息气泡（红色警示） */
+    .chat-error-bubble {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+        border: 1px solid #fecaca !important;
+        border-left: 4px solid #ef4444 !important;
+        color: #991b1b !important;
+    }
+    .chat-msg-error .chat-msg-avatar {
+        background: linear-gradient(135deg, #fca5a5, #ef4444) !important;
+    }
+
+    .chat-msg-actions {
+        display: flex;
+        gap: var(--space-1);
+        margin-top: var(--space-2);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .chat-msg:hover .chat-msg-actions {
+        opacity: 1;
+    }
+
+    .chat-msg-action-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: transparent;
+        color: var(--primary-400);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-fast);
+        font-size: 0.75rem;
+    }
+
+    .chat-msg-action-btn:hover {
+        background: var(--primary-100);
+        color: var(--primary-600);
+    }
+
+    .chat-msg-meta {
+        font-size: 0.6875rem;
+        margin-top: var(--space-2);
+        color: var(--primary-400);
+        font-weight: 500;
+    }
+
+    .chat-msg-user .chat-msg-meta {
+        color: rgba(255, 255, 255, 0.7);
+        text-align: right;
+    }
+
+    .chat-msg-ai .chat-msg-meta {
+        color: var(--primary-300);
+    }
+
+    /* ============================================
+       Column 3: Input Panel Sidebar (col-xl-3)
+       ============================================ */
+    .chat-input-sidebar {
+        background: var(--primary-50);
+        display: flex;
+        flex-direction: column;
+        border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+        overflow: hidden;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .chat-input-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-5);
+        gap: var(--space-4);
+    }
+
+    .chat-input-panel-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding-bottom: var(--space-4);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chat-input-panel-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .chat-input-panel-label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--primary-800);
+        letter-spacing: -0.01em;
+    }
+
+    .chat-input-panel-sublabel {
+        font-size: 0.75rem;
+        color: var(--primary-400);
+        margin-top: 0.125rem;
+    }
+
+    .chat-input-panel-form {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 1rem;
+    }
+
+    .chat-input-panel-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-xl);
+        padding: var(--space-4);
+        transition: var(--transition-base);
+        min-height: 150px;
+    }
+
+    .chat-input-panel-group:focus-within {
+        border-color: var(--accent-500);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .chat-textarea {
+        flex: 1;
+        border: none;
+        outline: none;
+        resize: none;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        padding: 0;
+        background: transparent;
+        min-height: 100px;
+        color: var(--primary-700);
+        letter-spacing: -0.01em;
+    }
+
+    .chat-textarea::placeholder {
+        color: var(--primary-300);
+    }
+
+    .chat-input-panel-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+    }
+
+    .chat-input-panel-tips {
+        font-size: 0.6875rem;
+        color: var(--primary-400);
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+
+    .chat-voice-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--border-color);
+        background: #ffffff;
+        color: var(--primary-500);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+        flex-shrink: 0;
+        font-size: 1.125rem;
+    }
+
+    .chat-voice-btn:hover {
+        color: var(--accent-500);
+        border-color: rgba(99, 102, 241, 0.3);
+        background: rgba(99, 102, 241, 0.04);
+        transform: translateY(-1px);
+    }
+
+    .chat-send-btn {
+        height: 44px;
+        padding: 0 var(--space-6);
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        cursor: pointer;
+        transition: var(--transition-base);
+        box-shadow: var(--shadow-sm);
+        flex-shrink: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .chat-send-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .chat-send-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+    }
+
+    /* ============================================
+       Welcome / Empty States
+       ============================================ */
+    .chat-welcome {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .chat-welcome-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: var(--radius-2xl);
+        background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: var(--space-6);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .chat-welcome h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-800);
+        margin-bottom: var(--space-2);
+        letter-spacing: -0.02em;
+    }
+
+    .chat-welcome p {
+        font-size: 0.875rem;
+        color: var(--primary-600);
+        max-width: 380px;
+        margin-bottom: var(--space-8);
+        line-height: 1.7;
+    }
+
+    .chat-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        justify-content: center;
+        max-width: 500px;
+    }
+
+    .chat-suggestion-chip {
+        padding: var(--space-2) var(--space-4);
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-full);
+        font-size: 0.8125rem;
+        color: var(--primary-600);
+        cursor: pointer;
+        transition: var(--transition-base);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .chat-suggestion-chip:hover {
+        background: rgba(99, 102, 241, 0.06);
+        border-color: rgba(99, 102, 241, 0.25);
+        color: var(--accent-600);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* ============================================
+       Mobile Responsive
+       ============================================ */
+    .mobile-sidebar-toggle {
+        display: none;
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--border-color);
+        background: transparent;
+        color: var(--primary-600);
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+        font-size: 1.125rem;
+    }
+
+    .mobile-sidebar-toggle:hover {
+        background: var(--primary-50);
+        color: var(--primary-800);
+    }
+
+    .mobile-sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1040;
+    }
+
+    .mobile-sidebar-overlay.show {
+        display: block;
+    }
+
+    .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: var(--space-2) 0;
+    }
+
+    .typing-indicator span {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-500);
+        animation: typingDot 1.4s ease-in-out infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingDot {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+        30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ============================================
+       Responsive Breakpoints
+       ============================================ */
+    @media (max-width: 1199.98px) {
+        .chat-sidebar {
+            border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        }
+
+        .chat-input-sidebar {
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .chat-app {
+            flex-direction: column;
+            height: calc(100vh - var(--navbar-height) - var(--footer-height) - 24px);
+            border-radius: var(--radius-xl);
+        }
+
+        .chat-sidebar {
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            bottom: 0;
+            width: 300px;
+            z-index: 1050;
+            transform: translateX(-100%);
+            transition: transform var(--transition-base);
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+            box-shadow: var(--shadow-2xl);
+        }
+
+        .chat-sidebar.show {
+            transform: translateX(0);
+        }
+
+        .chat-messages-area {
+            border-radius: 0;
+            border-right: none;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-input-sidebar {
+            border-radius: 0;
+            border-top: 1px solid var(--border-color);
+            max-height: 280px;
+            flex-shrink: 0;
+        }
+
+        .chat-input-panel {
+            padding: var(--space-4) var(--space-5);
+        }
+
+        .chat-input-panel-group {
+            min-height: auto;
+            flex: none;
+        }
+
+        .chat-textarea {
+            min-height: 50px;
+            max-height: 80px;
+        }
+
+        .mobile-sidebar-toggle {
+            display: flex;
+        }
+
+        .chat-msg-content {
+            max-width: 85%;
+        }
+
+        .chat-suggestions {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chat-suggestion-chip {
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .chat-app {
+            border-radius: var(--radius-lg);
+            height: calc(100vh - var(--navbar-height) - var(--footer-height) - 16px);
+        }
+
+        .chat-messages {
+            padding: var(--space-4);
+        }
+
+        .chat-input-panel {
+            padding: var(--space-3);
+        }
+
+        .chat-suggestion-chip {
+            font-size: 0.75rem;
+            padding: var(--space-2) var(--space-3);
+        }
+
+        .chat-msg-bubble {
+            padding: var(--space-3) var(--space-4);
+            font-size: 0.875rem;
+        }
+
+        .chat-welcome {
+            padding: var(--space-8) var(--space-4);
+        }
+
+        .chat-welcome h3 {
+            font-size: 1.125rem;
+        }
+
+        .chat-welcome p {
+            font-size: 0.8125rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<div class="chat-app row g-0">
+    <!-- Column 1: Session List Sidebar (col-xl-2) -->
+    <div class="chat-sidebar col-xl-2" id="chatSidebar">
+        <div class="chat-sidebar-header">
+            <button type="button" class="btn-new-session" onclick="newSession()">
+                <i class="bi bi-plus-lg"></i> 新建会话
+            </button>
+        </div>
+        <div class="chat-session-list" id="sessionList">
+            {% if length == 0 %}
+            <div class="chat-empty-sidebar">
+                <i class="bi bi-chat-square-text"></i>
+                <div class="empty-text">暂无历史记录</div>
+                <div class="empty-subtext">开始您的第一次对话吧</div>
+            </div>
+            {% else %}
+            {% for time, question, answer in chat_history %}
+            <div class="chat-session-item{% if forloop.first %} active{% endif %}"
+                 data-before="{{ time|date:'Y-m-d H:i:s' }}"
+                 onclick="switchSession(this)">
+                <div class="session-title">{{ question|truncatechars:20 }}</div>
+                <div class="session-preview">{{ answer|striptags|truncatechars:30 }}</div>
+                <div class="session-time">{{ time|date:'m-d H:i' }}</div>
+            </div>
+            {% endfor %}
+{% endif %}
+        </div>
+    </div>
+
+    <!-- Column 2: Messages Area (col-xl-7) -->
+    <div class="chat-messages-area col-xl-7">
+        <div class="chat-messages-header">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <button class="mobile-sidebar-toggle" onclick="toggleMobileSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="chat-messages-title" id="chatMainTitle">
+                    <div class="chat-messages-title-icon">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <span id="currentSessionTitle">智能问答助手</span>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="chat-header-action-btn" title="清空对话" onclick="clearCurrentChat()">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="messageHistory">
+            {% if not result and length == 0 %}
+            <div class="chat-welcome" id="chatWelcome">
+                <div class="chat-welcome-icon"><i class="bi bi-robot"></i></div>
+                <h3>濒危语言学习助手</h3>
+                <p>您好！我是您的濒危语言学习助手，可以问我关于濒危语言的学习、保护、现状和研究等方面的问题。</p>
+                <div class="chat-suggestions">
+                    <span class="chat-suggestion-chip" onclick="setQuestion('什么是濒危语言？')">什么是濒危语言？</span>
+                    <span class="chat-suggestion-chip" onclick="setQuestion('如何保护濒危语言？')">如何保护濒危语言？</span>
+                    <span class="chat-suggestion-chip" onclick="setQuestion('中国有哪些濒危语言？')">中国有哪些濒危语言？</span>
+                    <span class="chat-suggestion-chip" onclick="setQuestion('满语的现状如何？')">满语的现状如何？</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% for time, question, answer in chat_history %}
+            <div class="chat-msg chat-msg-user" data-msg-type="user">
+                <div class="chat-msg-content">
+                    <div class="chat-msg-bubble">{{ question }}</div>
+                    <div class="chat-msg-meta">{{ name }} · {{ time|date:'H:i' }}</div>
+                </div>
+                <div class="chat-msg-avatar"><i class="bi bi-person-fill"></i></div>
+            </div>
+            <div class="chat-msg chat-msg-ai" data-msg-type="ai">
+                <div class="chat-msg-avatar"><i class="bi bi-robot"></i></div>
+                <div class="chat-msg-content">
+                    <div class="chat-msg-bubble">{{ answer|safe }}</div>
+                    <div class="chat-msg-actions">
+                        <button class="chat-msg-action-btn" title="复制" onclick="copyMessage(this)">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                        <button class="chat-msg-action-btn" title="删除" onclick="deleteMessage(this)">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                    <div class="chat-msg-meta">助手 · {{ time|date:'H:i' }}</div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if result %}
+            <div class="chat-msg chat-msg-user" data-msg-type="user">
+                <div class="chat-msg-content">
+                    <div class="chat-msg-bubble">{{ language_text }}</div>
+                    <div class="chat-msg-meta">{{ name }} · {% now 'H:i' %}</div>
+                </div>
+                <div class="chat-msg-avatar"><i class="bi bi-person-fill"></i></div>
+            </div>
+            <div class="chat-msg chat-msg-ai" data-msg-type="ai">
+                <div class="chat-msg-avatar"><i class="bi bi-robot"></i></div>
+                <div class="chat-msg-content">
+                    <div class="chat-msg-bubble">{{ result|safe }}</div>
+                    <div class="chat-msg-actions">
+                        <button class="chat-msg-action-btn" title="复制" onclick="copyMessage(this)">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                        <button class="chat-msg-action-btn" title="删除" onclick="deleteMessage(this)">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                    <div class="chat-msg-meta">助手 · {% now 'H:i' %}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Column 3: Input Panel Sidebar (col-xl-3) -->
+    <div class="chat-input-sidebar col-xl-3">
+        <div class="chat-input-panel">
+            <div class="chat-input-panel-header">
+                <div class="chat-input-panel-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <div>
+                    <div class="chat-input-panel-label">输入您的问题</div>
+                    <div class="chat-input-panel-sublabel">Enter 发送 · Shift+Enter 换行</div>
+                </div>
+            </div>
+            <form action="" method="post" id="chatForm" class="chat-input-panel-form" onsubmit="return false;">
+                {% csrf_token %}
+                <div class="chat-input-panel-group">
+                    <textarea class="chat-textarea" name="language_text" id="chatTextarea" placeholder="在此输入您的问题..." onkeydown="handleKeyDown(event)" oninput="toggleSendBtn()"></textarea>
+                </div>
+                <div class="chat-input-panel-actions">
+                    <div class="chat-input-panel-tips">
+                        <i class="bi bi-lightning"></i> 支持语音输入
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button type="button" class="chat-voice-btn" title="语音输入">
+                            <i class="bi bi-mic"></i>
+                        </button>
+                        <button type="button" class="chat-send-btn" id="sendBtn" disabled title="发送" onclick="sendMessage()">
+                            <i class="bi bi-send-fill"></i>
+                            <span>发送</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+function handleKeyDown(e) {
+    if (e.keyCode === 13 && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function toggleSendBtn() {
+    var textarea = document.getElementById('chatTextarea');
+    var sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+        sendBtn.disabled = !textarea.value.trim();
+    }
+}
+
+function setQuestion(text) {
+    var textarea = document.getElementById('chatTextarea');
+    textarea.value = text;
+    textarea.focus();
+    toggleSendBtn();
+}
+
+function showTypingIndicator() {
+    var messages = document.getElementById('messageHistory');
+    if (!messages) return;
+
+    var indicator = document.createElement('div');
+    indicator.id = 'typingIndicator';
+    indicator.className = 'chat-msg chat-msg-ai';
+    indicator.innerHTML = `
+        <div class="chat-msg-avatar"><i class="bi bi-robot"></i></div>
+        <div class="chat-msg-content">
+            <div class="chat-msg-bubble" style="padding: 12px 16px;">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+    `;
+    messages.appendChild(indicator);
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    var indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+function sendMessage() {
+    var textarea = document.getElementById('chatTextarea');
+    var message = textarea.value.trim();
+    if (!message) return;
+
+    var sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = true;
+
+    var welcome = document.getElementById('chatWelcome');
+    if (welcome) welcome.style.display = 'none';
+
+    var messages = document.getElementById('messageHistory');
+
+    // Add user message immediately
+    var userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg chat-msg-user';
+    userMsg.innerHTML = `
+        <div class="chat-msg-content">
+            <div class="chat-msg-bubble">${escapeHtml(message)}</div>
+            <div class="chat-msg-meta">${escapeHtml(document.querySelector('.user-info span')?.textContent || '用户')} · 刚刚</div>
+        </div>
+        <div class="chat-msg-avatar"><i class="bi bi-person-fill"></i></div>
+    `;
+    messages.appendChild(userMsg);
+    textarea.value = '';
+    toggleSendBtn();
+    scrollToBottom();
+
+    showTypingIndicator();
+
+    var formData = new FormData();
+    formData.append('language_text', message);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        hideTypingIndicator();
+        if (data.status === 'success') {
+            var aiMsg = document.createElement('div');
+            aiMsg.className = 'chat-msg chat-msg-ai';
+            aiMsg.innerHTML = `
+                <div class="chat-msg-avatar"><i class="bi bi-robot"></i></div>
+                <div class="chat-msg-content">
+                    <div class="chat-msg-bubble">${data.answer}</div>
+                    <div class="chat-msg-actions">
+                        <button class="chat-msg-action-btn" title="复制" onclick="copyMessage(this)">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                        <button class="chat-msg-action-btn" title="删除" onclick="deleteMessage(this)">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                    <div class="chat-msg-meta">助手 · ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}</div>
+                </div>
+            `;
+            messages.appendChild(aiMsg);
+            scrollToBottom();
+        } else {
+            showChatError(data.message || '发送失败，请稍后重试');
+        }
+    })
+    .catch(function(err) {
+        hideTypingIndicator();
+        showChatError('网络错误，请稍后重试');
+        console.error(err);
+    })
+    .finally(function() {
+        sendBtn.disabled = false;
+    });
+}
+
+function showChatError(message) {
+    var messages = document.getElementById('messageHistory');
+    var errMsg = document.createElement('div');
+    errMsg.className = 'chat-msg chat-msg-ai chat-msg-error';
+    errMsg.innerHTML = `
+        <div class="chat-msg-avatar"><i class="bi bi-exclamation-triangle"></i></div>
+        <div class="chat-msg-content">
+            <div class="chat-msg-bubble chat-error-bubble">
+                <div style="font-weight:600;margin-bottom:6px;color:#dc2626;">
+                    <i class="bi bi-exclamation-circle me-1"></i>出错啦
+                </div>
+                <div style="white-space:pre-wrap;">${escapeHtml(message)}</div>
+            </div>
+            <div class="chat-msg-meta">系统 · ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}</div>
+        </div>
+    `;
+    messages.appendChild(errMsg);
+    scrollToBottom();
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function copyMessage(btn) {
+    var bubble = btn.closest('.chat-msg-content').querySelector('.chat-msg-bubble');
+    var text = bubble.textContent.trim();
+    navigator.clipboard.writeText(text).then(function() {
+        var icon = btn.querySelector('i');
+        icon.className = 'bi bi-check-lg';
+        setTimeout(function() { icon.className = 'bi bi-clipboard'; }, 1500);
+    });
+}
+
+function deleteMessage(btn) {
+    var msg = btn.closest('.chat-msg');
+    msg.style.opacity = '0';
+    msg.style.transform = 'translateX(20px)';
+    msg.style.transition = 'all 0.3s';
+    setTimeout(function() { msg.remove(); }, 300);
+}
+
+function switchSession(item) {
+    document.querySelectorAll('.chat-session-item').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    item.classList.add('active');
+
+    var title = item.querySelector('.session-title').textContent;
+    document.getElementById('currentSessionTitle').textContent = title;
+
+    var beforeTime = item.getAttribute('data-before');
+    var messages = document.getElementById('messageHistory');
+
+    fetch('/Dashboard/language_chat/history/?before=' + encodeURIComponent(beforeTime), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.status === 'success' && data.messages.length > 0) {
+            var html = '';
+            data.messages.forEach(function(msg) {
+                html += `
+                <div class="chat-msg chat-msg-user" data-msg-type="user">
+                    <div class="chat-msg-content">
+                        <div class="chat-msg-bubble">${escapeHtml(msg.question)}</div>
+                        <div class="chat-msg-meta">${escapeHtml(document.querySelector('.user-info span')?.textContent || '用户')} · ${formatTime(msg.time)}</div>
+                    </div>
+                    <div class="chat-msg-avatar"><i class="bi bi-person-fill"></i></div>
+                </div>
+                <div class="chat-msg chat-msg-ai" data-msg-type="ai">
+                    <div class="chat-msg-avatar"><i class="bi bi-robot"></i></div>
+                    <div class="chat-msg-content">
+                        <div class="chat-msg-bubble">${msg.answer}</div>
+                        <div class="chat-msg-actions">
+                            <button class="chat-msg-action-btn" title="复制" onclick="copyMessage(this)">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                            <button class="chat-msg-action-btn" title="删除" onclick="deleteMessage(this)">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                        <div class="chat-msg-meta">助手 · ${formatTime(msg.time)}</div>
+                    </div>
+                </div>`;
+            });
+            messages.innerHTML = html;
+            scrollToBottom();
+        }
+    })
+    .catch(function(err) {
+        console.error('加载历史记录失败:', err);
+    });
+
+    if (window.innerWidth <= 991) {
+        toggleMobileSidebar();
+    }
+}
+
+function formatTime(timeStr) {
+    try {
+        var d = new Date(timeStr);
+        return d.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
+    } catch (e) {
+        return '';
+    }
+}
+
+function newSession() {
+    var textarea = document.getElementById('chatTextarea');
+    textarea.value = '';
+    toggleSendBtn();
+    textarea.focus();
+
+    var messages = document.getElementById('messageHistory');
+    messages.innerHTML = `
+        <div class="chat-welcome" id="chatWelcome">
+            <div class="chat-welcome-icon"><i class="bi bi-robot"></i></div>
+            <h3>濒危语言学习助手</h3>
+            <p>您好！我是您的濒危语言学习助手，可以问我关于濒危语言的学习、保护、现状和研究等方面的问题。</p>
+            <div class="chat-suggestions">
+                <span class="chat-suggestion-chip" onclick="setQuestion('什么是濒危语言？')">什么是濒危语言？</span>
+                <span class="chat-suggestion-chip" onclick="setQuestion('如何保护濒危语言？')">如何保护濒危语言？</span>
+                <span class="chat-suggestion-chip" onclick="setQuestion('中国有哪些濒危语言？')">中国有哪些濒危语言？</span>
+                <span class="chat-suggestion-chip" onclick="setQuestion('满语的现状如何？')">满语的现状如何？</span>
+            </div>
+        </div>
+    `;
+    scrollToBottom();
+}
+
+function clearCurrentChat() {
+    if (confirm('确定要清空当前对话吗？')) {
+        newSession();
+    }
+}
+
+function toggleMobileSidebar() {
+    var sidebar = document.getElementById('chatSidebar');
+    var overlay = document.getElementById('mobileSidebarOverlay');
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+}
+
+function scrollToBottom() {
+    var container = document.getElementById('messageHistory');
+    if (container) {
+        setTimeout(function() {
+            container.scrollTop = container.scrollHeight;
+        }, 100);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+    toggleSendBtn();
+});
+</script>
+{% endblock %}

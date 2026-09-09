@@ -1,0 +1,822 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}濒危语言可视化 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .viz-page-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        margin: 0 -2rem 2rem -2rem;
+        padding: 3rem 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .viz-page-header::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 50%, rgba(245,158,11,0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    .viz-page-header::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M20 0L40 20L20 40L0 20z'/%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    .viz-stat-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .viz-stat-item {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+    .viz-stat-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .viz-stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .viz-stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--primary-400, #94a3b8);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.25rem;
+    }
+    .viz-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: box-shadow 0.3s;
+    }
+    .viz-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .viz-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-light, rgba(15,23,42,0.04));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .viz-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--primary-800, #1e293b);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .viz-card-title i {
+        color: var(--accent-500, #6366f1);
+    }
+    .viz-card-body {
+        padding: 1.5rem;
+    }
+    .chart-area {
+        width: 100%;
+        height: 400px;
+    }
+    .analysis-input {
+        width: 100%;
+        border: 1.5px solid var(--border-color, rgba(15,23,42,0.08));
+        border-radius: 12px;
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9375rem;
+        transition: all 0.3s;
+        background: var(--primary-50, #f8fafc);
+    }
+    .analysis-input:focus {
+        border-color: var(--accent-500, #6366f1);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        outline: none;
+        background: #ffffff;
+    }
+    .analysis-btn {
+        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
+        color: white;
+        border: none;
+        padding: 0.625rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+    }
+    .analysis-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+    }
+    .analysis-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .analysis-btn .spinner-border {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
+    .analysis-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 2rem;
+        color: var(--accent-600, #4f46e5);
+        font-weight: 500;
+    }
+    .analysis-loading .spinner-border {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-width: 0.2em;
+    }
+    .analysis-result-box {
+        background: linear-gradient(135deg, var(--primary-50, #f8fafc) 0%, rgba(99,102,241,0.03) 100%);
+        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1.25rem;
+        white-space: pre-line;
+        line-height: 1.7;
+        color: var(--primary-700, #334155);
+        font-size: 0.9375rem;
+    }
+    .map-search-input {
+        border: 1.5px solid var(--border-color, rgba(15,23,42,0.08));
+        border-radius: 10px;
+        padding: 0.625rem 1rem;
+        font-size: 0.9375rem;
+        transition: all 0.3s;
+    }
+    .map-search-input:focus {
+        border-color: var(--accent-500, #6366f1);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        outline: none;
+    }
+    .map-search-btn {
+        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
+        color: white;
+        border: none;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .map-search-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    }
+    .lang-list-item {
+        padding: 0.625rem 0.875rem;
+        margin-bottom: 0.375rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+        color: var(--primary-600, #475569);
+        border: 1px solid transparent;
+    }
+    .lang-list-item:hover {
+        background: rgba(99,102,241,0.06);
+        border-color: rgba(99,102,241,0.15);
+        color: var(--accent-600, #4f46e5);
+    }
+    .lang-list-item .badge {
+        font-size: 0.625rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+    }
+    #map-container {
+        width: 100%;
+        height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    @media (max-width: 767.98px) {
+        .viz-page-header { padding: 2rem 1.5rem; }
+        .chart-area { height: 300px; }
+        #map-container { height: 350px; }
+        .viz-stat-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="viz-page-header">
+    <div class="container position-relative" style="z-index:2;">
+        <h1 class="mb-2" style="font-size:2.25rem; font-weight:800; letter-spacing:-0.02em;"><i class="bi bi-bar-chart-line me-3"></i>数据可视化</h1>
+        <p style="opacity:0.8; font-size:1rem; max-width:600px;">沉浸式探索濒危语言数据，多维度呈现语言保护现状与趋势</p>
+        <nav aria-label="breadcrumb" class="mt-2">
+            <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                <li class="breadcrumb-item"><a href="javascript:history.back()" style="color:rgba(255,255,255,0.8);">返回</a></li>
+                <li class="breadcrumb-item active" style="color:rgba(255,255,255,0.6);">数据可视化</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="viz-stat-bar">
+    <div class="viz-stat-item">
+        <div class="viz-stat-number">{{ data.unsafe|default:0 }}</div>
+        <div class="viz-stat-label">不安全</div>
+    </div>
+    <div class="viz-stat-item">
+        <div class="viz-stat-number">{{ data.danger|default:0 }}</div>
+        <div class="viz-stat-label">危险</div>
+    </div>
+    <div class="viz-stat-item">
+        <div class="viz-stat-number">{{ data.endangered|default:0 }}</div>
+        <div class="viz-stat-label">濒危</div>
+    </div>
+    <div class="viz-stat-item">
+        <div class="viz-stat-number">{{ data.seriously_endangered|default:0 }}</div>
+        <div class="viz-stat-label">垂危</div>
+    </div>
+    <div class="viz-stat-item">
+        <div class="viz-stat-number">{{ data.extinct|default:0 }}</div>
+        <div class="viz-stat-label">灭绝</div>
+    </div>
+</div>
+
+<div class="viz-card">
+    <div class="viz-card-header">
+        <div class="viz-card-title"><i class="bi bi-bar-chart-fill"></i> 濒危语言数据统计</div>
+    </div>
+    <div class="viz-card-body">
+        <div class="chart-area" id="barChart"></div>
+    </div>
+</div>
+
+<div class="viz-card">
+    <div class="viz-card-header">
+        <div class="viz-card-title"><i class="bi bi-graph-up-arrow"></i> 濒危语言关注度趋势</div>
+    </div>
+    <div class="viz-card-body">
+        <div class="chart-area" id="lineChart"></div>
+    </div>
+</div>
+
+<div class="viz-card">
+    <div class="viz-card-header">
+        <div class="viz-card-title"><i class="bi bi-cpu"></i> 濒危语言分析助手</div>
+    </div>
+    <div class="viz-card-body">
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control analysis-input" id="analysis-input" placeholder="请输入需要分析的内容..." value="">
+            <button type="button" class="analysis-btn" id="analysis-btn" onclick="submitAnalysis()">
+                <i class="bi bi-lightning-charge-fill"></i> 分析
+            </button>
+        </div>
+        {% csrf_token %}
+        <div id="analysis-loading" style="display: none;">
+            <div class="analysis-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <span>正在分析，请稍候...</span>
+            </div>
+        </div>
+        <div id="analysis-result" style="display: {% if result %}block{% else %}none{% endif %};">
+            <div class="analysis-result-box" id="analysis-result-content">
+                {{ result|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="viz-card">
+    <div class="viz-card-header">
+        <div class="viz-card-title"><i class="bi bi-radar"></i> 濒危语言多维度对比</div>
+    </div>
+    <div class="viz-card-body">
+        <div class="chart-area" id="radarChart"></div>
+    </div>
+</div>
+
+<div class="viz-card" id="languageMapSection">
+    <div class="viz-card-header">
+        <div class="viz-card-title"><i class="bi bi-geo-alt-fill"></i> 濒危语言地理分布</div>
+        <a href="{% url 'Dashboard:language_map' %}" class="btn btn-sm btn-primary"><i class="bi bi-box-arrow-up-right me-1"></i>打开互动地图</a>
+    </div>
+    <div class="viz-card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div style="background:var(--primary-50, #f8fafc); border-radius:12px; padding:1rem; max-height:500px; overflow-y:auto;">
+                    <h6 style="font-weight:700; color:var(--primary-700, #334155); margin-bottom:0.75rem; font-size:0.8125rem; text-transform:uppercase; letter-spacing:0.05em;">
+                        <i class="bi bi-list-ul me-1"></i> 语言列表
+                    </h6>
+                    <ul id="language-list" style="list-style:none; padding:0; margin:0;"></ul>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="d-flex gap-2 mb-3">
+                    <input type="text" id="search-input" class="form-control map-search-input" placeholder="输入濒危语言名称搜索...">
+                    <button class="map-search-btn" onclick="searchLanguage()"><i class="bi bi-search me-1"></i>搜索</button>
+                </div>
+                <div id="map-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load ECharts and AMap BEFORE initialization code -->
+<script src="{% static 'js/echarts.js' %}"></script>
+<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=9a12dd3f64fc29a910c0913d36567cd2"></script>
+
+<script>
+(function() {
+    var barChartEl = document.getElementById('barChart');
+    var lineChartEl = document.getElementById('lineChart');
+    var radarChartEl = document.getElementById('radarChart');
+
+    if (typeof echarts === 'undefined' || !barChartEl || !lineChartEl || !radarChartEl) {
+        console.error('ECharts not loaded or chart elements not found');
+        return;
+    }
+
+    var barChart = echarts.init(barChartEl);
+    barChart.setOption({
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e2e8f0', borderWidth: 1, textStyle: { color: '#1e293b' } },
+        grid: { left: '3%', right: '4%', bottom: '12%', containLabel: true },
+        xAxis: {
+            type: 'category',
+            data: ['不安全', '危险', '濒危', '垂危', '灭绝'],
+            axisLabel: { interval: 0, rotate: 0, color: '#64748b', fontSize: 12 },
+            axisLine: { lineStyle: { color: '#e2e8f0' } }
+        },
+        yAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+        series: [{
+            data: [{{ data.unsafe|default:0 }}, {{ data.danger|default:0 }}, {{ data.endangered|default:0 }}, {{ data.seriously_endangered|default:0 }}, {{ data.extinct|default:0 }}],
+            type: 'bar',
+            barWidth: '50%',
+            itemStyle: {
+                borderRadius: [6, 6, 0, 0],
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: '#6366f1' },
+                    { offset: 1, color: '#818cf8' }
+                ])
+            },
+            emphasis: { itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#4f46e5' }, { offset: 1, color: '#6366f1' }]) } }
+        }]
+    });
+
+    var lineChart = echarts.init(lineChartEl);
+    var colors = ['#6366f1','#818cf8','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899','#14b8a6'];
+
+    // 使用后端传递的真实数据
+    var languageNames = [
+        {% for name in language_names %}
+            '{{ name|default:"未知" }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    var languageSpeakers = [
+        {% for count in language_speakers %}
+            {{ count }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    var languageCounts = [
+        {% for count in language_counts %}
+            {{ count }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // 折线图：各语系平均使用人数
+    var lineSeries = [{
+        name: '平均使用人数',
+        type: 'bar',
+        data: languageSpeakers,
+        itemStyle: {
+            borderRadius: [6, 6, 0, 0],
+            color: function(params) {
+                return colors[params.dataIndex % colors.length];
+            }
+        },
+        label: {
+            show: true,
+            position: 'top',
+            formatter: '{c}',
+            fontSize: 11,
+            color: '#64748b'
+        }
+    }, {
+        name: '语言数量',
+        type: 'line',
+        yAxisIndex: 1,
+        data: languageCounts,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: { width: 3, color: '#ef4444' },
+        itemStyle: { color: '#ef4444' }
+    }];
+
+    lineChart.setOption({
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            textStyle: { color: '#1e293b' },
+            formatter: function(params) {
+                var result = '<strong>' + params[0].name + '</strong><br/>';
+                params.forEach(function(item) {
+                    result += item.marker + ' ' + item.seriesName + ': ' +
+                        (item.seriesName === '平均使用人数' ? item.value.toLocaleString() + ' 人' : item.value + ' 种') + '<br/>';
+                });
+                return result;
+            }
+        },
+        legend: { data: ['平均使用人数', '语言数量'], bottom: 0, textStyle: { color: '#64748b', fontSize: 11 } },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: {
+            type: 'category',
+            data: languageNames,
+            axisLabel: { color: '#64748b', rotate: 30, fontSize: 11 },
+            axisLine: { lineStyle: { color: '#e2e8f0' } }
+        },
+        yAxis: [
+            { type: 'value', name: '使用人数', axisLabel: { color: '#94a3b8', formatter: function(v) { return v >= 10000 ? (v/10000).toFixed(0) + '万' : v; } }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+            { type: 'value', name: '语言数量', axisLabel: { color: '#94a3b8' }, splitLine: { show: false } }
+        ],
+        series: lineSeries
+    });
+
+    var radarChart = echarts.init(radarChartEl);
+    var endangermentData = [
+        {% for item in endangerment_data %}
+            { name: '{{ item.name }}', avg_speakers: {{ item.avg_speakers }}, count: {{ item.count }}, max_speakers: {{ item.max_speakers }} }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // 计算雷达图最大值
+    var maxSpeakers = 0, maxCount = 0, maxMax = 0;
+    endangermentData.forEach(function(d) {
+        if (d.avg_speakers > maxSpeakers) maxSpeakers = d.avg_speakers;
+        if (d.count > maxCount) maxCount = d.count;
+        if (d.max_speakers > maxMax) maxMax = d.max_speakers;
+    });
+    maxSpeakers = Math.ceil(maxSpeakers * 1.2 / 1000) * 1000;
+    maxCount = Math.ceil(maxCount * 1.2 / 10) * 10;
+    maxMax = Math.ceil(maxMax * 1.2 / 10000) * 10000;
+
+    var radarSeriesData = endangermentData.map(function(d, i) {
+        return {
+            value: [d.avg_speakers, d.count, d.max_speakers],
+            name: d.name,
+            lineStyle: { color: colors[i] },
+            itemStyle: { color: colors[i] },
+            areaStyle: { color: colors[i].replace(')', ',0.1)').replace('rgb', 'rgba') }
+        };
+    });
+
+    radarChart.setOption({
+        tooltip: {
+            trigger: 'item',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            textStyle: { color: '#1e293b' },
+            formatter: function(params) {
+                var d = params.data;
+                return '<strong>' + d.name + '</strong><br/>' +
+                    '平均使用人数: ' + d.value[0].toLocaleString() + ' 人<br/>' +
+                    '语言数量: ' + d.value[1] + ' 种<br/>' +
+                    '最大使用人数: ' + d.value[2].toLocaleString() + ' 人';
+            }
+        },
+        legend: {
+            data: endangermentData.map(function(d) { return d.name; }),
+            bottom: 0,
+            textStyle: { color: '#64748b', fontSize: 11 }
+        },
+        radar: {
+            indicator: [
+                { name: '平均使用人数', max: maxSpeakers },
+                { name: '语言数量', max: maxCount },
+                { name: '最大使用人数', max: maxMax }
+            ],
+            axisName: { color: '#64748b', fontSize: 12 },
+            splitArea: { areaStyle: { color: ['rgba(99,102,241,0.02)','rgba(99,102,241,0.04)','rgba(99,102,241,0.02)','rgba(99,102,241,0.04)','rgba(99,102,241,0.02)'] } },
+            splitLine: { lineStyle: { color: '#e2e8f0' } },
+            axisLine: { lineStyle: { color: '#e2e8f0' } }
+        },
+        series: [{
+            name: '濒危等级对比',
+            type: 'radar',
+            data: radarSeriesData
+        }]
+    });
+
+    window.addEventListener('resize', function() {
+        barChart.resize();
+        lineChart.resize();
+        radarChart.resize();
+    });
+})();
+</script>
+
+<script>
+(function() {
+    if (typeof AMap === 'undefined') {
+        console.error('AMap not loaded');
+        return;
+    }
+
+    var map = new AMap.Map('map-container', {
+        zoom: 4,
+        mapStyle: 'amap://styles/normal',  // 标准底图，显示街道和建筑
+        viewMode: '2D',
+        pitch: 0
+    });
+
+    // 添加建筑物 3D 图层（显示建筑轮廓）
+    AMap.plugin('AMap.Buildings', function() {
+        var buildings = new AMap.Buildings({
+            zIndex: 13,
+            opacity: 0.8,
+            wallColor: [200, 200, 220],
+            roofColor: [180, 180, 200],
+            viewMode: '2D',
+            heightFactor: 1
+        });
+        map.add(buildings);
+    });
+
+    AMap.plugin('AMap.Geolocation', function() {
+        var geolocation = new AMap.Geolocation({
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0,
+            convert: true,
+            showButton: true,
+            showMarker: true,
+            showCircle: true
+        });
+        map.addControl(geolocation);
+        geolocation.getCurrentPosition(function(status, result) {
+            if (status === 'complete') {
+                map.setCenter([result.position.lng, result.position.lat]);
+            } else {
+                setTimeout(function() {
+                    geolocation.getCurrentPosition(function(status, result) {
+                        if (status === 'complete') {
+                            map.setCenter([result.position.lng, result.position.lat]);
+                        } else {
+                            map.setCenter([105.200213, 36.076518]);
+                        }
+                    });
+                }, 3000);
+            }
+        });
+    });
+
+    function searchLanguage() {
+        var input = document.getElementById('search-input').value;
+        var found = false;
+        endangeredLanguages.forEach(function(lang) {
+            if (lang.name === input) {
+                // 跳转到该位置并放大
+                map.setCenter([lang.longitude, lang.latitude]);
+                map.setZoom(10);
+
+                // 创建信息窗口内容
+                var infoContent = '<div style="padding:14px;max-width:320px;"><h4 style="margin:0 0 10px;color:#1e293b;font-size:16px;font-weight:700;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">' + lang.name + '</h4><div style="font-size:13px;color:#475569;line-height:1.9;">';
+                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">濒危等级：</span><span style="font-weight:600;color:' + (dangerColors[lang.endangerment]||'#64748b') + ';">' + lang.endangerment + '</span></div>';
+                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">使用人数：</span><span style="font-weight:500;">' + lang.speakers + '</span></div>';
+                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">主要分布：</span><span style="font-weight:500;">' + lang.region + '</span></div>';
+                infoContent += '<div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">地理坐标：</span><span style="font-weight:500;font-size:12px;">' + lang.latitude.toFixed(4) + ', ' + lang.longitude.toFixed(4) + '</span></div>';
+                infoContent += '</div></div>';
+
+                var infoWindow = new AMap.InfoWindow({
+                    content: infoContent,
+                    offset: new AMap.Pixel(0, -35),
+                    autoMove: false
+                });
+                infoWindow.open(map, new AMap.LngLat(lang.longitude, lang.latitude));
+
+                // 添加一个显著的标记
+                var marker = new AMap.Marker({
+                    position: [lang.longitude, lang.latitude],
+                    map: map,
+                    icon: new AMap.Icon({
+                        size: new AMap.Size(32, 48),
+                        image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+                        imageSize: new AMap.Size(32, 48)
+                    }),
+                    offset: new AMap.Pixel(-16, -48)
+                });
+
+                found = true;
+            }
+        });
+        if (!found) alert('未找到该濒危语言');
+    }
+    var endangeredLanguages = [
+        { "name": "满语", "longitude": 125.328125, "latitude": 43.884041, "endangerment": "垂危", "speakers": "约100人", "region": "中国·黑龙江" },
+        { "name": "锡伯语", "longitude": 87.619981, "latitude": 43.829414, "endangerment": "濒危", "speakers": "约40000人", "region": "中国·新疆" },
+        { "name": "鄂温克语", "longitude": 119.744736, "latitude": 49.273465, "endangerment": "垂危", "speakers": "约28000人", "region": "中国·内蒙古" },
+        { "name": "达斡尔语", "longitude": 122.014679, "latitude": 48.01129, "endangerment": "濒危", "speakers": "约100000人", "region": "中国·内蒙古" },
+        { "name": "赫哲语", "longitude": 134.098381, "latitude": 48.239601, "endangerment": "垂危", "speakers": "约50人", "region": "中国·黑龙江" },
+        { "name": "鄂伦春语", "longitude": 123.394485, "latitude": 50.324703, "endangerment": "垂危", "speakers": "约1000人", "region": "中国·内蒙古" },
+        { "name": "独龙语", "longitude": 98.720001, "latitude": 28.520001, "endangerment": "濒危", "speakers": "约6000人", "region": "中国·云南" },
+        { "name": "仫佬语", "longitude": 109.219986, "latitude": 24.460001, "endangerment": "不安全", "speakers": "约50000人", "region": "中国·广西" },
+        { "name": "门巴语", "longitude": 91.880005, "latitude": 28.369999, "endangerment": "垂危", "speakers": "约6000人", "region": "中国·西藏" },
+        { "name": "珞巴语", "longitude": 93.079994, "latitude": 29.0, "endangerment": "垂危", "speakers": "约3000人", "region": "中国·西藏" },
+        { "name": "裕固语", "longitude": 100.669998, "latitude": 38.769997, "endangerment": "垂危", "speakers": "约4000人", "region": "中国·甘肃" },
+        { "name": "撒拉语", "longitude": 102.980003, "latitude": 35.930000, "endangerment": "濒危", "speakers": "约70000人", "region": "中国·青海" },
+        { "name": "保安语", "longitude": 102.980003, "latitude": 35.930000, "endangerment": "垂危", "speakers": "约12000人", "region": "中国·甘肃" },
+        { "name": "塔塔尔语", "longitude": 87.619981, "latitude": 43.829414, "endangerment": "濒危", "speakers": "约5000人", "region": "中国·新疆" },
+        { "name": "上海吴语", "longitude": 121.473616, "latitude": 31.23037, "endangerment": "垂危", "speakers": "约10000000人", "region": "中国·上海" },
+        { "name": "塔吉克语", "longitude": 75.0, "latitude": 38.983333, "endangerment": "垂危", "speakers": "约40000人", "region": "中国·新疆" },
+        { "name": "柯尔克孜语", "longitude": 81.150002, "latitude": 42.866669, "endangerment": "不安全", "speakers": "约3000000人", "region": "吉尔吉斯斯坦" },
+        { "name": "水语", "longitude": 107.480003, "latitude": 26.060001, "endangerment": "不安全", "speakers": "约300000人", "region": "中国·贵州" },
+        { "name": "仡佬语", "longitude": 107.75, "latitude": 27.5, "endangerment": "濒危", "speakers": "约6000人", "region": "中国·贵州" },
+        { "name": "德昂语", "longitude": 97.900002, "latitude": 24.0, "endangerment": "濒危", "speakers": "约13000人", "region": "缅甸·掸邦" },
+        { "name": "阿伊努语", "longitude": 142.766667, "latitude": 43.466667, "endangerment": "垂危", "speakers": "不足10人", "region": "日本·北海道" },
+        { "name": "切罗基语", "longitude": -84.3859, "latitude": 35.1016, "endangerment": "濒危", "speakers": "约2000人", "region": "美国·俄克拉荷马" },
+        { "name": "夏威夷语", "longitude": -157.8583, "latitude": 21.3069, "endangerment": "濒危", "speakers": "约24000人", "region": "美国·夏威夷" },
+        { "name": "萨米语", "longitude": 24.2270, "latitude": 69.2000, "endangerment": "濒危", "speakers": "约30000人", "region": "挪威·芬马克" }
+    ];
+
+    window.searchLanguage = searchLanguage;
+
+    var dangerColors = { '不安全': '#f59e0b', '危险': '#f97316', '濒危': '#ef4444', '垂危': '#dc2626', '灭绝': '#991b1b' };
+
+    for (var i = 0; i < endangeredLanguages.length; i++) {
+        (function(index) {
+            var language = endangeredLanguages[index];
+            var marker = new AMap.Marker({
+                position: new AMap.LngLat(language.longitude, language.latitude),
+                title: language.name
+            });
+            marker.setMap(map);
+            var infoWindow = new AMap.InfoWindow({
+                content: '<div style="padding:12px;max-width:280px;"><h4 style="margin:0 0 8px;color:#1e293b;font-size:15px;font-weight:600;">' + language.name + '</h4><div style="font-size:13px;color:#475569;line-height:1.8;"><div><b>濒危等级：</b><span style="color:' + (dangerColors[language.endangerment]||'#64748b') + ';">' + language.endangerment + '</span></div><div><b>使用人数：</b>' + language.speakers + '</div><div><b>主要分布：</b>' + language.region + '</div></div></div>',
+                offset: new AMap.Pixel(0, -30),
+                autoMove: true
+            });
+            AMap.event.addListener(marker, 'click', function(e) {
+                infoWindow.open(map, e.target.getPosition());
+            });
+        })(i);
+    }
+
+    function generateLanguageList() {
+        var listContainer = document.getElementById('language-list');
+        endangeredLanguages.forEach(function(lang) {
+            var listItem = document.createElement('li');
+            listItem.className = 'lang-list-item';
+            listItem.innerHTML = '<div class="d-flex justify-content-between align-items-center"><span>' + lang.name + '</span><span class="badge" style="background:' + (dangerColors[lang.endangerment]||'#64748b') + ';color:#fff;">' + lang.endangerment + '</span></div>';
+            listItem.onclick = function() {
+                map.setCenter([lang.longitude, lang.latitude]);
+                // 创建信息窗口内容
+                var infoContent = '<div style="padding:14px;max-width:320px;"><h4 style="margin:0 0 10px;color:#1e293b;font-size:16px;font-weight:700;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">' + lang.name + '</h4><div style="font-size:13px;color:#475569;line-height:1.9;">';
+                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">濒危等级：</span><span style="font-weight:600;color:' + (dangerColors[lang.endangerment]||'#64748b') + ';">' + lang.endangerment + '</span></div>';
+                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">使用人数：</span><span style="font-weight:500;">' + lang.speakers + '</span></div>';
+                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">主要分布：</span><span style="font-weight:500;">' + lang.region + '</span></div>';
+                infoContent += '<div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">地理坐标：</span><span style="font-weight:500;font-size:12px;">' + lang.latitude.toFixed(4) + ', ' + lang.longitude.toFixed(4) + '</span></div>';
+                infoContent += '</div></div>';
+                var infoWindow = new AMap.InfoWindow({
+                    content: infoContent,
+                    offset: new AMap.Pixel(0, -35),
+                    autoMove: false
+                });
+                infoWindow.open(map, new AMap.LngLat(lang.longitude, lang.latitude));
+                // 添加一个显著的标记
+                var marker = new AMap.Marker({
+                    position: [lang.longitude, lang.latitude],
+                    map: map,
+                    icon: new AMap.Icon({
+                        size: new AMap.Size(32, 48),
+                        image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+                        imageSize: new AMap.Size(32, 48)
+                    }),
+                    offset: new AMap.Pixel(-16, -48)
+                });
+            };
+            listContainer.appendChild(listItem);
+        });
+    }
+
+    // Run after AMap is loaded
+    if (document.readyState === 'complete') {
+        generateLanguageList();
+    } else {
+        window.addEventListener('load', generateLanguageList);
+    }
+})();
+</script>
+
+<script>
+var analysisCsrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+
+function submitAnalysis() {
+    var input = document.getElementById('analysis-input');
+    var text = input.value.trim();
+    if (!text) {
+        alert('请输入需要分析的内容');
+        return;
+    }
+
+    var btn = document.getElementById('analysis-btn');
+    var loading = document.getElementById('analysis-loading');
+    var resultDiv = document.getElementById('analysis-result');
+    var resultContent = document.getElementById('analysis-result-content');
+
+    // 保存当前滚动位置
+    var scrollPosition = window.scrollY || document.documentElement.scrollTop;
+
+    // 显示加载状态
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> 分析中';
+    loading.style.display = 'block';
+    resultDiv.style.display = 'none';
+
+    // 发送AJAX请求
+    var formData = new FormData();
+    formData.append('language_text', text);
+    formData.append('csrfmiddlewaretoken', analysisCsrfToken);
+
+    fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        loading.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> 分析';
+
+        if (data.status === 'success') {
+            resultContent.innerHTML = data.answer;
+            resultDiv.style.display = 'block';
+            input.value = '';
+        } else {
+            resultContent.innerHTML = '<span style="color: #ef4444;">' + (data.message || '分析失败，请稍后重试') + '</span>';
+            resultDiv.style.display = 'block';
+        }
+
+        // 恢复滚动位置
+        window.scrollTo(0, scrollPosition);
+    })
+    .catch(function(err) {
+        loading.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> 分析';
+        resultContent.innerHTML = '<span style="color: #ef4444;">网络错误，请稍后重试</span>';
+        resultDiv.style.display = 'block';
+        window.scrollTo(0, scrollPosition);
+        console.error(err);
+    });
+}
+
+// 回车提交
+document.getElementById('analysis-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        submitAnalysis();
+    }
+});
+
+// 地图搜索框回车提交
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        searchLanguage();
+    }
+});
+</script>
+{% endblock %}

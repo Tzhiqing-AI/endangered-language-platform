@@ -1,0 +1,48 @@
+# Django 核心
+Django>=4.2,<5.0
+mysqlclient>=2.2.0
+
+# API 文档（DRF）
+djangorestframework>=3.14.0
+coreapi>=2.3.3
+
+# 测试
+pytest>=7.4.0
+pytest-django>=4.5.0
+pytest-cov>=4.1.0
+
+# 安全扫描
+pip-audit>=2.6.0
+bandit>=1.7.5
+
+# 代码质量
+flake8>=6.1.0
+black>=23.7.0
+isort>=5.12.0
+
+# OpenAI / Moonshot
+openai>=1.0.0
+
+# Security
+bleach>=6.0.0
+
+# Production
+gunicorn>=21.2.0
+
+# =============================================================================
+# 非关系型数据库（实验三：多数据库协同设计）
+# =============================================================================
+
+# Redis - 缓存/消息队列/排行榜/分布式锁
+django-redis>=5.4.0
+redis>=5.0.0
+
+# MongoDB - 文档存储（帖子快照/行为日志/评论嵌套）
+pymongo>=4.6.0
+
+# Neo4j - 图数据库（社交关系图谱/共同关注/二度人脉推荐）
+neo4j>=5.14.0
+
+# ChromaDB - 向量数据库（语义搜索/内容推荐）
+chromadb>=0.4.0
+sentence-transformers>=2.2.0

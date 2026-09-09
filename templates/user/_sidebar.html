@@ -1,0 +1,68 @@
+{% comment %}
+个人中心左侧侧边栏（共享给所有用户中心页面）
+需要的上下文变量：user, profile, post_count, reply_count, followers_count, following_count, is_expert, is_admin, active_menu
+其中 active_menu 可选值：profile, edit, avatar, password
+{% endcomment %}
+<div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+            <!-- 头像 -->
+            <div class="avatar-section mb-3">
+                {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="头像"
+                     class="rounded-circle shadow-sm"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center bg-secondary"
+                     style="width: 120px; height: 120px;">
+                    <i class="bi bi-person-fill text-white" style="font-size: 60px;"></i>
+                </div>
+                {% endif %}
+            </div>
+            <!-- 用户名 -->
+            <h5 class="mb-1">{{ user.name|default:user.username }}</h5>
+            <p class="text-muted mb-3">@{{ user.username }}</p>
+
+            <!-- 统计 -->
+            <div class="row text-center mb-3">
+                <div class="col-4">
+                    <div class="fw-bold text-primary">{{ post_count }}</div>
+                    <small class="text-muted">帖子</small>
+                </div>
+                <div class="col-4">
+                    <div class="fw-bold text-primary">{{ followers_count }}</div>
+                    <small class="text-muted">粉丝</small>
+                </div>
+                <div class="col-4">
+                    <div class="fw-bold text-primary">{{ following_count }}</div>
+                    <small class="text-muted">关注</small>
+                </div>
+            </div>
+
+            <!-- 菜单 -->
+            <div class="list-group list-group-flush">
+                <a href="/User/profile/" class="list-group-item list-group-item-action {% if active_menu == 'profile' %}active{% endif %}">
+                    <i class="bi bi-person me-2"></i>个人资料
+                </a>
+                <a href="/User/profile/edit/" class="list-group-item list-group-item-action {% if active_menu == 'edit' %}active{% endif %}">
+                    <i class="bi bi-pencil me-2"></i>编辑资料
+                </a>
+                <a href="/User/profile/avatar/" class="list-group-item list-group-item-action {% if active_menu == 'avatar' %}active{% endif %}">
+                    <i class="bi bi-camera me-2"></i>修改头像
+                </a>
+                <a href="/User/profile/password/" class="list-group-item list-group-item-action {% if active_menu == 'password' %}active{% endif %}">
+                    <i class="bi bi-key me-2"></i>修改密码
+                </a>
+                {% if not is_expert %}
+                <a href="{% url 'User:expert_application' %}" class="list-group-item list-group-item-action text-warning">
+                    <i class="bi bi-award me-2"></i>申请专家
+                </a>
+                {% else %}
+                <a href="{% url 'User:expert_application_status' %}" class="list-group-item list-group-item-action text-warning">
+                    <i class="bi bi-award-fill me-2"></i>专家认证
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

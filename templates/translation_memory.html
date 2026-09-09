@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}翻译记忆库 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .memory-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2.5rem 0;
+        color: white;
+    }
+
+    .memory-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .memory-main {
+        padding: 2rem 0;
+    }
+
+    .memory-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .memory-card-header {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .memory-item {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s;
+    }
+
+    .memory-item:hover {
+        background: #f8f9fa;
+    }
+
+    .memory-item:last-child {
+        border-bottom: none;
+    }
+
+    .memory-source {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .memory-target {
+        color: #475569;
+        margin-bottom: 0.75rem;
+    }
+
+    .memory-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .memory-stars {
+        display: inline-flex;
+        gap: 0.25rem;
+    }
+
+    .memory-star {
+        cursor: pointer;
+        color: #d1d5db;
+        font-size: 1.25rem;
+    }
+
+    .memory-star.active {
+        color: #f59e0b;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .memory-meta {
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="memory-header">
+    <div class="container">
+        <h1><i class="bi bi-clock-history"></i> 翻译记忆库</h1>
+        <p>查看您的历史翻译记录，系统会自动匹配已翻译的内容</p>
+    </div>
+</section>
+
+<section class="memory-main">
+    <div class="container">
+        <div class="memory-card">
+            <div class="memory-card-header">
+                <span><i class="bi bi-collection"></i> 翻译记录 ({{ memories|length }})</span>
+                <a href="{% url 'Dashboard:language_translation' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus"></i> 新翻译
+                </a>
+            </div>
+            {% if memories %}
+                {% for memory in memories %}
+                <div class="memory-item">
+                    <div class="memory-source">{{ memory.source_text|truncatewords:50 }}</div>
+                    <div class="memory-target">{{ memory.translated_text|truncatewords:50 }}</div>
+                    <div class="memory-meta">
+                        <span><i class="bi bi-clock"></i> {{ memory.created_at|date:"Y-m-d H:i" }}</span>
+                        <span><i class="bi bi-arrow-repeat"></i> 使用 {{ memory.usage_count }} 次</span>
+                        <span>
+                            评分：
+                            <span class="memory-stars">
+                                {% for i in "12345" %}
+                                    <span class="memory-star {% if forloop.counter <= memory.quality_score %}active{% endif %}"
+                                          data-id="{{ memory.id }}" data-score="{{ forloop.counter }}">★</span>
+                                {% endfor %}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <h3>暂无翻译记录</h3>
+                    <p>使用翻译功能后，历史记录会自动保存在这里</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.memory-star').forEach(star => {
+    star.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        const score = this.dataset.score;
+        const csrfToken = '{{ csrf_token }}';
+
+        try {
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('score', score);
+
+            const response = await fetch('/Dashboard/translation/rate/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                // 更新星星显示
+                const stars = this.parentElement.querySelectorAll('.memory-star');
+                stars.forEach((s, i) => {
+                    if (i < score) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

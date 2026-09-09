@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}申请成为语言专家 - 濒危语言保护平台{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-award me-2"></i>申请成为语言专家</h4>
+                </div>
+                <div class="card-body">
+                    {% if pending %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>您的申请正在审核中，请耐心等待。审核结果将通过系统消息通知您。
+                    </div>
+                    {% else %}
+                    <form method="post" action="{% url 'User:expert_application' %}">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">专家领域 <span class="text-danger">*</span></label>
+                            <select name="field" class="form-select" required>
+                                <option value="">请选择</option>
+                                <option value="linguistics" {% if field == 'linguistics' %}selected{% endif %}>语言学</option>
+                                <option value="anthropology" {% if field == 'anthropology' %}selected{% endif %}>人类学</option>
+                                <option value="cultural_studies" {% if field == 'cultural_studies' %}selected{% endif %}>文化研究</option>
+                                <option value="language_education" {% if field == 'language_education' %}selected{% endif %}>语言教育</option>
+                                <option value="documentation" {% if field == 'documentation' %}selected{% endif %}>语言记录</option>
+                                <option value="translation" {% if field == 'translation' %}selected{% endif %}>翻译</option>
+                                <option value="other" {% if field == 'other' %}selected{% endif %}>其他</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">资质证明 <span class="text-danger">*</span></label>
+                            <textarea name="credentials" class="form-control" rows="4"
+                                placeholder="请详细描述您的专业背景、学历、工作经验、语言学研究经历等"
+                                required>{{ credentials|default:'' }}</textarea>
+                            <small class="text-muted">请尽量详细，这将帮助审核人员了解您的专业能力</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">相关语言 <span class="text-danger">*</span></label>
+                            <input type="text" name="languages" class="form-control"
+                                value="{{ languages|default:'' }}"
+                                placeholder="您专长的濒危语言，如：羌语、纳西语等，多个用逗号分隔" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">申请理由 <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="4"
+                                placeholder="为什么您想成为专家认证用户？" required>{{ reason|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">补充材料链接</label>
+                            <input type="url" name="supporting_docs" class="form-control"
+                                value="{{ supporting_docs|default:'' }}"
+                                placeholder="可上传到网盘等，附上链接作为补充证明（选填）">
+                        </div>
+
+                        {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                        {% endif %}
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send me-2"></i>提交申请
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if applications %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>申请历史</h5>
+                </div>
+                <div class="card-body">
+                    {% for app in applications %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ app.get_field_display }}</span>
+                            <span class="badge bg-{% if app.status == 'approved' %}success{% elif app.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ app.created_at|date:"Y-m-d H:i" }}</small>
+                        {% if app.review_comment %}
+                        <p class="mb-0 text-muted small mt-1"><em>审核备注：{{ app.review_comment }}</em></p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="bi bi-question-circle me-2"></i>专家认证说明</h5>
+                    <ul class="mb-0">
+                        <li>成为专家后，您发布的内容将直接发布，无需审核</li>
+                        <li>您可以对其他用户发布的内容进行验证和纠错</li>
+                        <li>专家发布的内容会显示专属徽章</li>
+                        <li>管理员有权随时取消专家资格</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

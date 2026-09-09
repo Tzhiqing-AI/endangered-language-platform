@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}专家申请状态 - 濒危语言保护平台{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-clock-history me-2"></i>我的专家申请
+        </h2>
+        <a href="/User/profile/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回个人中心
+        </a>
+    </div>
+
+    <!-- 申请说明 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>专家认证说明</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="mb-0">
+                        <li class="mb-2">成为专家后，您发布的内容将直接发布，无需审核</li>
+                        <li class="mb-2">您可以对其他用户发布的内容进行验证和纠错</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="mb-0">
+                        <li class="mb-2">专家发布的内容会显示专属徽章</li>
+                        <li class="mb-2">管理员有权随时取消专家资格</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 申请状态 -->
+    {% if applications %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>申请记录</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>申请时间</th>
+                            <th>专家领域</th>
+                            <th>相关语言</th>
+                            <th>状态</th>
+                            <th>审核时间</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                        <tr>
+                            <td>{{ app.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ app.get_field_display }}</td>
+                            <td>{{ app.languages|truncatewords:2 }}</td>
+                            <td>
+                                {% if app.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-hourglass-split me-1"></i>待审核
+                                </span>
+                                {% elif app.status == 'approved' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>已通过
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>已拒绝
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if app.reviewed_at %}
+                                {{ app.reviewed_at|date:"Y-m-d H:i" }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if app.review_comment %}
+                                {{ app.review_comment }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+            <p class="text-muted mb-4">您还没有提交过专家申请</p>
+            <a href="{% url 'User:expert_application' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>立即申请
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
