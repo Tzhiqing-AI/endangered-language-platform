@@ -242,11 +242,19 @@
 <div class="translation-page-header">
     <div class="container position-relative" style="z-index:2;">
         <h1 class="mb-2" style="font-size:2.25rem; font-weight:800; letter-spacing:-0.02em;"><i class="bi bi-translate me-3"></i>濒危语言翻译</h1>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
-                <li class="breadcrumb-item"><a href="javascript:history.back()" style="color:rgba(255,255,255,0.8);">返回</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'Dashboard:language' %}" style="color:rgba(255,255,255,0.8);">首页</a></li>
                 <li class="breadcrumb-item active" style="color:rgba(255,255,255,0.6);">语言翻译</li>
             </ol>
+            <div class="d-flex gap-2">
+                <a href="{% url 'Dashboard:translation_memory_list' %}" class="btn btn-sm btn-light">
+                    <i class="bi bi-database me-1"></i>翻译记忆库
+                </a>
+                <a href="{% url 'Dashboard:glossary_manage' %}" class="btn btn-sm btn-light">
+                    <i class="bi bi-book me-1"></i>术语库
+                </a>
+            </div>
         </nav>
     </div>
 </div>

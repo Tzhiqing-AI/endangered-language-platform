@@ -12,7 +12,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
-from Dashboard.common import get_user_context, get_openai_client
+from Dashboard.common import get_user_context, get_openai_client, OPENAI_MODEL, OPENAI_TEMPERATURE
 from language.utils import login_required_custom, api_response, rate_limit
 
 logger = logging.getLogger(__name__)
@@ -234,13 +234,13 @@ def _ai_sentiment(text):
 文本：{text}"""
 
         response = client.chat.completions.create(
-            model="moonshot-v1-8k",
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "你是中文情感分析专家，输出必须是严格 JSON。"},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.1,
-            max_tokens=200,
+            temperature=OPENAI_TEMPERATURE,
+            max_tokens=1000,
         )
         content = response.choices[0].message.content.strip()
 
@@ -330,6 +330,10 @@ def _analyze_sentiment(text):
         'sentence_sentiments': sentence_sentiments,
         'sentence_count': len(sentence_sentiments),
         'raw_score': result.get('raw_score'),
+        'summary': result.get('reason') or (
+            f'文本整体情感倾向为「{sentiment}」，积极概率为 {score:.1%}。'
+            f'共包含 {len(sentence_sentiments)} 个句子。'
+        ),
     }
     if result.get('reason'):
         out['reason'] = result['reason']
@@ -351,70 +355,6 @@ def nlp_page(request):
     """
     user, name, _ = get_user_context(request)
     return render(request, 'nlp.html', {'name': name, 'username': user.username})
-
-
-def _analyze_sentiment(text):
-    """
-    情感分析 - 使用 SnowNLP 进行更精细的分析
-
-    Returns:
-        dict: 包含情感分数、标签、置信度、句子级别分析
-    """
-    from snownlp import SnowNLP
-
-    s = SnowNLP(text)
-    score = s.sentiments
-
-    # 更精细的情感分类
-    if score >= 0.8:
-        sentiment = '非常积极'
-        emoji = '😊'
-        color = '#10b981'
-    elif score >= 0.6:
-        sentiment = '积极'
-        emoji = '🙂'
-        color = '#34d399'
-    elif score >= 0.4:
-        sentiment = '中性'
-        emoji = '😐'
-        color = '#6366f1'
-    elif score >= 0.2:
-        sentiment = '消极'
-        emoji = '😟'
-        color = '#f59e0b'
-    else:
-        sentiment = '非常消极'
-        emoji = '😢'
-        color = '#ef4444'
-
-    # 句子级别情感分析
-    sentence_sentiments = []
-    for sent in s.sentences[:10]:  # 最多分析10句
-        if len(sent.strip()) > 2:
-            sent_s = SnowNLP(sent)
-            sent_score = sent_s.sentiments
-            if sent_score >= 0.6:
-                sent_label = '积极'
-            elif sent_score >= 0.4:
-                sent_label = '中性'
-            else:
-                sent_label = '消极'
-            sentence_sentiments.append({
-                'text': sent[:50] + ('...' if len(sent) > 50 else ''),
-                'score': round(sent_score, 3),
-                'label': sent_label
-            })
-
-    return {
-        'score': round(score, 3),
-        'percentage': f'{score:.1%}',
-        'sentiment': sentiment,
-        'emoji': emoji,
-        'color': color,
-        'sentence_count': len(s.sentences),
-        'sentence_sentiments': sentence_sentiments,
-        'summary': f'文本整体情感倾向为「{sentiment}」，置信度为 {score:.1%}。共包含 {len(s.sentences)} 个句子。'
-    }
 
 
 def _extract_keywords(text, top_k=10):
@@ -542,12 +482,12 @@ def _polish_text(text):
 请直接输出润色后的文本，不需要额外说明。"""
 
         response = client.chat.completions.create(
-            model="moonshot-v1-8k",
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "你是一位专业的文本编辑和润色专家，擅长优化各种类型的文本。"},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7,
+            temperature=OPENAI_TEMPERATURE,
             max_tokens=2000
         )
 

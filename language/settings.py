@@ -38,6 +38,9 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost
 # =============================================================================
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 OPENAI_BASE_URL = os.getenv('OPENAI_BASE_URL', 'https://api.moonshot.cn/v1')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'kimi-k2.7-code')
+# kimi-k2.7-code / kimi-k3 等推理模型强制 temperature=1
+OPENAI_TEMPERATURE = float(os.getenv('OPENAI_TEMPERATURE', '1'))
 
 # 编码设置
 FILE_CHARSET = 'utf-8'

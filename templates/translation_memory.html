@@ -121,9 +121,14 @@
         <div class="memory-card">
             <div class="memory-card-header">
                 <span><i class="bi bi-collection"></i> 翻译记录 ({{ memories|length }})</span>
-                <a href="{% url 'Dashboard:language_translation' %}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-plus"></i> 新翻译
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'Dashboard:glossary_manage' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-book"></i> 术语库
+                    </a>
+                    <a href="{% url 'Dashboard:language_translation' %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus"></i> 新翻译
+                    </a>
+                </div>
             </div>
             {% if memories %}
                 {% for memory in memories %}

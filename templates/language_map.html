@@ -979,7 +979,7 @@
         document.getElementById('totalCount').textContent = languages.length;
 
         var totalSpeakers = languages.reduce(function(sum, lang) {
-            var num = parseInt(lang.sakers.replace(/[^0-9]/g, '')) || 0;
+            var num = parseInt(String(lang.speakers || '').replace(/[^0-9]/g, '')) || 0;
             return sum + num;
         }, 0);
 
@@ -998,6 +998,7 @@
             }
         });
 
+        document.getElementById('totalSpeakers').textContent = totalSpeakers.toLocaleString();
         document.getElementById('countAll').textContent = countByLevel.all;
         document.getElementById('countUnsafe').textContent = countByLevel['不安全'];
         document.getElementById('countDanger').textContent = countByLevel['危险'];

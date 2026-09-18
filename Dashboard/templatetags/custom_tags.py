@@ -11,6 +11,16 @@ def get_item(dictionary, key):
     return None
 
 
+@register.filter(name='file_exists')
+def file_exists(field_file):
+    """检查 FileField/ImageField 对应的物理文件是否存在。
+    Usage: {% if profile.avatar|file_exists %}"""
+    try:
+        return bool(field_file) and bool(field_file.storage.exists(field_file.name))
+    except Exception:
+        return False
+
+
 @register.simple_tag
 def get_user_avatar(username):
     """
@@ -20,10 +30,12 @@ def get_user_avatar(username):
     if not username:
         return None
     try:
+        import os
         from User.models import User, UserProfile
         user = User.objects.get(username=username)
         profile = UserProfile.objects.get(user=user)
-        if profile.avatar:
+        # 数据库有记录但物理文件已被删除时，回退到默认头像，避免页面裂图
+        if profile.avatar and os.path.exists(profile.avatar.path):
             return profile.avatar.url
     except Exception:
         pass

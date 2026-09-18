@@ -728,6 +728,7 @@ def search_posts(request):
     posts = Post.objects.filter(status='published').select_related('author', 'category').prefetch_related('tags')
     keyword = ''
     search_scores = {}  # post_id -> similarity score
+    search_sources = {}  # post_id -> 'semantic' / 'keyword'
 
     if form.is_valid():
         keyword = form.cleaned_data.get('keyword', '')
@@ -741,10 +742,11 @@ def search_posts(request):
                 hybrid_results = search_posts_hybrid(keyword, category=category, tag=tags, limit=30)
                 if hybrid_results:
                     post_ids = [r['post_id'] for r in hybrid_results]
-                    # 记录每个帖子的语义匹配分数
+                    # 记录每个帖子的匹配分数与来源
                     for r in hybrid_results:
                         score = r.get('score', 0)
                         search_scores[r['post_id']] = round(score * 100, 1)
+                        search_sources[r['post_id']] = r.get('source', 'keyword')
                     posts = posts.filter(id__in=post_ids)
                     # 按搜索结果排序
                     from django.db.models import Case, When
@@ -788,9 +790,10 @@ def search_posts(request):
 
     page_obj = paginator.get_page(page_number)
 
-    # 给分页后的帖子附加搜索分数
+    # 给分页后的帖子附加搜索分数与来源
     for post in page_obj:
         post.search_score = search_scores.get(post.id, None)
+        post.search_source = search_sources.get(post.id, None)
 
     if user:
         unread_count = _get_unread_count(user)
@@ -1053,14 +1056,16 @@ def user_reputation_rank(request):
     user, name, _ = get_user_context(request)
 
     # 计算声望分数：帖子数*10 + 收到的点赞数*5 + 收到的回复数*3 + 专家认证*100
-    top_users = User.objects.filter(is_active=True).order_by('-reputation_score')[:20]
+    active_users = User.objects.filter(is_active=True)
 
-    # 如果声望分数都是0，则按帖子数排序
-    if not top_users.filter(reputation_score__gt=0).exists():
-        top_users = User.objects.filter(is_active=True).annotate(
+    # 如果声望分数都是0，则按帖子数排序（注意：切片后的 QuerySet 不能再 filter）
+    if not active_users.filter(reputation_score__gt=0).exists():
+        top_users = active_users.annotate(
             post_count=Count('posts'),
-            total_likes=Count('posts__likes'),
+            total_likes=Count('posts__like_users'),
         ).order_by('-post_count')[:20]
+    else:
+        top_users = active_users.order_by('-reputation_score')[:20]
 
     context = {
         'name': name,

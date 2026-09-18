@@ -15,7 +15,13 @@
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
+                    <a href="{% url 'Community:reputation_rank' %}" class="btn btn-outline-primary" title="声望排行榜">
+                        <i class="bi bi-trophy"></i>
+                    </a>
                     {% if name %}
+                    <a href="{% url 'Community:user_collections' %}" class="btn btn-outline-primary" title="我的收藏">
+                        <i class="bi bi-bookmark"></i>
+                    </a>
                     <a href="{% url 'Community:messages' %}" class="btn btn-outline-primary position-relative">
                         <i class="bi bi-bell"></i>
                         {% if unread_count > 0 %}

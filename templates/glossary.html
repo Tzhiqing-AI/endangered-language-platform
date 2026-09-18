@@ -131,9 +131,19 @@
 
 {% block content %}
 <section class="glossary-header">
-    <div class="container">
-        <h1><i class="bi bi-book"></i> 术语表管理</h1>
-        <p>管理濒危语言专业术语，提高翻译准确性</p>
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1><i class="bi bi-book"></i> 术语表管理</h1>
+            <p class="mb-0">管理濒危语言专业术语，提高翻译准确性</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'Dashboard:translation_memory_list' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-database me-1"></i>翻译记忆库
+            </a>
+            <a href="{% url 'Dashboard:language_translation' %}" class="btn btn-sm btn-light">
+                <i class="bi bi-arrow-left me-1"></i>返回翻译
+            </a>
+        </div>
     </div>
 </section>
 

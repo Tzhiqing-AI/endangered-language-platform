@@ -518,6 +518,22 @@
             font-size: 0.8125rem;
             color: var(--primary-400);
         }
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--space-2) var(--space-5);
+            margin-bottom: var(--space-3);
+        }
+        .footer-links a {
+            font-size: 0.875rem;
+            color: var(--primary-500);
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+        .footer-links a:hover {
+            color: var(--accent-600);
+        }
 
         /* 提示消息 */
         .alert-container {
@@ -798,9 +814,26 @@
                         <li><a class="dropdown-item" href="{% url 'User:expert_application_status' %}">
                             <i class="bi bi-award me-2"></i>我的专家申请
                         </a></li>
+                        <li><a class="dropdown-item" href="{% url 'Community:user_collections' %}">
+                            <i class="bi bi-bookmark me-2"></i>我的收藏
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/api/docs/" target="_blank">
+                            <i class="bi bi-file-earmark-code me-2"></i>API 接口文档
+                        </a></li>
                         {% if is_admin %}
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="{% url 'User:expert_management' %}">
+                        <li><h6 class="dropdown-header"><i class="bi bi-shield-lock me-1"></i>管理后台</h6></li>
+                        <li><a class="dropdown-item" href="{% url 'Dashboard:admin_dashboard' %}">
+                            <i class="bi bi-speedometer2 me-2"></i>管理仪表盘
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'Dashboard:user_management' %}">
+                            <i class="bi bi-people me-2"></i>用户管理
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'Community:moderation_queue' %}">
+                            <i class="bi bi-clipboard-check me-2"></i>内容审核队列
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'User:expert_management' %}">
                             <i class="bi bi-shield-check me-2"></i>专家认证管理
                         </a></li>
                         {% endif %}
@@ -877,6 +910,14 @@
     <footer class="footer-main">
         <div class="footer-content">
             <div class="footer-brand">濒危语言保护平台</div>
+            <div class="footer-links">
+                <a href="{% url 'Dashboard:language' %}"><i class="bi bi-house-door me-1"></i>首页概览</a>
+                <a href="{% url 'Dashboard:language_list' %}"><i class="bi bi-table me-1"></i>语言数据</a>
+                <a href="{% url 'Community:community_home' %}"><i class="bi bi-people me-1"></i>社区论坛</a>
+                <a href="{% url 'Community:reputation_rank' %}"><i class="bi bi-trophy me-1"></i>声望排行</a>
+                <a href="{% url 'Dashboard:nlp_page' %}"><i class="bi bi-cpu me-1"></i>NLP处理</a>
+                <a href="/api/docs/" target="_blank"><i class="bi bi-file-earmark-code me-1"></i>API文档</a>
+            </div>
             <div class="footer-tagline">Preserving Global Linguistic Heritage</div>
             <div class="footer-copyright">
                 &copy; {% now "Y" %} 濒危语言保护平台 · 守护人类文明的多元记忆

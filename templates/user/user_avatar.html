@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_tags %}
 
 {% block title %}修改头像 - 濒危语言保护管理系统{% endblock %}
 
@@ -31,7 +32,7 @@
                     <!-- 头像预览 -->
                     <div class="text-center mb-4">
                         <div class="avatar-preview d-inline-block">
-                            {% if profile.avatar %}
+                            {% if profile.avatar|file_exists %}
                             <img id="avatar-preview" src="{{ profile.avatar.url }}" alt="头像预览"
                                  class="rounded-circle shadow"
                                  style="width: 180px; height: 180px; object-fit: cover;">

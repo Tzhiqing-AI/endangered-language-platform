@@ -21,6 +21,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 from rest_framework.documentation import include_docs_urls
+from rest_framework.permissions import AllowAny
 
 from . import views
 
@@ -31,7 +32,12 @@ urlpatterns = [
     path('User/',include('User.urls')),
     path('Community/',include('Community.urls')),
     path('api/', include('rest_api.urls')),
-    path('api/docs/', include_docs_urls(title='濒危语言保护平台 API', description='RESTful API 接口文档')),
+    path('api/docs/', include_docs_urls(
+        title='濒危语言保护平台 API',
+        description='RESTful API 接口文档',
+        permission_classes=[AllowAny],
+        authentication_classes=[],
+    )),
 ]
 
 # 开发环境下 serve media 文件

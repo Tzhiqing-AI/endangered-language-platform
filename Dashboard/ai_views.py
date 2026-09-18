@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from Dashboard.models import Language
 from User.models import ChatHistory, User
-from Dashboard.common import get_user_context, get_chart_data, get_openai_client, ENDANGERMENT_LEVELS, CHAT_HISTORY_LIMIT, CHAT_RECENT_LIMIT
+from Dashboard.common import get_user_context, get_chart_data, get_openai_client, ENDANGERMENT_LEVELS, CHAT_HISTORY_LIMIT, CHAT_RECENT_LIMIT, OPENAI_MODEL, OPENAI_TEMPERATURE
 from language.utils import login_required_custom, sanitize_ai_output
 
 logger = logging.getLogger(__name__)
@@ -320,11 +320,11 @@ def execute_web_search(query: str) -> str:
     try:
         def _call():
             return client.chat.completions.create(
-                model="moonshot-v1-8k",
+                model=OPENAI_MODEL,
                 messages=[
                     {"role": "user", "content": f"请搜索以下内容并总结关键信息，返回简洁的中文摘要（100字以内）：{query}"}
                 ],
-                temperature=0.3,
+                temperature=OPENAI_TEMPERATURE,
             )
         response = _retry_on_transient_error(_call)
         return response.choices[0].message.content if response.choices else "搜索无结果"
@@ -367,10 +367,10 @@ def chat_with_web_search(query: str, history: List[dict], system_prompt: str = N
         # 第一轮：让 Kimi 决定是否需要联网搜索
         completion = _retry_on_transient_error(
             client.chat.completions.create,
-            model="moonshot-v1-8k",
+            model=OPENAI_MODEL,
             messages=messages,
             tools=tools,
-            temperature=0.3,
+            temperature=OPENAI_TEMPERATURE,
         )
 
         message = completion.choices[0].message
@@ -399,9 +399,9 @@ def chat_with_web_search(query: str, history: List[dict], system_prompt: str = N
             # 第二轮：用搜索结果继续对话
             completion = _retry_on_transient_error(
                 client.chat.completions.create,
-                model="moonshot-v1-8k",
+                model=OPENAI_MODEL,
                 messages=messages,
-                temperature=0.3,
+                temperature=OPENAI_TEMPERATURE,
             )
             result = completion.choices[0].message.content if completion.choices and completion.choices[0].message.content else "回答失败！"
         else:

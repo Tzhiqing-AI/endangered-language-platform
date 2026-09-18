@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 OPENAI_API_KEY = getattr(settings, 'OPENAI_API_KEY', '')
 OPENAI_BASE_URL = getattr(settings, 'OPENAI_BASE_URL', 'https://api.moonshot.cn/v1')
+OPENAI_MODEL = getattr(settings, 'OPENAI_MODEL', 'kimi-k2.7-code')
+OPENAI_TEMPERATURE = getattr(settings, 'OPENAI_TEMPERATURE', 1.0)
 
 # 分页配置
 PAGINATION_PAGE_SIZE = 20

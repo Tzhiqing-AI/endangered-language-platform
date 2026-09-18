@@ -113,13 +113,17 @@
                             </div>
                             {% endif %}
                         </div>
-                        {% if post.search_score is not None %}
+                        {% if post.search_source == 'semantic' %}
                         <div class="text-end ms-3">
                             <span class="search-badge-semantic">语义匹配</span>
                             <div class="mt-1">
                                 <small class="text-muted">相关度 {{ post.search_score }}%</small>
                                 <div class="similarity-bar"><div class="similarity-fill" style="width: {{ post.search_score }}%"></div></div>
                             </div>
+                        </div>
+                        {% elif post.search_source == 'keyword' %}
+                        <div class="text-end ms-3">
+                            <span class="search-badge-keyword">关键词匹配</span>
                         </div>
                         {% endif %}
                     </div>

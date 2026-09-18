@@ -1,3 +1,4 @@
+{% load custom_tags %}
 {% comment %}
 个人中心左侧侧边栏（共享给所有用户中心页面）
 需要的上下文变量：user, profile, post_count, reply_count, followers_count, following_count, is_expert, is_admin, active_menu
@@ -8,7 +9,7 @@
         <div class="card-body text-center p-4">
             <!-- 头像 -->
             <div class="avatar-section mb-3">
-                {% if profile.avatar %}
+                {% if profile.avatar|file_exists %}
                 <img src="{{ profile.avatar.url }}" alt="头像"
                      class="rounded-circle shadow-sm"
                      style="width: 120px; height: 120px; object-fit: cover;">
