@@ -86,6 +86,8 @@ def language_register(request):
         admin=0,  # 默认普通用户
     )
 
+    # 防御会话固定攻击：认证成功后更换 session id（保留 session 数据）
+    request.session.cycle_key()
     request.session["username"] = user.username
     request.session["name"] = user.name
 
@@ -117,6 +119,8 @@ def language_login(request):
     try:
         user = User.objects.get(username=username)
         if check_password(password, user.password):
+            # 防御会话固定攻击：登录成功后更换 session id（保留 session 数据）
+            request.session.cycle_key()
             request.session["username"] = user.username
             request.session["name"] = user.name
 

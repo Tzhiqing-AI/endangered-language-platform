@@ -1,14 +1,26 @@
+# =============================================================================
+# 濒危语言保护平台 - 直接依赖
+# 运行时依赖锁定为当前实测可用版本；测试/代码质量/部署工具保留下限。
+# 全量传递依赖快照见 requirements-lock.txt。
+# =============================================================================
+
 # Django 核心
-Django>=4.2,<5.0
-mysqlclient>=2.2.0
+Django==6.0.4
+mysqlclient==2.2.7
+
+# 环境配置
+python-dotenv==1.2.2
+
+# 图像处理（UserProfile.avatar ImageField 依赖）
+Pillow==11.1.0
 
 # API 文档（DRF）
-djangorestframework>=3.14.0
-coreapi>=2.3.3
+djangorestframework==3.16.1
+coreapi==2.3.3
 
 # 测试
 pytest>=7.4.0
-pytest-django>=4.5.0
+pytest-django==4.12.0
 pytest-cov>=4.1.0
 
 # 安全扫描
@@ -21,10 +33,13 @@ black>=23.7.0
 isort>=5.12.0
 
 # OpenAI / Moonshot
-openai>=1.0.0
+openai==1.70.0
 
-# Security
-bleach>=6.0.0
+# 安全（AI 输出 HTML 清洗）
+bleach==6.2.0
+
+# NLP（情感分析兜底层）
+snownlp==0.12.3
 
 # Production
 gunicorn>=21.2.0
@@ -34,15 +49,15 @@ gunicorn>=21.2.0
 # =============================================================================
 
 # Redis - 缓存/消息队列/排行榜/分布式锁
-django-redis>=5.4.0
-redis>=5.0.0
+django-redis==7.0.0
+redis==7.3.0
 
 # MongoDB - 文档存储（帖子快照/行为日志/评论嵌套）
-pymongo>=4.6.0
+pymongo==4.16.0
 
 # Neo4j - 图数据库（社交关系图谱/共同关注/二度人脉推荐）
-neo4j>=5.14.0
+neo4j==6.2.0
 
 # ChromaDB - 向量数据库（语义搜索/内容推荐）
-chromadb>=0.4.0
-sentence-transformers>=2.2.0
+chromadb==1.5.9
+sentence-transformers==5.6.0
