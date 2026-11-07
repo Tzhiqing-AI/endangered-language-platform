@@ -75,6 +75,81 @@
       "source_features": ["latitude", "longitude"]
     }
   ],
+  "weak_plus_features": {
+    "name": "weak_plus",
+    "status": "final",
+    "description": "正式口径 16 列 = 弱信息 9 列 + 7 个低信息量派生列；由标签派生的 dist_nearest_extinct_km 明确排除",
+    "n_features": 16,
+    "columns": [
+      "latitude",
+      "longitude",
+      "has_location",
+      "country",
+      "region",
+      "family_top",
+      "family_depth",
+      "classification_depth",
+      "neighbor_density_100km",
+      "bib_recent5_count",
+      "bib_year_span",
+      "bib_year_min",
+      "bib_year_variance",
+      "same_family_other_count",
+      "same_region_other_count",
+      "neighbor_count_50km"
+    ],
+    "column_order_note": "列序与探索性 16 列消融一致（弱信息 → 文献时间 → 地理语系）。树模型存在列子采样（LightGBM/XGBoost colsample_bytree=0.8、RandomForest max_features=sqrt），换序会使 CV 波动约 ±0.015，复算时不要改列序。",
+    "added_over_weak": [
+      "bib_recent5_count",
+      "bib_year_span",
+      "bib_year_min",
+      "bib_year_variance",
+      "same_family_other_count",
+      "same_region_other_count",
+      "neighbor_count_50km"
+    ],
+    "forbidden_label_derived": [
+      "dist_nearest_extinct_km"
+    ],
+    "derived": [
+      {
+        "name": "same_family_other_count",
+        "source_features": ["family_top"],
+        "formula": "同 family_top 的其他可训练语言数（本行除外）；family_top=unknown 记 NaN"
+      },
+      {
+        "name": "same_region_other_count",
+        "source_features": ["region"],
+        "formula": "同 region 的其他可训练语言数（本行除外）；region=unknown 记 NaN"
+      },
+      {
+        "name": "neighbor_count_50km",
+        "source_features": ["latitude", "longitude"],
+        "formula": "haversine 距离 ≤ 50km 的其他可训练语言数；无坐标记 NaN"
+      },
+      {
+        "name": "bib_recent5_count",
+        "source_features": ["bibliography_link.code_id", "language_source.year"],
+        "formula": "有效年份 ≥ 2013 的文献条数；无有效年份记 0"
+      },
+      {
+        "name": "bib_year_span",
+        "source_features": ["language_source.year"],
+        "formula": "max(year) − min(year)；无有效年份 NaN，仅 1 条记 0"
+      },
+      {
+        "name": "bib_year_min",
+        "source_features": ["language_source.year"],
+        "formula": "最早有效年份；无则 NaN"
+      },
+      {
+        "name": "bib_year_variance",
+        "source_features": ["language_source.year"],
+        "formula": "有效年份总体方差；不足 2 条记 0，无则 NaN"
+      }
+    ],
+    "load_check": "加载时校验 n_features 与 columns 数量一致、列名无重复、不含 forbidden_label_derived；构建矩阵后校验列集合与顺序逐列一致"
+  },
   "ambiguous_features": [
     {
       "feature": "family_depth",
