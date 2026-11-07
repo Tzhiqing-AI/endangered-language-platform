@@ -12,7 +12,7 @@
     <script src="{% static 'bootstrap-5.3.0-alpha1-dist/js/bootstrap.bundle.min.js' %}"></script>
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -54,7 +54,7 @@
         .login-header .icon-wrapper {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -107,7 +107,7 @@
         }
 
         .form-group input:focus {
-            border-color: #667eea;
+            border-color: #0f766e;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
             background: white;
             outline: none;
@@ -115,7 +115,7 @@
 
         .form-group input:focus + .input-icon,
         .form-group input:focus ~ .input-icon {
-            color: #667eea;
+            color: #0f766e;
         }
 
         .remember-me {
@@ -130,7 +130,7 @@
             height: 18px;
             margin-right: 8px;
             cursor: pointer;
-            accent-color: #667eea;
+            accent-color: #0f766e;
         }
 
         .remember-me label {
@@ -141,7 +141,7 @@
         }
 
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
             border: none;
             border-radius: 12px;
             padding: 16px;
@@ -191,14 +191,14 @@
         }
 
         .register-link a {
-            color: #667eea;
+            color: #0f766e;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s;
         }
 
         .register-link a:hover {
-            color: #764ba2;
+            color: #0b1120;
             text-decoration: underline;
         }
 
@@ -267,18 +267,23 @@
                 <input type="hidden" name="next" value="{{ next|default:'' }}">
 
                 <div class="form-group">
+                    <label class="visually-hidden" for="login-username">用户名</label>
                     <i class="bi bi-person input-icon"></i>
-                    <input type="text" class="form-control" placeholder="请输入用户名" required autofocus name="username">
+                    <input type="text" id="login-username" class="form-control" placeholder="请输入用户名" required autofocus autocomplete="username" name="username">
                 </div>
 
                 <div class="form-group">
+                    <label class="visually-hidden" for="login-password">密码</label>
                     <i class="bi bi-lock input-icon"></i>
-                    <input type="password" class="form-control" placeholder="请输入密码" required name="password">
+                    <input type="password" id="login-password" class="form-control" placeholder="请输入密码" required autocomplete="current-password" name="password">
                 </div>
 
-                <div class="remember-me">
-                    <input type="checkbox" id="rememberMe" name="remember_me" value="yes">
-                    <label for="rememberMe">记住登录状态</label>
+                <div class="remember-me d-flex justify-content-between align-items-center">
+                    <span>
+                        <input type="checkbox" id="rememberMe" name="remember_me" value="yes">
+                        <label for="rememberMe">记住登录状态</label>
+                    </span>
+                    <a href="{% url 'User:password_help' %}" class="small" style="color:#0f766e;text-decoration:none;">忘记密码？</a>
                 </div>
 
                 <button type="submit" class="btn-login">

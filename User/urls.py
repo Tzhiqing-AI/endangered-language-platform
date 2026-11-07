@@ -8,6 +8,7 @@ urlpatterns = [
     # 认证相关
     path('register/', language_register, name='register'),
     path('login/', language_login, name='login'),
+    path('password-help/', password_help, name='password_help'),
     path('logout/', logout_view, name='logout'),
 
     # 用户中心

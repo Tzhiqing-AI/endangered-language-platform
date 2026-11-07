@@ -216,6 +216,15 @@ def change_password(request):
         messages.error(request, '两次输入的新密码不一致！')
         return render(request, 'user/user_password.html', base_ctx)
 
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError
+
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as exc:
+        messages.error(request, ' '.join(exc.messages))
+        return render(request, 'user/user_password.html', base_ctx)
+
     # 更新密码
     from django.contrib.auth.hashers import make_password
     user.password = make_password(new_password)

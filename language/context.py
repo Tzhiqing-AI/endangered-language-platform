@@ -2,28 +2,19 @@
 自定义模板上下文处理器
 """
 def user_context(request):
-    """
-    将用户信息添加到所有模板上下文
+    """将当前登录用户的管理员标识注入所有模板。"""
+    from language.utils import get_authenticated_user
 
-    在settings.py的TEMPLATES中添加:
-    'OPTIONS': {
-        'context_processors': [
-            ...
-            'language.context.user_context',
-        ],
+    user = get_authenticated_user(request)
+    return {
+        'is_admin': bool(user and user.admin == 1),
     }
-    """
-    username = request.session.get('username', '')
-    is_admin = False
 
-    if username:
-        try:
-            from User.models import User
-            user = User.objects.get(username=username)
-            is_admin = user.admin == 1
-        except User.DoesNotExist:
-            pass
+
+def site_context(request):
+    """站点级配置（地图 Key 等），避免把密钥写进模板。"""
+    from django.conf import settings
 
     return {
-        'is_admin': is_admin,
+        'amap_js_key': getattr(settings, 'AMAP_JS_KEY', ''),
     }

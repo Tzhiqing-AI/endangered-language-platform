@@ -105,8 +105,8 @@ class ReplySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reply
-        fields = ['id', 'content', 'author_name', 'parent', 'like_count', 'children', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'post', 'content', 'author_name', 'parent', 'like_count', 'children', 'created_at']
+        read_only_fields = ['id', 'created_at', 'author_name', 'like_count']
 
     def get_children(self, obj):
         max_depth = self.context.get('max_depth', 3)
@@ -166,7 +166,11 @@ class ExpertApplicationSerializer(serializers.ModelSerializer):
             'status', 'status_display', 'reviewer', 'reviewer_name',
             'review_comment', 'reviewed_at', 'created_at'
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = [
+            'id', 'created_at', 'applicant', 'applicant_name', 'field_display',
+            'status', 'status_display', 'reviewer', 'reviewer_name',
+            'review_comment', 'reviewed_at',
+        ]
 
     def get_reviewer_name(self, obj):
         if obj.reviewer:
@@ -185,4 +189,7 @@ class ExpertEndorsementSerializer(serializers.ModelSerializer):
             'id', 'post', 'reply', 'expert', 'expert_name',
             'endorsement_type', 'endorsement_type_display', 'comment', 'created_at'
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = [
+            'id', 'created_at', 'expert', 'expert_name',
+            'endorsement_type_display',
+        ]

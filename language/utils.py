@@ -15,14 +15,22 @@ def api_response(status='success', message='', data=None):
         'data': data if data is not None else {}
     })
 
+def _clear_stale_session(request):
+    """会话里有用户名但用户已不存在/被禁用时，清掉脏会话。"""
+    if request.session.get('username'):
+        request.session.flush()
+
+
 def login_required_custom(view_func):
     """装饰器：确保用户已通过 session 登录（API 端点用，返回 JSON 401）"""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not request.session.get('username'):
+        user = get_authenticated_user(request)
+        if not user:
+            _clear_stale_session(request)
             return JsonResponse({
                 'status': 'error',
-                'message': 'Please login first'
+                'message': '请先登录'
             }, status=401)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
@@ -32,7 +40,11 @@ def login_required_redirect(view_func):
     """装饰器：确保用户已通过 session 登录（模板视图用，未登录重定向到登录页）"""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not request.session.get('username'):
+        user = get_authenticated_user(request)
+        if not user:
+            _clear_stale_session(request)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': '请先登录'}, status=401)
             from django.shortcuts import redirect
             return redirect(f'/User/login/?next={request.path}')
         return view_func(request, *args, **kwargs)
@@ -43,11 +55,10 @@ def expert_required(view_func):
     """装饰器：仅专家用户可访问"""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not request.session.get('username'):
-            return JsonResponse({'status': 'error', 'message': '请先登录'}, status=401)
         user = get_authenticated_user(request)
         if not user:
-            return JsonResponse({'status': 'error', 'message': '用户不存在'}, status=404)
+            _clear_stale_session(request)
+            return JsonResponse({'status': 'error', 'message': '请先登录'}, status=401)
         if user.expert != 1:
             return JsonResponse({'status': 'error', 'message': '仅专家用户可访问'}, status=403)
         return view_func(request, *args, **kwargs)
@@ -58,39 +69,47 @@ def moderator_required(view_func):
     """装饰器：仅管理员或专家可访问"""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not request.session.get('username'):
-            return JsonResponse({'status': 'error', 'message': '请先登录'}, status=401)
         user = get_authenticated_user(request)
         if not user:
-            return JsonResponse({'status': 'error', 'message': '用户不存在'}, status=404)
+            _clear_stale_session(request)
+            return JsonResponse({'status': 'error', 'message': '请先登录'}, status=401)
         if user.admin != 1 and user.expert != 1:
             return JsonResponse({'status': 'error', 'message': '无权访问'}, status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-def rate_limit(max_requests=10, window_seconds=60):
+def _client_ip(request):
+    """仅当明确配置了可信反向代理时才读取 X-Forwarded-For。"""
+    from django.conf import settings
+
+    if getattr(settings, 'TRUST_PROXY_HEADERS', False):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'unknown')
+
+
+def rate_limit(max_requests=10, window_seconds=60, methods=('POST',)):
     """
     速率限制装饰器
 
     Args:
         max_requests: 时间窗口内允许的最大请求数
         window_seconds: 时间窗口大小（秒）
-
-    基于 IP 地址进行限流，使用 Django 缓存存储计数器。
+        methods: 需要计数的请求方法，默认只限制写操作，避免正常翻页被拦
     """
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            # 获取客户端 IP
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-            if x_forwarded_for:
-                ip = x_forwarded_for.split(',')[0].strip()
-            else:
-                ip = request.META.get('REMOTE_ADDR', 'unknown')
+            if request.method not in methods:
+                return view_func(request, *args, **kwargs)
+
+            ip = _client_ip(request)
+            identity = f"{ip}:{request.session.get('username', 'anon')}"
 
             current_time = time.time()
-            count_key = f'rate_limit:{ip}:{view_func.__name__}:count'
-            window_key = f'rate_limit:{ip}:{view_func.__name__}:window'
+            count_key = f'rate_limit:{identity}:{view_func.__name__}:count'
+            window_key = f'rate_limit:{identity}:{view_func.__name__}:window'
 
             window_start = cache.get(window_key)
             if window_start is None or (current_time - window_start) > window_seconds:
@@ -121,14 +140,21 @@ def rate_limit(max_requests=10, window_seconds=60):
     return decorator
 
 def get_authenticated_user(request):
-    """Helper to get user from session."""
-    username = request.session.get('username', '')
+    """获取当前登录用户；优先使用中间件注入的 request.user，避免重复查库。"""
     from User.models import User
+
+    current = getattr(request, 'user', None)
+    if isinstance(current, User):
+        return current if current.is_active else None
+
+    username = request.session.get('username', '')
+    if not username:
+        return None
     try:
         user = User.objects.get(username=username)
-        return user
     except User.DoesNotExist:
         return None
+    return user if user.is_active else None
 
 
 # 允许的 HTML 标签（用于 AI 输出的安全渲染）

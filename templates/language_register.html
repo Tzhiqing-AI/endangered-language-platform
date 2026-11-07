@@ -12,7 +12,7 @@
     <script src="{% static 'bootstrap-5.3.0-alpha1-dist/js/bootstrap.bundle.min.js' %}"></script>
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -54,7 +54,7 @@
         .register-header .icon-wrapper {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -107,7 +107,7 @@
         }
 
         .form-group input:focus {
-            border-color: #667eea;
+            border-color: #0f766e;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
             background: white;
             outline: none;
@@ -115,7 +115,7 @@
 
         .form-group input:focus + .input-icon,
         .form-group input:focus ~ .input-icon {
-            color: #667eea;
+            color: #0f766e;
         }
 
         .form-group.name-group input {
@@ -123,7 +123,7 @@
         }
 
         .btn-register {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
             border: none;
             border-radius: 12px;
             padding: 16px;
@@ -173,14 +173,14 @@
         }
 
         .login-link a {
-            color: #667eea;
+            color: #0f766e;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s;
         }
 
         .login-link a:hover {
-            color: #764ba2;
+            color: #0b1120;
             text-decoration: underline;
         }
 
@@ -249,23 +249,27 @@
                 <input type="hidden" name="next" value="{{ next|default:'' }}">
 
                 <div class="form-group">
+                    <label class="visually-hidden" for="register-username">用户名</label>
                     <i class="bi bi-person input-icon"></i>
-                    <input type="text" class="form-control" placeholder="请输入用户名" required autofocus name="username">
+                    <input type="text" id="register-username" class="form-control" placeholder="请输入用户名" required autofocus autocomplete="username" name="username">
                 </div>
 
                 <div class="form-group">
+                    <label class="visually-hidden" for="register-password">密码</label>
                     <i class="bi bi-lock input-icon"></i>
-                    <input type="password" class="form-control" placeholder="请输入密码" required name="password">
+                    <input type="password" id="register-password" class="form-control" placeholder="请输入密码" required autocomplete="new-password" name="password">
                 </div>
 
                 <div class="form-group">
+                    <label class="visually-hidden" for="register-confirm-password">确认密码</label>
                     <i class="bi bi-lock-fill input-icon"></i>
-                    <input type="password" class="form-control" placeholder="请确认密码" required name="confirm_password">
+                    <input type="password" id="register-confirm-password" class="form-control" placeholder="请确认密码" required autocomplete="new-password" name="confirm_password">
                 </div>
 
                 <div class="form-group name-group">
+                    <label class="visually-hidden" for="register-name">昵称</label>
                     <i class="bi bi-badge-tm input-icon"></i>
-                    <input type="text" class="form-control" placeholder="请输入您的名称（选填）" name="name">
+                    <input type="text" id="register-name" class="form-control" placeholder="请输入您的名称（选填）" maxlength="20" autocomplete="nickname" name="name">
                 </div>
 
                 <button type="submit" class="btn-register">

@@ -40,9 +40,18 @@ urlpatterns = [
     )),
 ]
 
-# 开发环境下 serve media 文件
+# 头像等媒体文件由 Django 提供（生产环境若上 CDN/nginx 可移除）
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # 无 nginx/whitenoise 的课程部署：collectstatic 后由 Django 提供静态文件
+    urlpatterns += [
+        re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+    ]
 
 # 错误页面处理
 handler404 = 'language.views.handler404'

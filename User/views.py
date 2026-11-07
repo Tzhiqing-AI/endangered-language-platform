@@ -1,10 +1,11 @@
 from django.shortcuts import render, HttpResponseRedirect, redirect
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.contrib.auth import logout
 from django.utils.http import url_has_allowed_host_and_scheme
 from User.models import User, ExpertApplication
-from User.forms import UserLoginForm
 from Dashboard.common import get_user_context
 from language.utils import rate_limit
 import re
@@ -31,6 +32,7 @@ def get_redirect_url(request, default_url='/Dashboard/language/'):
     return default_url
 
 
+@rate_limit(max_requests=5, window_seconds=60)
 @require_http_methods(["GET", "POST"])
 def language_register(request):
     if request.method == 'GET':
@@ -79,12 +81,27 @@ def language_register(request):
             'next': next_url
         })
 
+    if len(name) > 20:
+        return render(request, 'language_register.html', {
+            'message': '昵称不能超过20个字符',
+            'next': next_url
+        })
+
+    try:
+        validate_password(password)
+    except ValidationError as exc:
+        return render(request, 'language_register.html', {
+            'message': ' '.join(exc.messages),
+            'next': next_url
+        })
+
     user = User.objects.create(
         username=username,
         password=make_password(password),
         name=name if name else username,
         admin=0,  # 默认普通用户
     )
+    user.update_last_login()
 
     # 防御会话固定攻击：认证成功后更换 session id（保留 session 数据）
     request.session.cycle_key()
@@ -118,11 +135,22 @@ def language_login(request):
 
     try:
         user = User.objects.get(username=username)
+        if not user.is_active:
+            return render(request, 'language_login.html', {
+                'message': '该账号已被禁用，请联系管理员',
+                'next': next_url
+            })
         if check_password(password, user.password):
             # 防御会话固定攻击：登录成功后更换 session id（保留 session 数据）
             request.session.cycle_key()
             request.session["username"] = user.username
             request.session["name"] = user.name
+            # 勾选“记住登录状态”时使用默认有效期；否则关闭浏览器即失效
+            if request.POST.get('remember_me') == 'yes':
+                request.session.set_expiry(None)
+            else:
+                request.session.set_expiry(0)
+            user.update_last_login()
 
             if next_url:
                 return HttpResponseRedirect(_safe_redirect_url(next_url, request))
@@ -138,6 +166,13 @@ def language_login(request):
             'next': next_url
         })
 
+@require_http_methods(["GET"])
+def password_help(request):
+    """密码找回说明页（当前系统不发送邮件，由管理员协助重置）。"""
+    return render(request, 'user/password_help.html')
+
+
+@require_POST
 def logout_view(request):
     request.session.flush()
     logout(request)

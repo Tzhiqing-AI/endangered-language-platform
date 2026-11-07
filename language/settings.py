@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,13 +26,38 @@ load_dotenv(BASE_DIR / '.env')
 # Security Settings - 敏感配置从环境变量读取
 # =============================================================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-key-change-in-production')
+# 默认按生产模式运行；本地开发必须在 .env 中显式开启 DJANGO_DEBUG=True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() == 'true'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-dev-only-do-not-use-in-production'
+    else:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY 未配置，生产环境必须设置安全密钥')
+if not DEBUG and SECRET_KEY.startswith('django-insecure-'):
+    raise ImproperlyConfigured('生产环境不能使用 django-insecure- 开头的 SECRET_KEY')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+
+# 反向代理场景下才信任 X-Forwarded-For/Proto，避免客户端伪造
+TRUST_PROXY_HEADERS = os.getenv('TRUST_PROXY_HEADERS', 'False').lower() == 'true'
+
+# Cookie / HTTPS 安全开关：DEBUG 下自动关闭，生产默认开启
+_secure_default = str(not DEBUG)
+SECURE_SSL_REDIRECT = os.getenv('DJANGO_SECURE_SSL_REDIRECT', _secure_default).lower() == 'true'
+SESSION_COOKIE_SECURE = os.getenv('DJANGO_SECURE_COOKIES', _secure_default).lower() == 'true'
+CSRF_COOKIE_SECURE = os.getenv('DJANGO_SECURE_COOKIES', _secure_default).lower() == 'true'
+SECURE_HSTS_SECONDS = int(os.getenv('DJANGO_HSTS_SECONDS', '0' if DEBUG else '31536000'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if TRUST_PROXY_HEADERS else None
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+]
 
 # =============================================================================
 # AI API Settings - Moonshot/Kimi API 配置
@@ -41,6 +67,12 @@ OPENAI_BASE_URL = os.getenv('OPENAI_BASE_URL', 'https://api.moonshot.cn/v1')
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'kimi-k2.7-code')
 # kimi-k2.7-code / kimi-k3 等推理模型强制 temperature=1
 OPENAI_TEMPERATURE = float(os.getenv('OPENAI_TEMPERATURE', '1'))
+
+# 高德地图前端 Key（不要写进模板，按环境注入）
+AMAP_JS_KEY = os.getenv('AMAP_JS_KEY', '')
+
+# 可选：唯一可调整管理员角色的引导账号；留空时任何人都不能通过网页提升管理员
+SUPER_ADMIN_USERNAME = os.getenv('DJANGO_SUPER_ADMIN_USERNAME', '')
 
 # 编码设置
 FILE_CHARSET = 'utf-8'
@@ -77,6 +109,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'language.middleware.SessionUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -95,6 +128,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'language.context.user_context',
+                'language.context.site_context',
             ],
         },
     },
@@ -110,9 +144,9 @@ WSGI_APPLICATION = 'language.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
-        'NAME': os.getenv('DB_NAME', 'language'),
+        'NAME': os.getenv('DB_NAME', 'language_v2'),
         'USER': os.getenv('DB_USER', 'root'),
-        'PASSWORD': os.getenv('DB_PASSWORD', '123456'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '3306'),
     }
@@ -152,6 +186,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -196,12 +239,13 @@ MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
 MONGODB_NAME = os.getenv('MONGODB_NAME', 'language_nosql')
 
 # =============================================================================
-# Neo4j 配置（虚拟机部署）
+# Neo4j 配置
+# 地址必须由环境变量 NEO4J_URI 提供；默认仅指向本机，避免把内网/生产地址写死进仓库。
 # =============================================================================
 
-NEO4J_URI = os.getenv('NEO4J_URI', 'bolt://192.168.28.129:7687')
+NEO4J_URI = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
 NEO4J_USER = os.getenv('NEO4J_USER', 'neo4j')
-NEO4J_PASSWORD = os.getenv('NEO4J_PASSWORD', '123456')
+NEO4J_PASSWORD = os.getenv('NEO4J_PASSWORD', '')
 
 # =============================================================================
 # ChromaDB 配置（Docker 部署，语义推荐）
@@ -232,6 +276,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/min',
+        'user': '120/min',
+    },
 }
 
 
