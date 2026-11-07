@@ -130,7 +130,7 @@
                 </div>
 
                 <div class="panel-card" id="riskLegendCard" style="display:none;">
-                    <div class="panel-title">风险预测分布</div>
+                    <div class="panel-title">高危概率分布 P(≥高危)</div>
                     <div class="risk-list">
                         <div class="risk-item">
                             <div class="legend-dot" style="background:#10b981;"></div>
@@ -143,19 +143,15 @@
                             <strong id="riskCountMedium">0</strong>
                         </div>
                         <div class="risk-item">
-                            <div class="legend-dot" style="background:#f97316;"></div>
+                            <div class="legend-dot" style="background:#dc2626;"></div>
                             <span>高风险</span>
                             <strong id="riskCountHigh">0</strong>
                         </div>
-                        <div class="risk-item">
-                            <div class="legend-dot" style="background:#dc2626;"></div>
-                            <span>极高风险</span>
-                            <strong id="riskCountCritical">0</strong>
-                        </div>
                     </div>
-                    <div class="panel-title" style="margin-top:0.9rem;">风险最高</div>
+                    <div class="risk-calibration-note" id="riskCalibrationNote"></div>
+                    <div class="panel-title" style="margin-top:0.9rem;">高危概率最高</div>
                     <ol class="risk-top-list" id="riskTopList"></ol>
-                    <p class="risk-note">圆点越大、颜色越深，风险估计越高（按语系分组交叉验证的样本外估计）；点击上方列表可定位到对应语言。</p>
+                    <p class="risk-note">数值是校准后的 <strong>P(≥高危)</strong>，即濒危 / 垂危 / 灭绝三类的累积概率（0–100%），不是 0–100 的旧风险分数；50% 为分档界。颜色：绿=低风险、琥珀=中风险、红=高风险；圆点越大代表概率越高。点击上方列表可定位到对应语言。</p>
                 </div>
             </div>
 
@@ -192,7 +188,7 @@
                         <div class="detail-value" id="detailCoords"></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">预测风险</div>
+                        <div class="detail-label">高危概率</div>
                         <div class="detail-value" id="detailRisk"></div>
                     </div>
                 </div>
@@ -203,6 +199,7 @@
 
 <!-- 加载地图 -->
 {{ map_data|json_script:"map-data" }}
+{{ map_risk_meta|json_script:"map-risk-meta" }}
 <script>
 // 修复 AMap 1.4.15 高分屏（devicePixelRatio != 1）画布尺寸 bug：
 // AMap 会把画布 CSS 尺寸除以 devicePixelRatio（如 150% 缩放下地图只占容器的 2/3，

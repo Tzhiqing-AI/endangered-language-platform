@@ -1370,7 +1370,22 @@ def _build_map_snapshot():
     from django.db.models import Count
 
     from Dashboard.models import Language, LanguageLocation, LanguageLocationDetail
+    from Dashboard.risk_calibration import (
+        RISK_TIER_COLORS,
+        RISK_TIER_LABELS,
+        TIER_THRESHOLD,
+    )
     from Dashboard.risk_service import get_risk_profile
+
+    # 风险图例元信息：三档标签/颜色与校准状态，只随快照下发一次
+    risk_meta = {
+        'tiers': {
+            key: {'label': RISK_TIER_LABELS[key], 'color': RISK_TIER_COLORS[key]}
+            for key in ('low', 'medium', 'high')
+        },
+        'threshold': TIER_THRESHOLD,
+        'calibration': None,
+    }
 
     language_rows = Language.objects.values(
         'language_id', 'language_name', 'number_of_speakers',
@@ -1410,6 +1425,8 @@ def _build_map_snapshot():
             legacy_key = lang['legacy_endangerment_level'] or 'unknown'
             level_cn = LEGACY_LEVEL_LABELS.get(legacy_key, '未分类')
             risk = get_risk_profile(lang['language_id'])
+            if risk and risk_meta['calibration'] is None:
+                risk_meta['calibration'] = risk.get('calibration')
             points.append({
                 'id': lang['language_id'],
                 'name': display_language_name(lang),
@@ -1419,6 +1436,10 @@ def _build_map_snapshot():
                 'speakers': lang['number_of_speakers'] or 0,
                 'region': lang['country'] or '未知',
                 'family': lang['language_family'] or '未知',
+                # 新口径：高危及以上（濒危/垂危/灭绝）的累积概率 + 三档
+                'riskProbPct': risk['high_risk_prob_pct'] if risk else None,
+                'riskTier': risk['risk_tier'] if risk else None,
+                # 旧字段保留，页面不再依赖
                 'riskScore': risk['risk_score'] if risk else None,
                 'riskLabel': risk['risk_band_label'] if risk else '暂无预测',
             })
@@ -1441,7 +1462,16 @@ def _build_map_snapshot():
     for key in ELCAT_SIMPLE_LEVEL_KEYS:
         stats[key] = elcat_counts.get(key, 0)
 
-    return {'points': points, 'stats': stats, 'total': total_languages}
+    if risk_meta['calibration'] is None:
+        risk_meta['calibration'] = {
+            'applied': False, 'method': None, 'temperature': None,
+            'reason': '暂无风险预测数据',
+        }
+
+    return {
+        'points': points, 'stats': stats, 'total': total_languages,
+        'riskMeta': risk_meta,
+    }
 
 
 def _get_map_snapshot():
@@ -1454,7 +1484,8 @@ def _get_map_snapshot():
     cached = cache.get(MAP_SNAPSHOT_CACHE_KEY)
     # 结构校验：旧版本/损坏缓存视为未命中，避免前端拿到不完整数据
     if (isinstance(cached, dict) and 'points' in cached
-            and 'stats' in cached and 'total' in cached):
+            and 'stats' in cached and 'total' in cached
+            and 'riskMeta' in cached):
         return cached
 
     snapshot = _build_map_snapshot()
@@ -1546,6 +1577,7 @@ def language_map(request):
             'points': points,
             'count': len(points),
             'total': snapshot['total'],
+            'riskMeta': snapshot['riskMeta'],
             'bbox': list(bbox) if bbox else None,
             'level': level,
         }, json_dumps_params={'ensure_ascii': False})
@@ -1555,6 +1587,7 @@ def language_map(request):
         'name': name,
         'username': user.username if user else '',
         'map_data': snapshot['points'],
+        'map_risk_meta': snapshot['riskMeta'],
         'endangerment_stats': snapshot['stats'],
         'endangerment_levels': ENDANGERMENT_LEVELS,
         'total_languages': snapshot['total'],

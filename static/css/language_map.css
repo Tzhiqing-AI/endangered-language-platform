@@ -270,6 +270,7 @@
         font-weight: 700;
         color: white;
         flex-shrink: 0;
+        white-space: nowrap;
     }
 
     /* 统计信息 */
@@ -490,6 +491,22 @@
         font-size: 0.72rem;
         line-height: 1.45;
         color: var(--primary-500);
+    }
+
+    /* 校准状态提示：已校准为浅绿，未校准为琥珀提醒（不报错、不隐藏图层） */
+    .risk-calibration-note {
+        margin-top: 0.55rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        line-height: 1.4;
+        color: var(--primary-600);
+        background: rgba(16,185,129,0.10);
+    }
+
+    .risk-calibration-note.is-uncalibrated {
+        color: #92400e;
+        background: rgba(245,158,11,0.16);
     }
 
     .risk-score-label {

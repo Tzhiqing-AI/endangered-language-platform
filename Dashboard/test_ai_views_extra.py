@@ -371,12 +371,27 @@ def test_map_snapshot_and_json_view(monkeypatch, db):
         id=1, code_id=lang.language_id, coordinates='120.1,30.2', preferred=True,
     )
     monkeypatch.setattr('Dashboard.risk_service.get_risk_profile',
-                        lambda code_id: {'risk_score': 88.0, 'risk_band_label': '极高'})
+                        lambda code_id: {
+                            # 新口径字段
+                            'high_risk_prob': 0.62,
+                            'high_risk_prob_pct': 62.0,
+                            'risk_tier': 'high',
+                            'calibration': {
+                                'applied': True, 'method': 'temperature_scaling',
+                                'temperature': 1.2, 'reason': '',
+                            },
+                            # 旧字段保留
+                            'risk_score': 88.0, 'risk_band_label': '极高',
+                        })
 
     snapshot = ai_views._build_map_snapshot()
     assert snapshot['total'] == 1
     assert snapshot['points'][0]['id'] == lang.language_id
     assert snapshot['points'][0]['riskScore'] == 88.0
+    assert snapshot['points'][0]['riskProbPct'] == 62.0
+    assert snapshot['points'][0]['riskTier'] == 'high'
+    assert snapshot['riskMeta']['tiers']['high']['label'] == '高风险'
+    assert snapshot['riskMeta']['calibration']['applied'] is True
     assert snapshot['points'][0]['endangerment'] == ai_views.LEGACY_LEVEL_LABELS['endangered']
     assert ai_views._get_map_snapshot()['total'] == 1
 

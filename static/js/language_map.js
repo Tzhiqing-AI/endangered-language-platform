@@ -7,6 +7,22 @@
     // 语言数据 - 由后端 json_script 安全序列化
     var languages = JSON.parse(document.getElementById('map-data').textContent || '[]');
 
+    // 风险口径元信息：三档标签/颜色 + 校准状态，随快照只下发一次
+    var riskMeta = {};
+    var riskMetaEl = document.getElementById('map-risk-meta');
+    if (riskMetaEl) {
+        try {
+            riskMeta = JSON.parse(riskMetaEl.textContent || '{}') || {};
+        } catch (e) {
+            riskMeta = {};
+        }
+    }
+    var RISK_TIERS = riskMeta.tiers || {
+        low: { label: '低风险', color: '#10b981' },
+        medium: { label: '中风险', color: '#f59e0b' },
+        high: { label: '高风险', color: '#dc2626' }
+    };
+
     // 视口接口返回的点是新的对象副本，不能再用 languages.indexOf 取全局下标，
     // 统一走 id -> 全局下标映射，保证点击视口标记仍能高亮右侧列表项
     var languageIndexById = Object.create(null);
@@ -88,15 +104,61 @@
     // 超过该数量时密集点自动聚合，避免低缩放级别下点位堆叠
     var CLUSTER_THRESHOLD = 260;
 
-    // 风险等级颜色与圆点尺寸（风险越高圆点越大）
-    var RISK_STYLES = {
-        '低风险': { color: '#10b981', size: 9 },
-        '中风险': { color: '#f59e0b', size: 11 },
-        '高风险': { color: '#f97316', size: 14 },
-        '极高风险': { color: '#dc2626', size: 17 }
-    };
-    var RISK_BAND_KEYS = ['低风险', '中风险', '高风险', '极高风险'];
-    var RISK_BAND_RANK = { '低风险': 0, '中风险': 1, '高风险': 2, '极高风险': 3 };
+    // 风险三档：标签与颜色来自后端 riskMeta（与详情页、预警榜同一口径），
+    // 圆点尺寸只在前端按档位递增，不再依赖旧的 riskLabel / riskScore。
+    var RISK_TIER_ORDER = ['low', 'medium', 'high'];
+    var RISK_TIER_RANK = { low: 0, medium: 1, high: 2 };
+    var RISK_TIER_SIZE = { low: 9, medium: 11, high: 14 };
+    var RISK_UNKNOWN_STYLE = { color: '#64748b', size: 10 };
+
+    function riskTierInfo(lang) {
+        var tier = lang && lang.riskTier;
+        var meta = RISK_TIERS[tier];
+        if (!meta) return null;
+        return {
+            key: tier,
+            label: meta.label,
+            color: meta.color,
+            size: RISK_TIER_SIZE[tier] || 10
+        };
+    }
+
+    function hasRiskProb(lang) {
+        if (!lang) return false;
+        var value = lang.riskProbPct;
+        return value !== null && value !== undefined && isFinite(Number(value));
+    }
+
+    function riskPctText(lang) {
+        return Number(lang.riskProbPct).toFixed(1) + '%';
+    }
+
+    // 校准不可用时只显示“未校准”标记，不隐藏风险图层也不报错
+    function calibrationStatusText() {
+        var cal = riskMeta.calibration || {};
+        if (!cal.applied) {
+            return {
+                applied: false,
+                text: '未校准 · ' + (cal.reason || '校准文件缺失')
+            };
+        }
+        var temperature = cal.temperature;
+        return {
+            applied: true,
+            text: '已校准（温度缩放' +
+                (temperature !== null && temperature !== undefined ? ' T=' + temperature : '') + '）'
+        };
+    }
+
+    // 与详情页一致的弹窗文案：三档标签 + 高危概率 P(≥高危)；未校准时追加标记
+    function buildRiskDetailText(lang) {
+        if (!hasRiskProb(lang)) return '暂无预测';
+        var tierInfo = riskTierInfo(lang);
+        var text = (tierInfo ? tierInfo.label + ' · ' : '') +
+            '高危概率 ' + riskPctText(lang);
+        if (!calibrationStatusText().applied) text += ' · 未校准';
+        return text;
+    }
 
     // ===== 画布尺寸同步（右侧白块的核心修复） =====
     // AMap 1.4 没有公开的 resize()，它靠塞进容器的一个 <object> 监听器感知容器尺寸变化。
@@ -459,7 +521,7 @@
 
         list.forEach(function(lang) {
             var index = languageIndexOf(lang);
-            var styleConfig = RISK_STYLES[lang.riskLabel] || { color: '#64748b', size: 10 };
+            var styleConfig = riskTierInfo(lang) || RISK_UNKNOWN_STYLE;
             var s = styleConfig.size;
             var marker = new AMap.Marker({
                 position: new AMap.LngLat(lang.longitude, lang.latitude),
@@ -480,7 +542,7 @@
         return result;
     }
 
-    // 风险聚合气泡：按簇内最高风险等级着色，放大后自动还原为分色圆点
+    // 风险聚合气泡：按簇内最高风险档着色，放大后自动还原为分色圆点
     function renderRiskClusterMarker(context) {
         var count = context.count;
         var worstRank = -1;
@@ -488,11 +550,12 @@
         for (var i = 0; i < mks.length; i++) {
             var idx = mks[i] && mks[i].getExtData ? mks[i].getExtData() : null;
             if (typeof idx === 'number' && languages[idx]) {
-                var rank = RISK_BAND_RANK[languages[idx].riskLabel];
+                var rank = RISK_TIER_RANK[languages[idx].riskTier];
                 if (rank !== undefined && rank > worstRank) worstRank = rank;
             }
         }
-        var color = worstRank >= 0 ? RISK_STYLES[RISK_BAND_KEYS[worstRank]].color : 'rgba(15,118,110,.94)';
+        var worstTier = worstRank >= 0 ? RISK_TIERS[RISK_TIER_ORDER[worstRank]] : null;
+        var color = worstTier ? worstTier.color : 'rgba(15,118,110,.94)';
         var size = count >= 1000 ? 54 : count >= 100 ? 48 : count >= 10 ? 42 : 34;
         var el = document.createElement('div');
         el.style.cssText = 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px;' +
@@ -506,18 +569,27 @@
         }
     }
 
+    function updateRiskCalibrationNote() {
+        var noteEl = document.getElementById('riskCalibrationNote');
+        if (!noteEl) return;
+        var status = calibrationStatusText();
+        noteEl.textContent = status.text;
+        noteEl.classList.toggle('is-uncalibrated', !status.applied);
+    }
+
     function updateRiskPanel(list, top) {
-        var counts = { '低风险': 0, '中风险': 0, '高风险': 0, '极高风险': 0 };
+        var counts = { low: 0, medium: 0, high: 0 };
         list.forEach(function(lang) {
-            if (counts.hasOwnProperty(lang.riskLabel)) {
-                counts[lang.riskLabel]++;
+            if (counts.hasOwnProperty(lang.riskTier)) {
+                counts[lang.riskTier]++;
             }
         });
 
-        document.getElementById('riskCountLow').textContent = counts['低风险'];
-        document.getElementById('riskCountMedium').textContent = counts['中风险'];
-        document.getElementById('riskCountHigh').textContent = counts['高风险'];
-        document.getElementById('riskCountCritical').textContent = counts['极高风险'];
+        document.getElementById('riskCountLow').textContent = counts.low;
+        document.getElementById('riskCountMedium').textContent = counts.medium;
+        document.getElementById('riskCountHigh').textContent = counts.high;
+
+        updateRiskCalibrationNote();
 
         var listEl = document.getElementById('riskTopList');
         listEl.innerHTML = '';
@@ -525,7 +597,7 @@
             var li = document.createElement('li');
             li.className = 'risk-top-item';
             li.innerHTML = '<span>' + escapeHtml(lang.name) + '</span>' +
-                '<span class="risk-top-score">' + Math.round(Number(lang.riskScore)) + '</span>';
+                '<span class="risk-top-score">' + riskPctText(lang) + '</span>';
             li.onclick = function() {
                 focusOnLanguage(lang);
             };
@@ -536,11 +608,9 @@
     function renderRisk() {
         clearMapLayers();
 
-        var filtered = getFilteredLanguages().filter(function(lang) {
-            return lang.riskScore !== null && lang.riskScore !== undefined;
-        });
+        var filtered = getFilteredLanguages().filter(hasRiskProb);
         var top = filtered.slice().sort(function(a, b) {
-            return Number(b.riskScore) - Number(a.riskScore);
+            return Number(b.riskProbPct) - Number(a.riskProbPct);
         });
 
         // 每个语言一个按风险分色/分大小的圆点，坐标即真实经纬度
@@ -554,13 +624,14 @@
             map.add(dots);
         }
 
-        // 风险最高的语言叠加分数标签，形成“预警点”而不是一片红色热区
+        // 高危概率最高的语言叠加概率标签，形成“预警点”而不是一片红色热区
         top.slice(0, 10).forEach(function(lang) {
-            var index = languages.indexOf(lang);
+            var index = languageIndexOf(lang);
+            var pctText = riskPctText(lang);
             var label = new AMap.Marker({
                 position: new AMap.LngLat(lang.longitude, lang.latitude),
-                title: lang.name + ' · 风险 ' + Math.round(Number(lang.riskScore)),
-                content: '<div class="risk-score-label">' + Math.round(Number(lang.riskScore)) + '</div>',
+                title: lang.name + ' · 高危概率 ' + pctText,
+                content: '<div class="risk-score-label">' + pctText + '</div>',
                 offset: new AMap.Pixel(-18, -30),
                 zIndex: 130
             });
@@ -637,9 +708,18 @@
             li.className = 'lang-list-item';
             li.setAttribute('data-index', index);
             var color = dangerColors[lang.endangerment] || '#64748b';
+            var badge = lang.endangerment;
+            // 风险模式下列表与地图点使用同一套三档口径，避免同一语言两处颜色不一致
+            if (currentViewMode === 'risk') {
+                var tierInfo = riskTierInfo(lang);
+                color = tierInfo ? tierInfo.color : '#64748b';
+                badge = tierInfo
+                    ? tierInfo.label + (hasRiskProb(lang) ? ' ' + riskPctText(lang) : '')
+                    : '暂无预测';
+            }
             li.innerHTML = '<div class="lang-dot" style="background:' + color + ';"></div>' +
                 '<div class="lang-info"><div class="lang-name">' + escapeHtml(lang.name) + '</div><div class="lang-meta">' + escapeHtml(lang.region) + ' · ' + escapeHtml(formatSpeakers(lang.speakers)) + '</div></div>' +
-                '<span class="lang-badge" style="background:' + color + ';">' + escapeHtml(lang.endangerment) + '</span>';
+                '<span class="lang-badge" style="background:' + color + ';">' + escapeHtml(badge) + '</span>';
             li.onclick = function() {
                 focusOnLanguage(lang);
             };
@@ -687,9 +767,7 @@
         document.getElementById('detailRegion').textContent = lang.region;
         document.getElementById('detailFamily').textContent = lang.family;
         document.getElementById('detailCoords').textContent = lang.latitude.toFixed(4) + ', ' + lang.longitude.toFixed(4);
-        document.getElementById('detailRisk').textContent = (lang.riskScore === null || lang.riskScore === undefined)
-            ? '暂无预测'
-            : lang.riskLabel + ' · ' + Number(lang.riskScore).toFixed(1);
+        document.getElementById('detailRisk').textContent = buildRiskDetailText(lang);
         panel.classList.add('show');
     }
 
