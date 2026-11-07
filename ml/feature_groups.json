@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "name": "archive_vs_weak_information",
+  "description": "按「专家尚未查阅档案时该值是否存在」划分 59 个特征；弱信息消融只保留 weak_features，并额外计算 1 个由弱信息派生的邻域密度列。",
+  "total_features": 59,
+  "archive_features": [
+    "speakers",
+    "log_speakers",
+    "has_speakers",
+    "notes_length",
+    "has_media",
+    "alternate_name_count",
+    "has_iso",
+    "speaker_trend",
+    "transmission",
+    "domain_of_use",
+    "sample_count",
+    "sample_type_count",
+    "sample_A",
+    "sample_D",
+    "sample_G",
+    "sample_I",
+    "sample_L",
+    "sample_V",
+    "bibliography_count",
+    "source_count",
+    "cited_count",
+    "source_type_count",
+    "activity_count",
+    "activity_type_count",
+    "orthography_count",
+    "script_count",
+    "documentation_count",
+    "max_documentation_index",
+    "resource_count",
+    "media_count",
+    "context_count",
+    "government_support_flag",
+    "institutional_support_flag",
+    "speaker_attitude_flag",
+    "location_count",
+    "country_count",
+    "vitality_count",
+    "speaker_records",
+    "max_speaker_number",
+    "max_ethnic_population",
+    "max_semi_speakers",
+    "max_children",
+    "max_young_adults",
+    "max_older_adults",
+    "max_elders",
+    "log_ethnic_population",
+    "log_speaker_number_max",
+    "log_children",
+    "log_young_adults",
+    "log_older_adults",
+    "log_elders"
+  ],
+  "weak_features": [
+    "latitude",
+    "longitude",
+    "has_location",
+    "country",
+    "region",
+    "family_top",
+    "family_depth",
+    "classification_depth"
+  ],
+  "derived_weak_features": [
+    {
+      "name": "neighbor_density_100km",
+      "label": "100 公里内可训练语言数",
+      "formula": "对每个有经纬度的可训练语言，统计其他可训练语言在 100 公里（haversine 大圆距离）内的数量；无坐标时为 NaN，沿用主实验的数值中位数填充",
+      "radius_km": 100,
+      "source_features": ["latitude", "longitude"]
+    }
+  ],
+  "ambiguous_features": [
+    {
+      "feature": "family_depth",
+      "assigned_to": "weak",
+      "reason": "与 family_top 同源于 language_family 字符串，冷启动可获得；但「深度」也可能来自档案著录，若从严可改归档案组"
+    },
+    {
+      "feature": "classification_depth",
+      "assigned_to": "weak",
+      "reason": "需求将「分类层级」列入弱信息；实际取值来自 language_code.classification，属档案著录字段，从严可改归档案组"
+    },
+    {
+      "feature": "has_location",
+      "assigned_to": "weak",
+      "reason": "由经纬度是否存在派生，信息量与坐标同源；不额外引入档案信息"
+    },
+    {
+      "feature": "country_count",
+      "assigned_to": "archive",
+      "reason": "虽然国家清单可能是公开知识，但多国家归属由 LanguageCountry 档案记录决定，按保守原则归档案组"
+    },
+    {
+      "feature": "location_count",
+      "assigned_to": "archive",
+      "reason": "是档案中位置明细条数，不是冷启动可直接获得的「是否有坐标」，按保守原则归档案组"
+    },
+    {
+      "feature": "notes_length",
+      "assigned_to": "archive",
+      "reason": "additional_notes 由编目人员撰写，冷启动不存在"
+    },
+    {
+      "feature": "has_media",
+      "assigned_to": "archive",
+      "reason": "media 字段由档案整理产生；若未来接入多媒体自动发现可重新评估"
+    }
+  ],
+  "notes": [
+    "分组只覆盖数据集中的 59 列，缺失或新增列会在训练时直接报错，避免静默漂移",
+    "neighbor_density_100km 是额外派生列（不属于原 59 列），由弱信息坐标计算，仅出现在 weak 组",
+    "拿不准的列一律按保守原则归入 archive_features，ambiguous_features 中逐列记录判断依据"
+  ]
+}
