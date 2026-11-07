@@ -7,23 +7,26 @@
 <style>
     /* 页面头部 */
     .page-header-custom {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        margin: 0 -2rem 2rem -2rem;
-        padding: 3rem 2rem;
-        color: white;
         position: relative;
         overflow: hidden;
+        margin: 0 0 1.6rem;
+        padding: 2.4rem;
+        border-radius: 28px;
+        color: #fff;
+        background:
+            radial-gradient(circle at 84% 18%, rgba(13, 148, 136, 0.30), transparent 42%),
+            radial-gradient(circle at 10% 90%, rgba(217, 119, 6, 0.22), transparent 44%),
+            linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%);
+        box-shadow: 0 24px 60px rgba(11, 17, 32, 0.20);
     }
 
     .page-header-custom::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        z-index: 1;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 22px 22px;
+        pointer-events: none;
     }
 
     .page-header-custom > .container {
@@ -36,6 +39,28 @@
         font-weight: 800;
         margin-bottom: 0.5rem;
         letter-spacing: -0.02em;
+    }
+
+    .header-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 0.95rem;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #0b1120;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .header-pill:hover {
+        background: #f1f5f9;
+        color: #0f766e;
+        transform: translateY(-1px);
     }
 
     /* 搜索区域 */
@@ -66,8 +91,8 @@
     }
 
     .search-input:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
         background: white;
         outline: none;
     }
@@ -78,7 +103,7 @@
         top: 50%;
         transform: translateY(-50%);
         font-size: 1.25rem;
-        color: #94a3b8;
+        color: #64748b;
     }
 
     .search-btn {
@@ -87,7 +112,7 @@
         top: 50%;
         transform: translateY(-50%);
         padding: 0.875rem 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
         color: white;
         border: none;
         border-radius: 12px;
@@ -98,7 +123,7 @@
 
     .search-btn:hover {
         transform: translateY(-50%) scale(1.02);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 20px rgba(20, 184, 166, 0.32);
     }
 
     /* 搜索过滤器 */
@@ -136,7 +161,7 @@
 
     .filter-option:has(input:checked) {
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        color: #667eea;
+        color: #0f766e;
         font-weight: 600;
     }
 
@@ -155,7 +180,7 @@
     .result-count {
         font-size: 1.5rem;
         font-weight: 800;
-        color: #667eea;
+        color: #0f766e;
     }
 
     /* 语言卡片 */
@@ -176,8 +201,8 @@
 
     .language-header {
         padding: 1.5rem;
-        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        background: linear-gradient(135deg, #f8fafc 0%, #f0fdfa 100%);
+        border-bottom: 1px solid rgba(15, 118, 110, 0.12);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -185,15 +210,35 @@
         gap: 1rem;
     }
 
-    .language-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
+    .language-card .language-header .language-title {
+        color: #0f172a !important;
+        font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        font-size: clamp(1.7rem, 3.2vw, 2.1rem);
+        font-weight: 800;
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+        text-shadow: none;
+        padding-bottom: 0.6rem;
+        position: relative;
     }
 
-    .language-id {
-        font-size: 0.875rem;
-        color: #94a3b8;
+    .language-card .language-header .language-title::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 48px;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #14b8a6 0%, #f59e0b 100%);
+    }
+
+    .language-card .language-header .language-id {
+        margin-top: 0.35rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: #475569;
+        letter-spacing: 0.08em;
     }
 
     /* 濒危程度徽章 */
@@ -212,6 +257,9 @@
     .badge-endangered { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
     .badge-seriously { background: rgba(220, 38, 38, 0.1); color: #b91c1c; }
     .badge-extinct { background: rgba(153, 27, 27, 0.1); color: #991b1b; }
+    .badge-awakening { background: rgba(20, 184, 166, 0.12); color: #0f766e; }
+    .badge-safe { background: rgba(16, 185, 129, 0.12); color: #047857; }
+    .badge-unknown { background: rgba(100, 116, 139, 0.12); color: #475569; }
 
     /* 详情网格 */
     .language-details {
@@ -230,7 +278,7 @@
     .detail-label {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #94a3b8;
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -286,11 +334,11 @@
 
     .page-link:hover {
         background: #f1f5f9;
-        color: #667eea;
+        color: #0f766e;
     }
 
     .page-item.active .page-link {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
         color: white;
     }
 
@@ -298,7 +346,7 @@
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
-        color: #94a3b8;
+        color: #64748b;
     }
 
     .empty-state i {
@@ -310,7 +358,8 @@
     /* 响应式 */
     @media (max-width: 768px) {
         .page-header-custom {
-            padding: 2rem 1.5rem;
+            padding: 1.8rem 1.4rem;
+            border-radius: 22px;
         }
 
         .page-title {
@@ -338,13 +387,25 @@
 <!-- 页面标题 -->
 <div class="page-header-custom">
     <div class="container">
-        <h1 class="page-title"><i class="bi bi-search me-3"></i>语言详情查询</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="javascript:history.back()" class="text-white-50">返回</a></li>
-                <li class="breadcrumb-item active text-white">详情查询</li>
-            </ol>
-        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="page-title"><i class="bi bi-search me-3"></i>语言详情查询</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'Dashboard:language' %}" class="text-white-50">首页</a></li>
+                        <li class="breadcrumb-item active text-white">详情查询</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'Dashboard:language_list' %}" class="header-pill">
+                    <i class="bi bi-table"></i> 语言数据
+                </a>
+                <a href="{% url 'Dashboard:language_visualization' %}" class="header-pill">
+                    <i class="bi bi-stars"></i> 语言洞察
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -406,19 +467,25 @@
         <div class="language-card">
             <div class="language-header">
                 <div>
-                    <div class="language-title">{{ language.language_name }}</div>
+                    <div class="language-title">{{ language|language_display_name }}</div>
                     <div class="language-id">ID: {{ language.language_id }}</div>
                 </div>
-                {% if language.level_of_endangerment == 'unsafe' %}
+                {% if language.legacy_endangerment_level == 'unsafe' %}
                     <span class="endangerment-badge badge-unsafe"><i class="bi bi-exclamation-circle"></i> 不安全</span>
-                {% elif language.level_of_endangerment == 'danger' %}
+                {% elif language.legacy_endangerment_level == 'danger' %}
                     <span class="endangerment-badge badge-danger"><i class="bi bi-exclamation-triangle"></i> 危险</span>
-                {% elif language.level_of_endangerment == 'endangered' %}
+                {% elif language.legacy_endangerment_level == 'endangered' %}
                     <span class="endangerment-badge badge-endangered"><i class="bi bi-x-octagon"></i> 濒危</span>
-                {% elif language.level_of_endangerment == 'seriously_endangered' %}
+                {% elif language.legacy_endangerment_level == 'seriously_endangered' %}
                     <span class="endangerment-badge badge-seriously"><i class="bi bi-heartbreak"></i> 垂危</span>
-                {% elif language.level_of_endangerment == 'extinct' %}
+                {% elif language.legacy_endangerment_level == 'extinct' %}
                     <span class="endangerment-badge badge-extinct"><i class="bi bi-circle"></i> 灭绝</span>
+                {% elif language.legacy_endangerment_level == 'awakening' %}
+                    <span class="endangerment-badge badge-awakening"><i class="bi bi-sunrise"></i> 复苏</span>
+                {% elif language.legacy_endangerment_level == 'safe' %}
+                    <span class="endangerment-badge badge-safe"><i class="bi bi-shield-check"></i> 安全</span>
+                {% else %}
+                    <span class="endangerment-badge badge-unknown"><i class="bi bi-question-circle"></i> 未分类</span>
                 {% endif %}
             </div>
 
@@ -436,26 +503,28 @@
                 <div class="detail-item">
                     <span class="detail-label">趋势</span>
                     <span class="detail-value">
-                        {% if language.speaker_trends == 'Increasing' %}
-                            <span class="text-success"><i class="bi bi-arrow-up-circle-fill"></i> 增加</span>
-                        {% elif language.speaker_trends == 'Decreasing' %}
-                            <span class="text-danger"><i class="bi bi-arrow-down-circle-fill"></i> 减少</span>
+                        {% if language.speaker_trends == '-1' %}
+                            <span class="text-success"><i class="bi bi-arrow-up-circle-fill"></i> {{ language.speaker_trend_display }}</span>
+                        {% elif language.speaker_trends == '1' or language.speaker_trends == '2' %}
+                            <span style="color:#d97706;"><i class="bi bi-dash-circle-fill"></i> {{ language.speaker_trend_display }}</span>
+                        {% elif language.speaker_trends == '3' or language.speaker_trends == '4' or language.speaker_trends == '5' %}
+                            <span class="text-danger"><i class="bi bi-arrow-down-circle-fill"></i> {{ language.speaker_trend_display }}</span>
                         {% else %}
-                            <span class="text-muted"><i class="bi bi-dash-circle"></i> 稳定</span>
+                            <span class="text-muted"><i class="bi bi-dash-circle"></i> 未记录</span>
                         {% endif %}
                     </span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">代际传承</span>
-                    <span class="detail-value">{{ language.intergenerational_transmission|default:"未知"|title }}</span>
+                    <span class="detail-value">{{ language.transmission_display }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">语言家族</span>
-                    <span class="detail-value">{{ language.language_family|default:"未知" }}</span>
+                    <span class="detail-value">{{ language.language_family|default:"未记录" }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">国家/地区</span>
-                    <span class="detail-value">{{ language.country|default:"未知" }}</span>
+                    <span class="detail-value">{{ language.country|default:"未记录" }}</span>
                 </div>
             </div>
 
@@ -485,12 +554,16 @@
                         </li>
                     {% endif %}
 
-                    {% for num in paginator.page_range %}
-                        {% if num == page_obj.number %}
+                    {% for num in page_numbers %}
+                        {% if num == '...' %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                        {% elif num == page_obj.number %}
                             <li class="page-item active">
                                 <span class="page-link">{{ num }}</span>
                             </li>
-                        {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                        {% else %}
                             <li class="page-item">
                                 <a class="page-link" href="?q={{ search_query }}&search_type={{ search_type }}&page={{ num }}">{{ num }}</a>
                             </li>

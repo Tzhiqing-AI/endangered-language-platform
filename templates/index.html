@@ -5,676 +5,551 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>濒危语言保护平台</title>
     <style>
+        :root {
+            --ink-0: #04060d;
+            --ink-1: #0b1120;
+            --ink-2: #111827;
+            --teal: #14b8a6;
+            --teal-deep: #0f766e;
+            --gold: #f59e0b;
+            --gold-deep: #d97706;
+            --text: #f8fafc;
+            --muted: rgba(226, 232, 240, 0.68);
+            --line: rgba(148, 163, 184, 0.18);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html,
+        body {
+            min-height: 100%;
+        }
+
         body {
             min-height: 100vh;
             overflow: hidden;
-            background: #0a0a1a;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background:
+                radial-gradient(circle at 50% 14%, rgba(15, 118, 110, 0.20), transparent 44%),
+                radial-gradient(circle at 84% 84%, rgba(217, 119, 6, 0.14), transparent 40%),
+                linear-gradient(180deg, var(--ink-0) 0%, var(--ink-1) 52%, #070b14 100%);
+            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', sans-serif;
             cursor: pointer;
             position: relative;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* 动态背景 */
-        .background {
+        /* ===== 背景层 ===== */
+        .scene {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
 
-        /* 背景渐变球体 */
-        .orb {
+        .glow {
             position: absolute;
             border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.25;
-            animation: float 25s infinite ease-in-out;
+            filter: blur(100px);
+            opacity: 0.5;
         }
 
-        .orb-1 {
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, #667eea 0%, #764ba2 40%, transparent 70%);
-            top: 10%;
-            left: 5%;
-            animation-delay: 0s;
+        .glow-teal {
+            width: 46vw;
+            height: 46vw;
+            min-width: 320px;
+            min-height: 320px;
+            top: -12%;
+            left: -8%;
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.22), transparent 68%);
+            animation: drift 26s infinite ease-in-out;
         }
 
-        .orb-2 {
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, #f093fb 0%, #f5576c 40%, transparent 70%);
-            bottom: 15%;
-            right: 8%;
-            animation-delay: -7s;
+        .glow-gold {
+            width: 38vw;
+            height: 38vw;
+            min-width: 260px;
+            min-height: 260px;
+            right: -10%;
+            bottom: -16%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.16), transparent 68%);
+            animation: drift 30s infinite ease-in-out reverse;
         }
 
-        .orb-3 {
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle, #4facfe 0%, #00f2fe 40%, transparent 70%);
-            top: 60%;
-            left: 70%;
-            animation-delay: -13s;
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(28px, 20px) scale(1.08); }
         }
 
-        .orb-4 {
-            width: 150px;
-            height: 150px;
-            background: radial-gradient(circle, #43e97b 0%, #38f9d7 40%, transparent 70%);
-            top: 20%;
-            right: 25%;
-            animation-delay: -19s;
+        .grid {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(148, 163, 184, 0.10) 1px, transparent 1px);
+            background-size: 34px 34px;
+            mask-image: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0.55), transparent 72%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0.55), transparent 72%);
         }
 
-        .orb-5 {
+        .orbit {
+            position: absolute;
+            left: 50%;
+            top: 48%;
+            width: min(86vw, 880px);
+            height: min(86vw, 880px);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(20, 184, 166, 0.10);
+            box-shadow: inset 0 0 80px rgba(20, 184, 166, 0.04);
+            animation: orbitSpin 60s linear infinite;
+        }
+
+        .orbit::before,
+        .orbit::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+        }
+
+        .orbit::before {
+            inset: 7%;
+        }
+
+        .orbit::after {
+            inset: 16%;
+            border-color: rgba(245, 158, 11, 0.08);
+        }
+
+        @keyframes orbitSpin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            background: #e2e8f0;
+            animation: twinkle var(--dur, 4s) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: var(--min, 0.2); transform: scale(0.8); }
+            50% { opacity: var(--max, 0.75); transform: scale(1); }
+        }
+
+        .meteor {
+            position: absolute;
             width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, #a8c0ff 0%, #8fd3f4 40%, transparent 70%);
-            top: 75%;
-            left: 20%;
-            animation-delay: -4s;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(226, 232, 240, 0.7), transparent);
+            transform: rotate(-35deg);
+            opacity: 0;
+            animation: meteorFly 9s infinite ease-in;
         }
 
-        .orb-6 {
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, #d299c2 0%, #fef9d7 40%, transparent 70%);
-            top: 35%;
-            left: 85%;
-            animation-delay: -11s;
+        @keyframes meteorFly {
+            0% { opacity: 0; transform: translate(0, 0) rotate(-35deg); }
+            6% { opacity: 0.7; }
+            18% { opacity: 0; transform: translate(-360px, 250px) rotate(-35deg); }
+            100% { opacity: 0; }
         }
 
-        @keyframes float {
-            0%, 100% {
-                transform: translate(0, 0) rotate(0deg) scale(1);
-            }
-            15% {
-                transform: translate(40px, -60px) rotate(45deg) scale(1.1);
-            }
-            30% {
-                transform: translate(-80px, 30px) rotate(120deg) scale(0.9);
-            }
-            45% {
-                transform: translate(25px, 80px) rotate(200deg) scale(1.05);
-            }
-            60% {
-                transform: translate(-50px, -25px) rotate(280deg) scale(0.95);
-            }
-            75% {
-                transform: translate(60px, 50px) rotate(340deg) scale(1.08);
-            }
-        }
-
-        /* 光线效果 */
-        .light-rays {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            background:
-                linear-gradient(125deg, transparent 45%, rgba(255,255,255,0.015) 48%, transparent 50%),
-                linear-gradient(245deg, transparent 45%, rgba(255,255,255,0.01) 48%, transparent 50%),
-                linear-gradient(325deg, transparent 45%, rgba(255,255,255,0.012) 48%, transparent 50%);
-            background-size: 300% 300%;
-            animation: lightMove 25s infinite linear;
-        }
-
-        @keyframes lightMove {
-            0% {
-                background-position: 0% 0%, 0% 0%, 0% 0%;
-            }
-            100% {
-                background-position: 100% 100%, 100% 100%, 100% 100%;
-            }
-        }
-
-        /* 主内容区域 */
-        .container {
+        /* ===== 主内容 ===== */
+        .stage {
             position: relative;
             z-index: 10;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
+            padding: 2rem 1.2rem;
         }
 
-        /* 液态玻璃卡片 */
         .glass-card {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 30px;
-            padding: 60px 80px;
+            width: min(92vw, 650px);
+            padding: clamp(2.2rem, 5vw, 3.7rem) clamp(1.5rem, 5vw, 4rem);
             text-align: center;
             position: relative;
             overflow: hidden;
+            border-radius: 28px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(180deg, rgba(17, 24, 39, 0.82) 0%, rgba(11, 17, 32, 0.66) 100%);
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.25),
-                inset 0 0 60px rgba(255, 255, 255, 0.03);
-            animation: glassPulse 6s infinite ease-in-out;
+                0 34px 90px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(255, 255, 255, 0.02),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            animation: cardIn 1s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .glass-card::before {
             content: '';
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(
-                45deg,
-                transparent 35%,
-                rgba(102, 126, 234, 0.15) 45%,
-                rgba(118, 75, 162, 0.15) 55%,
-                transparent 65%
-            );
-            border-radius: 32px;
-            z-index: -1;
-            animation: borderGlow 5s infinite ease-in-out;
+            top: 0;
+            left: 12%;
+            right: 12%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(94, 234, 212, 0.45), rgba(245, 158, 11, 0.35), transparent);
         }
 
         .glass-card::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: -50%;
-            width: 200%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.04),
-                transparent
-            );
-            transform: skewX(-20deg);
-            animation: shimmer 12s infinite;
+            width: 70%;
+            height: 45%;
+            left: 15%;
+            top: -22%;
+            background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.14), transparent 70%);
+            pointer-events: none;
         }
 
-        @keyframes glassPulse {
-            0%, 100% {
-                box-shadow:
-                    0 8px 32px rgba(0, 0, 0, 0.25),
-                    inset 0 0 60px rgba(255, 255, 255, 0.03);
-            }
-            50% {
-                box-shadow:
-                    0 8px 40px rgba(102, 126, 234, 0.1),
-                    inset 0 0 80px rgba(255, 255, 255, 0.05);
-            }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(26px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        @keyframes borderGlow {
-            0% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-            100% { opacity: 0.3; }
+        .kicker {
+            display: inline-block;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.28em;
+            color: #5eead4;
+            text-transform: uppercase;
         }
 
-        @keyframes shimmer {
-            0% { left: -50%; }
-            100% { left: 100%; }
-        }
-
-        /* 图标 */
-        .icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 25px;
+        .emblem {
+            width: 86px;
+            height: 86px;
+            margin: 1.6rem auto 1.35rem;
+            border-radius: 26px;
+            display: grid;
+            place-items: center;
             position: relative;
-        }
-
-        .icon-inner {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 45px;
+            border: 1px solid rgba(94, 234, 212, 0.26);
+            background: linear-gradient(145deg, rgba(20, 184, 166, 0.18), rgba(245, 158, 11, 0.08));
             box-shadow:
-                0 8px 30px rgba(102, 126, 234, 0.3),
-                inset 0 -3px 15px rgba(0, 0, 0, 0.15);
-            animation: iconFloat 4s infinite ease-in-out;
+                0 0 42px rgba(20, 184, 166, 0.18),
+                inset 0 0 28px rgba(20, 184, 166, 0.08);
         }
 
-        .icon::before {
+        .emblem::before {
             content: '';
             position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
-            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #4facfe);
-            border-radius: 35px;
-            z-index: -1;
-            opacity: 0.3;
-            filter: blur(15px);
-            animation: iconGlow 4s infinite ease-in-out;
+            inset: -14px;
+            border-radius: 34px;
+            border: 1px solid rgba(94, 234, 212, 0.10);
+            animation: emblemPulse 6s infinite ease-in-out;
         }
 
-        @keyframes iconFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+        @keyframes emblemPulse {
+            0%, 100% { opacity: 0.35; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.04); }
         }
 
-        @keyframes iconGlow {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.05); }
+        .emblem svg {
+            width: 46px;
+            height: 46px;
         }
 
-        /* 标题 */
         .title {
-            font-size: 40px;
-            font-weight: 600;
-            background: linear-gradient(135deg, #ffffff 0%, #c8d6ff 50%, #ffffff 100%);
-            background-size: 200% 200%;
+            font-size: clamp(1.85rem, 4vw, 2.7rem);
+            font-weight: 700;
+            line-height: 1.24;
+            letter-spacing: 0.07em;
+            background: linear-gradient(120deg, #ffffff 0%, #d1fae5 42%, #fef3c7 100%);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 12px;
-            animation: titleShine 8s infinite linear;
-            letter-spacing: 2px;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.35));
         }
 
-        @keyframes titleShine {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .title-en {
+            margin-top: 0.6rem;
+            font-size: 0.68rem;
+            letter-spacing: 0.38em;
+            color: rgba(203, 213, 225, 0.72);
+            text-transform: uppercase;
         }
 
-        .subtitle {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 35px;
-            letter-spacing: 3px;
+        .tagline {
+            max-width: 34rem;
+            margin: 1.4rem auto 0;
+            font-size: 0.94rem;
+            line-height: 1.9;
+            letter-spacing: 0.04em;
+            color: var(--muted);
         }
 
-        /* 提示文字 */
-        .hint {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.35);
-            margin-top: 25px;
-            animation: hintPulse 3s infinite ease-in-out;
-            letter-spacing: 1px;
-        }
-
-        @keyframes hintPulse {
-            0%, 100% { opacity: 0.25; }
-            50% { opacity: 0.5; }
-        }
-
-        /* ===== 装饰效果容器 ===== */
-        .effects-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-            pointer-events: none;
+        .progress {
+            width: 168px;
+            height: 2px;
+            margin: 1.55rem auto 0;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.16);
             overflow: hidden;
         }
 
-        /* ===== 上升粒子 ===== */
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            animation: particleFloat 18s infinite linear;
+        .progress span {
+            display: block;
+            width: 42%;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, var(--teal), var(--gold), transparent);
+            animation: progressSlide 2.6s infinite ease-in-out;
         }
 
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
-            }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% {
-                transform: translateY(-100vh) rotate(720deg);
-                opacity: 0;
-            }
+        @keyframes progressSlide {
+            0% { transform: translateX(-110%); }
+            100% { transform: translateX(340%); }
         }
 
-        /* ===== 萤火虫效果 ===== */
-        .firefly {
-            position: absolute;
+        .enter-btn {
+            margin-top: 1.65rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.82rem 1.75rem;
+            border: none;
+            border-radius: 999px;
+            background-color: var(--gold);
+            background-image: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+            color: var(--ink-1);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(217, 119, 6, 0.24);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+        }
+
+        .enter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 38px rgba(217, 119, 6, 0.30);
+            filter: brightness(1.04);
+        }
+
+        .enter-btn .arrow {
+            font-style: normal;
+            transition: transform 0.25s ease;
+        }
+
+        .enter-btn:hover .arrow {
+            transform: translateX(4px);
+        }
+
+        .enter-btn:focus-visible {
+            outline: 2px solid #5eead4;
+            outline-offset: 4px;
+        }
+
+        .hint {
+            margin-top: 1.05rem;
+            font-size: 0.72rem;
+            letter-spacing: 0.16em;
+            color: rgba(203, 213, 225, 0.68);
+        }
+
+        .stage-meta {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 1.7rem;
+            z-index: 12;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.85rem;
+            font-size: 0.62rem;
+            letter-spacing: 0.22em;
+            color: rgba(148, 163, 184, 0.38);
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        .stage-meta .meta-dot {
             width: 4px;
             height: 4px;
-            background: #fff;
             border-radius: 50%;
-            box-shadow: 0 0 10px 2px rgba(255, 255, 200, 0.8);
-            animation: fireflyGlow 3s infinite ease-in-out;
+            background: rgba(94, 234, 212, 0.5);
         }
 
-        @keyframes fireflyGlow {
-            0%, 100% {
-                opacity: 0;
-                transform: translate(0, 0);
-            }
-            20% {
-                opacity: 0.9;
-            }
-            50% {
-                opacity: 0.4;
-                transform: translate(30px, -20px);
-            }
-            80% {
-                opacity: 0.8;
-            }
-        }
-
-        /* ===== 流星效果 ===== */
-        .meteor {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: linear-gradient(45deg, #fff, transparent);
-            border-radius: 50%;
-            animation: meteorFall 3s infinite linear;
-            opacity: 0;
-        }
-
-        .meteor::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-80deg);
-            width: 100px;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent);
-            transform-origin: left center;
-        }
-
-        @keyframes meteorFall {
-            0% {
-                opacity: 0;
-                transform: translate(0, 0) rotate(45deg);
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: translate(calc(-100vw - 100px), calc(100vh + 100px)) rotate(45deg);
-            }
-        }
-
-        /* ===== 纤维丝效果 ===== */
-        .fiber {
-            position: absolute;
-            width: 60px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: fiberFloat 12s infinite linear;
-        }
-
-        @keyframes fiberFloat {
-            0% {
-                transform: translateX(-100px) translateY(0) rotate(var(--rotation));
-                opacity: 0;
-            }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.6; }
-            100% {
-                transform: translateX(110vw) translateY(50px) rotate(var(--rotation));
-                opacity: 0;
-            }
-        }
-
-        /* ===== 气泡效果 ===== */
-        .bubble {
-            position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent);
-            animation: bubbleRise 15s infinite linear;
-        }
-
-        @keyframes bubbleRise {
-            0% {
-                transform: translateY(100vh) scale(0.5);
-                opacity: 0;
-            }
-            10% { opacity: 0.6; }
-            95% { opacity: 0.6; }
-            100% {
-                transform: translateY(-20vh) scale(1);
-                opacity: 0;
-            }
-        }
-
-        /* 鼠标跟随光效 */
-        .mouse-follower {
-            position: fixed;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 6;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.3s;
-        }
-
-        /* 点击涟漪效果 */
         .ripple {
             position: fixed;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            border: 1px solid rgba(94, 234, 212, 0.55);
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, transparent 70%);
             pointer-events: none;
             z-index: 100;
-            animation: rippleExpand 1s ease-out forwards;
+            animation: rippleExpand 0.7s ease-out forwards;
         }
 
         @keyframes rippleExpand {
-            0% {
-                width: 0;
-                height: 0;
-                opacity: 1;
+            0% { width: 0; height: 0; opacity: 0.9; }
+            100% { width: 160vmax; height: 160vmax; opacity: 0; }
+        }
+
+        @media (max-width: 640px) {
+            .glass-card {
+                border-radius: 24px;
+                padding: 2.2rem 1.4rem 2.4rem;
             }
-            100% {
-                width: 200vmax;
-                height: 200vmax;
-                opacity: 0;
+
+            .emblem {
+                width: 72px;
+                height: 72px;
+                border-radius: 22px;
+            }
+
+            .emblem svg {
+                width: 38px;
+                height: 38px;
+            }
+
+            .title {
+                letter-spacing: 0.04em;
+            }
+
+            .title-en {
+                letter-spacing: 0.26em;
+            }
+
+            .tagline {
+                font-size: 0.88rem;
+            }
+
+            .stage-meta {
+                bottom: 1.1rem;
+                font-size: 0.56rem;
             }
         }
 
-        /* 加载动画 */
-        .loading-dots {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .loading-dots span {
-            width: 6px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            animation: loadingBounce 1.4s infinite ease-in-out both;
-        }
-
-        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0s; }
-
-        @keyframes loadingBounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+        @media (prefers-reduced-motion: reduce) {
+            .glow,
+            .orbit,
+            .star,
+            .meteor,
+            .emblem::before,
+            .progress span,
+            .glass-card {
+                animation: none !important;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 背景球体 -->
-    <div class="background">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-        <div class="orb orb-4"></div>
-        <div class="orb orb-5"></div>
-        <div class="orb orb-6"></div>
+    <div class="scene">
+        <div class="glow glow-teal"></div>
+        <div class="glow glow-gold"></div>
+        <div class="grid"></div>
+        <div class="orbit"></div>
+        <div id="starLayer"></div>
+        <div class="meteor" style="top: 18%; left: 72%; animation-delay: 2s;"></div>
+        <div class="meteor" style="top: 8%; left: 54%; animation-delay: 10s;"></div>
     </div>
 
-    <!-- 光线效果 -->
-    <div class="light-rays"></div>
+    <main class="stage">
+        <section class="glass-card">
+            <span class="kicker">Endangered Language Archive</span>
 
-    <!-- 装饰效果容器 -->
-    <div class="effects-container" id="effectsContainer"></div>
-
-    <!-- 鼠标跟随光效 -->
-    <div class="mouse-follower" id="mouseFollower"></div>
-
-    <!-- 主内容 -->
-    <div class="container">
-        <div class="glass-card">
-            <div class="icon">
-                <div class="icon-inner">🌍</div>
+            <div class="emblem" aria-hidden="true">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="globeGradient" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#5eead4"/>
+                            <stop offset="1" stop-color="#fbbf24"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="24" cy="24" r="17" stroke="url(#globeGradient)" stroke-width="1.6"/>
+                    <ellipse cx="24" cy="24" rx="8" ry="17" stroke="url(#globeGradient)" stroke-width="1.2" opacity="0.75"/>
+                    <path d="M7 24H41" stroke="url(#globeGradient)" stroke-width="1.2" opacity="0.75"/>
+                    <path d="M10 14C17.5 18.2 30.5 18.2 38 14" stroke="url(#globeGradient)" stroke-width="1.1" opacity="0.55"/>
+                    <path d="M10 34C17.5 29.8 30.5 29.8 38 34" stroke="url(#globeGradient)" stroke-width="1.1" opacity="0.55"/>
+                </svg>
             </div>
+
             <h1 class="title">濒危语言保护平台</h1>
-            <p class="subtitle">ENDANGERED LANGUAGE PROTECTION</p>
-            <div class="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <p class="hint">点击任意处进入首页</p>
+            <div class="title-en">Endangered Language Protection</div>
+
+            <p class="tagline">
+                记录正在消失的声音、文字与世界观。<br>
+                让每一种语言，都继续被听见。
+            </p>
+
+            <div class="progress" aria-hidden="true"><span></span></div>
+
+            <button class="enter-btn" type="button">
+                进入平台 <i class="arrow">→</i>
+            </button>
+
+            <p class="hint">点击任意处或按任意键继续</p>
+        </section>
+
+        <div class="stage-meta">
+            <span>Linguistic Heritage</span>
+            <span class="meta-dot"></span>
+            <span>Archive 2026</span>
         </div>
-    </div>
+    </main>
 
     <script>
-        const container = document.getElementById('effectsContainer');
+        const starLayer = document.getElementById('starLayer');
+        const starCount = 80;
 
-        // ===== 上升粒子 =====
-        for (let i = 0; i < 50; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.animationDelay = Math.random() * 18 + 's';
-            p.style.animationDuration = (12 + Math.random() * 10) + 's';
-            p.style.width = (3 + Math.random() * 5) + 'px';
-            p.style.height = p.style.width;
-            p.style.opacity = 0.5 + Math.random() * 0.4;
-            container.appendChild(p);
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            const size = 1 + Math.random() * 2.2;
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.setProperty('--dur', (2.6 + Math.random() * 3.8) + 's');
+            star.style.setProperty('--min', (0.12 + Math.random() * 0.2).toFixed(2));
+            star.style.setProperty('--max', (0.45 + Math.random() * 0.4).toFixed(2));
+            star.style.animationDelay = Math.random() * 6 + 's';
+            if (size > 2.4) {
+                star.style.boxShadow = '0 0 8px rgba(226, 232, 240, 0.35)';
+            }
+            starLayer.appendChild(star);
         }
 
-        // ===== 萤火虫 =====
-        for (let i = 0; i < 25; i++) {
-            const f = document.createElement('div');
-            f.className = 'firefly';
-            f.style.left = Math.random() * 100 + '%';
-            f.style.top = Math.random() * 100 + '%';
-            f.style.animationDelay = Math.random() * 5 + 's';
-            f.style.animationDuration = (2 + Math.random() * 3) + 's';
-            f.style.width = (2 + Math.random() * 3) + 'px';
-            f.style.height = f.style.width;
-            const hue = Math.random() > 0.5 ? '50, 255, 200' : '255, 255, 200';
-            f.style.boxShadow = `0 0 10px 2px rgba(${hue}, 0.6)`;
-            container.appendChild(f);
+        let entering = false;
+
+        function enterPlatform() {
+            if (entering) return;
+            entering = true;
+            window.setTimeout(function () {
+                window.location.href = '/Dashboard/language/';
+            }, 420);
         }
 
-        // ===== 流星 =====
-        for (let i = 0; i < 5; i++) {
-            const m = document.createElement('div');
-            m.className = 'meteor';
-            m.style.left = (60 + Math.random() * 40) + '%';
-            m.style.top = Math.random() * 40 + '%';
-            m.style.animationDelay = (3 + Math.random() * 10) + 's';
-            m.style.animationDuration = (1.65 + Math.random() * 1.65) + 's';
-            container.appendChild(m);
-        }
-
-        // ===== 纤维丝 =====
-        for (let i = 0; i < 15; i++) {
-            const fb = document.createElement('div');
-            fb.className = 'fiber';
-            fb.style.top = (10 + Math.random() * 80) + '%';
-            fb.style.setProperty('--rotation', (-10 + Math.random() * 20) + 'deg');
-            fb.style.animationDelay = Math.random() * 15 + 's';
-            fb.style.animationDuration = (10 + Math.random() * 8) + 's';
-            fb.style.width = (40 + Math.random() * 60) + 'px';
-            const colors = [
-                'rgba(102, 126, 234, 0.4)',
-                'rgba(240, 147, 251, 0.4)',
-                'rgba(79, 172, 254, 0.4)',
-                'rgba(255, 255, 255, 0.3)'
-            ];
-            fb.style.background = `linear-gradient(90deg, transparent, ${colors[i % colors.length]}, transparent)`;
-            container.appendChild(fb);
-        }
-
-        // ===== 气泡 =====
-        for (let i = 0; i < 20; i++) {
-            const b = document.createElement('div');
-            b.className = 'bubble';
-            b.style.left = Math.random() * 100 + '%';
-            b.style.animationDelay = Math.random() * 15 + 's';
-            b.style.animationDuration = (12 + Math.random() * 8) + 's';
-            b.style.width = (5 + Math.random() * 15) + 'px';
-            b.style.height = b.style.width;
-            container.appendChild(b);
-        }
-
-        // 鼠标跟随效果
-        const mouseFollower = document.getElementById('mouseFollower');
-        let mouseX = 0, mouseY = 0;
-        let followerX = 0, followerY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateFollower() {
-            followerX += (mouseX - followerX) * 0.08;
-            followerY += (mouseY - followerY) * 0.08;
-            mouseFollower.style.left = followerX + 'px';
-            mouseFollower.style.top = followerY + 'px';
-            requestAnimationFrame(animateFollower);
-        }
-        animateFollower();
-
-        // 点击效果
-        document.body.addEventListener('click', (e) => {
+        function createRipple(x, y) {
             const ripple = document.createElement('div');
             ripple.className = 'ripple';
-            ripple.style.left = e.clientX + 'px';
-            ripple.style.top = e.clientY + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.style.transform = 'translate(-50%, -50%)';
             document.body.appendChild(ripple);
-
-            setTimeout(() => {
+            window.setTimeout(function () {
                 ripple.remove();
-                window.location.href = '/Dashboard/language/';
-            }, 500);
+            }, 700);
+        }
+
+        document.body.addEventListener('click', function (event) {
+            createRipple(event.clientX, event.clientY);
+            enterPlatform();
         });
 
-        mouseFollower.style.opacity = '0';
-        document.body.addEventListener('mouseenter', () => {
-            mouseFollower.style.opacity = '1';
-        });
-        document.body.addEventListener('mouseleave', () => {
-            mouseFollower.style.opacity = '0';
-        });
+        window.addEventListener('keydown', enterPlatform);
     </script>
 </body>
 </html>

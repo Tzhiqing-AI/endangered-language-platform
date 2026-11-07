@@ -12,7 +12,6 @@
     <link rel="icon" type="image/x-icon" href="{% static 'image/favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'bootstrap-5.3.0-alpha1-dist/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'bootstrap-icons-1.13.1/font/bootstrap-icons.min.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -21,15 +20,15 @@
             --primary-700: #334155;
             --primary-600: #475569;
             --primary-500: #64748b;
-            --primary-400: #94a3b8;
+            --primary-400: #64748b;
             --primary-300: #cbd5e1;
             --primary-200: #e2e8f0;
             --primary-100: #f1f5f9;
             --primary-50: #f8fafc;
-            --accent-600: #4f46e5;
-            --accent-500: #6366f1;
-            --accent-400: #818cf8;
-            --accent-100: #e0e7ff;
+            --accent-600: #0d9488;
+            --accent-500: #0f766e;
+            --accent-400: #14b8a6;
+            --accent-100: #ccfbf1;
             --warm-500: #f59e0b;
             --warm-400: #fbbf24;
             --warm-100: #fef3c7;
@@ -101,13 +100,13 @@
         .text-small { font-size: 0.875rem; line-height: 1.6; color: var(--primary-500); }
 
         a {
-            color: #a78bfa;
+            color: var(--accent-600);
             text-decoration: none;
             transition: var(--transition-base);
         }
 
         a:hover {
-            color: #8b5cf6;
+            color: var(--accent-500);
         }
 
         /* ========== 顶部导航栏 ========== */
@@ -709,6 +708,24 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
+        a:focus-visible,
+        button:focus-visible,
+        .btn:focus-visible,
+        .nav-link:focus-visible,
+        .dropdown-item:focus-visible {
+            outline: 3px solid rgba(15, 118, 110, 0.45);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
         .bg-gradient-primary {
             background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
         }
@@ -719,9 +736,9 @@
         /* ============================================
            子模板扩展区域
            ============================================ */
-
-        {% block extra_css %}{% endblock %}
     </style>
+    {% block extra_css %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/phase2-theme.css' %}?v=20261031">
 </head>
 <body>
     {% block header %}
@@ -763,7 +780,7 @@
                 <li class="nav-item">
                     <a href="{% url 'Dashboard:language_visualization' %}" class="nav-link {% if request.resolver_match.url_name == 'language_visualization' %}active{% endif %}">
                         <i class="bi bi-bar-chart-line"></i>
-                        <span>数据可视化</span>
+                        <span>语言洞察</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -778,17 +795,11 @@
                         <span>社区论坛</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{% url 'Dashboard:nlp_page' %}" class="nav-link {% if request.resolver_match.url_name == 'nlp_page' or request.resolver_match.url_name == 'nlp_process' %}active{% endif %}">
-                        <i class="bi bi-cpu"></i>
-                        <span>NLP处理</span>
-                    </a>
-                </li>
             </ul>
         </nav>
 
         <!-- 移动端菜单按钮 -->
-        <button class="navbar-toggler-custom d-lg-none" type="button" id="mobileMenuToggle" aria-label="切换菜单">
+        <button class="navbar-toggler-custom d-lg-none" type="button" id="mobileMenuToggle" aria-label="切换菜单" aria-expanded="false" aria-controls="mobileMenu">
             <i class="bi bi-list"></i>
         </button>
 
@@ -833,14 +844,22 @@
                         <li><a class="dropdown-item" href="{% url 'Community:moderation_queue' %}">
                             <i class="bi bi-clipboard-check me-2"></i>内容审核队列
                         </a></li>
+                        <li><a class="dropdown-item" href="{% url 'Community:report_queue' %}">
+                            <i class="bi bi-flag me-2"></i>举报处理
+                        </a></li>
                         <li><a class="dropdown-item" href="{% url 'User:expert_management' %}">
                             <i class="bi bi-shield-check me-2"></i>专家认证管理
                         </a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'User:logout' %}?next={{ request.get_full_path|urlencode }}">
-                            <i class="bi bi-box-arrow-right me-2"></i>退出登录
-                        </a></li>
+                        <li>
+                            <form method="post" action="{% url 'User:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item" style="border:0; background:transparent; width:100%; text-align:left;">
+                                    <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                                </button>
+                            </form>
+                        </li>
                     </ul>
                 </div>
             {% else %}
@@ -898,6 +917,18 @@
                     <span>社区论坛</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_map' %}" class="nav-link {% if request.resolver_match.url_name == 'language_map' %}active{% endif %}">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>语言地图</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Dashboard:language_samples' %}" class="nav-link {% if request.resolver_match.url_name == 'language_samples' %}active{% endif %}">
+                    <i class="bi bi-collection-play"></i>
+                    <span>语言样本</span>
+                </a>
+            </li>
         </ul>
     </div>
     {% endblock %}
@@ -913,9 +944,11 @@
             <div class="footer-links">
                 <a href="{% url 'Dashboard:language' %}"><i class="bi bi-house-door me-1"></i>首页概览</a>
                 <a href="{% url 'Dashboard:language_list' %}"><i class="bi bi-table me-1"></i>语言数据</a>
+                <a href="{% url 'Dashboard:language_map' %}"><i class="bi bi-geo-alt me-1"></i>语言地图</a>
+                <a href="{% url 'Dashboard:language_samples' %}"><i class="bi bi-collection-play me-1"></i>语言样本</a>
                 <a href="{% url 'Community:community_home' %}"><i class="bi bi-people me-1"></i>社区论坛</a>
                 <a href="{% url 'Community:reputation_rank' %}"><i class="bi bi-trophy me-1"></i>声望排行</a>
-                <a href="{% url 'Dashboard:nlp_page' %}"><i class="bi bi-cpu me-1"></i>NLP处理</a>
+                <a href="{% url 'Dashboard:glossary_manage' %}"><i class="bi bi-journal-text me-1"></i>术语库</a>
                 <a href="/api/docs/" target="_blank"><i class="bi bi-file-earmark-code me-1"></i>API文档</a>
             </div>
             <div class="footer-tagline">Preserving Global Linguistic Heritage</div>
@@ -960,7 +993,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: var(--radius-md); font-weight: 500;">
                         稍后再说
                     </button>
-                    <a href="{% url 'User:login' %}" class="btn btn-primary" style="border-radius: var(--radius-md);">
+                    <a href="{% url 'User:login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary" style="border-radius: var(--radius-md);">
                         <i class="bi bi-box-arrow-in-right"></i>
                         立即登录
                     </a>
@@ -996,8 +1029,10 @@
 
         mobileMenuToggle?.addEventListener('click', function() {
             mobileMenu.classList.toggle('show');
+            const expanded = mobileMenu.classList.contains('show');
+            this.setAttribute('aria-expanded', expanded ? 'true' : 'false');
             const icon = this.querySelector('i');
-            if (mobileMenu.classList.contains('show')) {
+            if (expanded) {
                 icon.classList.remove('bi-list');
                 icon.classList.add('bi-x-lg');
             } else {
@@ -1055,8 +1090,14 @@
             // 未登录状态，页面加载后显示模态框
             window.addEventListener('DOMContentLoaded', function() {
                 const currentPath = window.location.pathname;
-                // 不需要登录提示的页面：首页、社区论坛、NLP处理
-                const exemptPaths = ['/Dashboard/language/', '/Community/', '/Dashboard/nlp/'];
+                // 公开页面不弹出登录框
+                const exemptPaths = [
+                    '/Dashboard/language/',
+                    '/Dashboard/language_visualization/',
+                    '/Dashboard/language_map/',
+                    '/Dashboard/language_samples/',
+                    '/Community/'
+                ];
                 const needsLoginModal = !exemptPaths.some(path => currentPath.startsWith(path));
 
                 if (needsLoginModal) {
@@ -1069,11 +1110,18 @@
             {% endif %}
         }
 
-        // AJAX 全局错误处理 - 未登录时显示登录提示
+        // AJAX 全局错误处理：401 提示登录，403 提示权限不足
         $(document).ajaxError(function(event, xhr) {
-            if (xhr.status === 401 || xhr.status === 403) {
+            if (xhr.status === 401) {
                 const modal = new bootstrap.Modal(loginRequiredModal);
                 modal.show();
+            } else if (xhr.status === 403) {
+                const notice = document.createElement('div');
+                notice.className = 'alert-custom alert-warning';
+                notice.style.cssText = 'position:fixed;top:calc(var(--navbar-height) + 16px);right:24px;z-index:2000;';
+                notice.innerHTML = '<i class="bi bi-shield-exclamation alert-icon"></i><div class="alert-content">当前账号权限不足</div>';
+                document.body.appendChild(notice);
+                setTimeout(function() { notice.remove(); }, 4000);
             }
         });
 
@@ -1089,9 +1137,7 @@
                     '/Dashboard/language_list/',
                     '/Dashboard/language_search/',
                     '/Dashboard/language_translation/',
-                    '/Dashboard/language_visualization/',
                     '/Dashboard/language_chat/',
-                    '/Dashboard/nlp/',
                     '/Community/create/',
                     '/Community/edit/',
                     '/Community/delete/',

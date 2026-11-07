@@ -5,320 +5,59 @@
 {% block title %}濒危语言科普 - 濒危语言保护平台{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Hero区域 */
-    .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        padding: 60px 20px 80px !important;
-        text-align: center;
-        color: white;
-        position: relative;
-        min-height: 220px;
-        display: block !important;
-        overflow: visible !important;
-    }
-
-    .hero-content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .hero-icon {
-        font-size: 2.5rem;
-        opacity: 0.9;
-    }
-
-    .hero-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0;
-    }
-
-    .hero-subtitle {
-        font-size: 1.1rem;
-        opacity: 0.95;
-        max-width: 700px;
-        width: 100%;
-        margin: 1rem auto 0 !important;
-        line-height: 1.6;
-        text-align: center !important;
-        display: block;
-        padding: 0 1rem;
-    }
-
-    /* 统计卡片 */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
-        margin: 30px auto 2rem !important;
-        padding: 0 1rem;
-        max-width: 1200px;
-        position: relative;
-        z-index: 5;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem 1rem;
-        text-align: center;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-4px);
-    }
-
-    .stat-icon {
-        font-size: 2rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .stat-number {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
-        word-break: break-all;
-        line-height: 1.2;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: #64748b;
-    }
-
-    /* 内容区域 */
-    .content-section {
-        padding: 2rem 0 4rem;
-    }
-
-    /* 内容卡片 */
-    .info-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-    }
-
-    .info-card-header {
-        background: #f8f9fa;
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .info-card-number {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 1rem;
-    }
-
-    .info-card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #212529;
-        margin: 0;
-    }
-
-    .info-card-body {
-        padding: 1.5rem;
-        line-height: 1.8;
-        color: #495057;
-    }
-
-    /* 数据标签 */
-    .stat-tag {
-        display: inline-block;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        color: #667eea;
-        padding: 0.25rem 0.75rem;
-        border-radius: 6px;
-        font-weight: 600;
-        margin: 0 0.25rem;
-    }
-
-    /* 语言排行表格 */
-    .ranking-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-    }
-
-    .ranking-table th {
-        background: #f8f9fa;
-        padding: 0.75rem 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: #495057;
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    .ranking-table td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .ranking-table tr:hover {
-        background: #f8f9fa;
-    }
-
-    .endangerment-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .endangerment-unsafe { background: rgba(251, 191, 36, 0.15); color: #d97706; }
-    .endangerment-danger { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
-    .endangerment-endangered { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
-    .endangerment-seriously_endangered { background: rgba(153, 27, 27, 0.15); color: #991b1b; }
-    .endangerment-extinct { background: rgba(0, 0, 0, 0.1); color: #374151; }
-
-    /* CTA区域 */
-    .cta-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        padding: 2.5rem;
-        text-align: center;
-        color: white;
-        margin-top: 2rem;
-    }
-
-    .cta-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .cta-text {
-        opacity: 0.9;
-        margin-bottom: 1.25rem;
-    }
-
-    .cta-btn {
-        background: white;
-        color: #667eea;
-        padding: 0.75rem 2rem;
-        border-radius: 8px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        transition: all 0.2s;
-    }
-
-    .cta-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        color: #667eea;
-    }
-
-    /* 响应式 */
-    @media (max-width: 768px) {
-        .hero-section {
-            padding: 40px 15px 60px !important;
-            min-height: 180px;
-        }
-        .hero-content {
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        .hero-icon {
-            font-size: 2rem;
-        }
-        .hero-title {
-            font-size: 1.75rem;
-        }
-        .content-section {
-            padding: 1.5rem 1rem 3rem;
-        }
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-            margin-top: 20px !important;
-        }
-        .stat-number {
-            font-size: 1.4rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-        .stat-card {
-            padding: 1rem 0.5rem;
-        }
-        .stat-number {
-            font-size: 1.2rem;
-        }
-        .stat-label {
-            font-size: 0.75rem;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/language_home.css' %}">
 {% endblock %}
 
 {% block content %}
 <!-- Hero区域 -->
 <section class="hero-section">
     <div class="container">
+        <span class="hero-kicker">LINGUISTIC HERITAGE · 濒危语言档案</span>
         <div class="hero-content">
             <i class="bi bi-globe hero-icon"></i>
-            <h1 class="hero-title">濒危语言科普</h1>
+            <h1 class="hero-title">让每一种语言，<span>都被听见</span></h1>
         </div>
-        <p class="hero-subtitle">探索全球语言多样性，了解濒危语言的现状、分布与保护意义</p>
+        <p class="hero-subtitle">从 {{ total_languages }} 种语言出发，探索正在消失的声音、文字与世界观</p>
+        <div class="hero-links">
+            <a href="{% url 'Dashboard:language_visualization' %}" class="hero-link primary">
+                <i class="bi bi-stars"></i> 走进语言洞察
+            </a>
+            <a href="{% url 'Dashboard:language_map' %}" class="hero-link ghost">
+                <i class="bi bi-geo-alt"></i> 查看语言地图
+            </a>
+        </div>
     </div>
 </section>
 
 <!-- 实时统计卡片 -->
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-icon">🌍</div>
+        <div class="stat-icon"><i class="bi bi-globe2"></i></div>
         <div class="stat-number">{{ total_languages }}</div>
         <div class="stat-label">收录语言</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">⚠️</div>
+        <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
         <div class="stat-number">{{ endangered_count }}</div>
         <div class="stat-label">濒危语言</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon"><i class="bi bi-people"></i></div>
         <div class="stat-number">{{ total_speakers|intcomma }}</div>
         <div class="stat-label">使用人数</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">🗺️</div>
+        <div class="stat-icon"><i class="bi bi-geo-alt"></i></div>
         <div class="stat-number">{{ country_count }}</div>
         <div class="stat-label">分布国家</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">📝</div>
+        <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
         <div class="stat-number">{{ total_posts }}</div>
         <div class="stat-label">社区帖子</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">💬</div>
+        <div class="stat-icon"><i class="bi bi-chat-dots"></i></div>
         <div class="stat-number">{{ total_replies }}</div>
         <div class="stat-label">社区回复</div>
     </div>
@@ -363,13 +102,8 @@
                             <td><strong>{{ lang.language_name }}</strong></td>
                             <td>{{ lang.number_of_speakers|intcomma }}</td>
                             <td>
-                                <span class="endangerment-badge endangerment-{{ lang.level_of_endangerment }}">
-                                    {% if lang.level_of_endangerment == 'unsafe' %}不安全
-                                    {% elif lang.level_of_endangerment == 'danger' %}危险
-                                    {% elif lang.level_of_endangerment == 'endangered' %}濒危
-                                    {% elif lang.level_of_endangerment == 'seriously_endangered' %}垂危
-                                    {% elif lang.level_of_endangerment == 'extinct' %}灭绝
-                                    {% else %}未知{% endif %}
+                                <span class="endangerment-badge endangerment-{{ lang.legacy_endangerment_level|default:'unknown' }}">
+                                    {{ lang.legacy_label }}
                                 </span>
                             </td>
                         </tr>
@@ -403,16 +137,11 @@
                         <tr>
                             <td><strong>{{ lang.language_name }}</strong></td>
                             <td>
-                                <span class="endangerment-badge endangerment-{{ lang.level_of_endangerment }}">
-                                    {% if lang.level_of_endangerment == 'unsafe' %}不安全
-                                    {% elif lang.level_of_endangerment == 'danger' %}危险
-                                    {% elif lang.level_of_endangerment == 'endangered' %}濒危
-                                    {% elif lang.level_of_endangerment == 'seriously_endangered' %}垂危
-                                    {% elif lang.level_of_endangerment == 'extinct' %}灭绝
-                                    {% else %}未知{% endif %}
+                                <span class="endangerment-badge endangerment-{{ lang.legacy_endangerment_level|default:'unknown' }}">
+                                    {{ lang.legacy_label }}
                                 </span>
                             </td>
-                            <td>{{ lang.country|default:"未知" }}</td>
+                            <td>{{ lang.country|default:"未记录" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -441,8 +170,9 @@
                 <h2 class="info-card-title">濒危语言的级别分类</h2>
             </div>
             <div class="info-card-body">
-                <p>联合国教科文组织将濒危语言分为五个级别：<span class="stat-tag" style="background: rgba(251, 191, 36, 0.15); color: #d97706;">不安全</span>、<span class="stat-tag" style="background: rgba(249, 115, 22, 0.15); color: #ea580c;">危险</span>、<span class="stat-tag" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">濒危</span>、<span class="stat-tag" style="background: rgba(153, 27, 27, 0.15); color: #991b1b;">垂危</span>和<span class="stat-tag" style="background: rgba(0, 0, 0, 0.1); color: #374151;">灭绝</span>。每个级别代表着语言传承的不同危机程度。</p>
-                <p style="margin-top: 1rem;">本系统中：<span class="stat-tag" style="background: rgba(251, 191, 36, 0.15); color: #d97706;">不安全 {{ chart_data.unsafe }}种</span>、<span class="stat-tag" style="background: rgba(249, 115, 22, 0.15); color: #ea580c;">危险 {{ chart_data.danger }}种</span>、<span class="stat-tag" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">濒危 {{ chart_data.endangered }}种</span>、<span class="stat-tag" style="background: rgba(153, 27, 27, 0.15); color: #991b1b;">垂危 {{ chart_data.seriously_endangered }}种</span>、<span class="stat-tag" style="background: rgba(0, 0, 0, 0.1); color: #374151;">灭绝 {{ chart_data.extinct }}种</span>。</p>
+                <p>联合国教科文组织将濒危语言分为五个级别：<span class="stat-tag" style="background: rgba(251, 191, 36, 0.15); color: #d97706;">不安全</span>、<span class="stat-tag" style="background: rgba(249, 115, 22, 0.15); color: #ea580c;">危险</span>、<span class="stat-tag" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">濒危</span>、<span class="stat-tag" style="background: rgba(153, 27, 27, 0.15); color: #991b1b;">垂危</span>和<span class="stat-tag" style="background: rgba(0, 0, 0, 0.1); color: #374151;">灭绝</span>。本系统以这套五级作为主分类。</p>
+                <p style="margin-top: 1rem;">本系统实际数据：<span class="stat-tag" style="background: rgba(251, 191, 36, 0.15); color: #d97706;">不安全 {{ chart_data.unsafe }}种</span>、<span class="stat-tag" style="background: rgba(249, 115, 22, 0.15); color: #ea580c;">危险 {{ chart_data.danger }}种</span>、<span class="stat-tag" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">濒危 {{ chart_data.endangered }}种</span>、<span class="stat-tag" style="background: rgba(153, 27, 27, 0.15); color: #991b1b;">垂危 {{ chart_data.seriously_endangered }}种</span>、<span class="stat-tag" style="background: rgba(0, 0, 0, 0.1); color: #374151;">灭绝 {{ chart_data.extinct }}种</span>；另有<span class="stat-tag" style="background: rgba(251, 191, 36, 0.15); color: #d97706;">复苏 {{ chart_data.legacy_awakening }}种</span>、<span class="stat-tag" style="background: rgba(100, 116, 139, 0.12); color: #475569;">未分类 {{ chart_data.unknown }}种</span>。</p>
+                <p style="margin-top: 1rem; color: #64748b; font-size: 0.9rem;">ELCat 源库使用自己的简化分级：高危 {{ chart_data.high }}种、中危 {{ chart_data.mid }}种、低危 {{ chart_data.low }}种、休眠 {{ chart_data.dormant }}种、复苏 {{ chart_data.awakening }}种。两套体系已按 UNESCO 原始分级自动对照，页面不会再把有数据的语言显示为“未知”。</p>
             </div>
         </div>
 

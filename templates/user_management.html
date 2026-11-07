@@ -6,22 +6,26 @@
 {% block extra_css %}
 <style>
     .page-header-custom {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        margin: 0 -2rem 2rem -2rem;
-        padding: 3rem 2rem;
-        color: white;
         position: relative;
         overflow: hidden;
+        margin: 0 0 1.6rem;
+        padding: 2.4rem;
+        border-radius: 28px;
+        color: #fff;
+        background:
+            radial-gradient(circle at 84% 18%, rgba(13, 148, 136, 0.30), transparent 42%),
+            radial-gradient(circle at 10% 90%, rgba(217, 119, 6, 0.22), transparent 44%),
+            linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%);
+        box-shadow: 0 24px 60px rgba(11, 17, 32, 0.20);
     }
 
     .page-header-custom::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 22px 22px;
+        pointer-events: none;
     }
 
     .page-header-content {
@@ -43,12 +47,40 @@
     }
 
     .breadcrumb-custom .breadcrumb-item a {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.78);
         text-decoration: none;
     }
 
     .breadcrumb-custom .breadcrumb-item.active {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    .header-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 0.95rem;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #0b1120;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .header-pill:hover {
+        background: #f1f5f9;
+        color: #0f766e;
+        transform: translateY(-1px);
+    }
+
+    .header-pill.active {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #0b1120;
+        box-shadow: 0 8px 24px rgba(217, 119, 6, 0.22);
     }
 
     .user-card {
@@ -71,7 +103,7 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -128,7 +160,7 @@
     }
 
     .action-btn-unexpert {
-        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
         color: white;
     }
 
@@ -138,11 +170,36 @@
     }
 
     .stats-card {
+        display: block;
         background: white;
         border-radius: 12px;
         padding: 1.5rem;
         text-align: center;
+        text-decoration: none;
+        color: inherit;
+        border: 2px solid transparent;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(20, 184, 166, 0.35);
+        box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.12);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .stats-card.active {
+        border-color: #f59e0b;
+        background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+        box-shadow: 0 12px 30px -8px rgba(217, 119, 6, 0.22);
+    }
+
+    .stats-card.active .stats-label {
+        color: #b45309;
+        font-weight: 600;
     }
 
     .stats-number {
@@ -167,8 +224,9 @@
 
     @media (max-width: 768px) {
         .page-header-custom {
-            padding: 2rem 1.5rem;
-            margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+            padding: 1.8rem 1.4rem;
+            margin: 0 0 1.4rem;
+            border-radius: 22px;
         }
 
         .page-title {
@@ -187,7 +245,7 @@
                 <h1 class="page-title"><i class="bi bi-people me-3"></i>用户数据</h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb breadcrumb-custom">
-                        <li class="breadcrumb-item"><a href="javascript:history.back()">返回</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'Dashboard:language' %}">首页</a></li>
                         <li class="breadcrumb-item active">数据管理</li>
                     </ol>
                 </nav>
@@ -195,11 +253,11 @@
             <div class="d-flex gap-2">
                 <!-- 标签页切换 -->
                 <div class="btn-group" role="group">
-                    <a href="{% url 'Dashboard:language_list' %}" class="btn btn-light {% if request.resolver_match.url_name == 'language_list' %}active{% endif %}">
-                        <i class="bi bi-globe me-1"></i>语言数据
+                    <a href="{% url 'Dashboard:language_list' %}" class="header-pill {% if request.resolver_match.url_name == 'language_list' %}active{% endif %}">
+                        <i class="bi bi-globe"></i>语言数据
                     </a>
-                    <a href="{% url 'Dashboard:user_management' %}" class="btn btn-light {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}">
-                        <i class="bi bi-people me-1"></i>用户数据
+                    <a href="{% url 'Dashboard:user_management' %}" class="header-pill {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}">
+                        <i class="bi bi-people"></i>用户数据
                     </a>
                 </div>
             </div>
@@ -216,36 +274,53 @@
 {% else %}
 <div class="alert alert-info border-0 shadow-sm mb-4" role="alert">
     <i class="bi bi-info-circle me-2"></i>
-    <strong>只读视图：</strong>您是管理员，但仅超级管理员（浩天帝）才能修改其他用户的权限。如需调整，请联系超级管理员。
+    <strong>管理员视图：</strong>您可以调整普通用户的专家资格、删除普通用户；管理员账号互相保护，如需调整管理员角色请联系超级管理员。
 </div>
 {% endif %}
 
 <!-- 统计信息 -->
-<div class="row mb-4">
+<div class="row mb-3">
     <div class="col-md-3">
-        <div class="stats-card">
-            <div class="stats-number">{{ users_data|length }}</div>
+        <a href="?role=all" class="stats-card {% if current_role == 'all' %}active{% endif %}" title="显示全部用户">
+            <div class="stats-number">{{ total_count }}</div>
             <div class="stats-label">总用户数</div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="stats-card">
+        <a href="?role=admin" class="stats-card {% if current_role == 'admin' %}active{% endif %}" title="只显示管理员">
             <div class="stats-number">{{ admin_count }}</div>
             <div class="stats-label">管理员</div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="stats-card">
+        <a href="?role=expert" class="stats-card {% if current_role == 'expert' %}active{% endif %}" title="只显示专家">
             <div class="stats-number" style="color: #d97706;">{{ expert_count }}</div>
             <div class="stats-label">专家</div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="stats-card">
+        <a href="?role=normal" class="stats-card {% if current_role == 'normal' %}active{% endif %}" title="只显示普通用户">
             <div class="stats-number">{{ normal_count }}</div>
             <div class="stats-label">普通用户</div>
-        </div>
+        </a>
     </div>
+</div>
+
+<!-- 当前筛选提示 -->
+<div class="d-flex align-items-center gap-2 mb-3 small text-muted">
+    <span>当前显示：</span>
+    {% if current_role == 'admin' %}
+    <span class="fw-semibold" style="color: #dc2626;">管理员（{{ admin_count }} 人）</span>
+    {% elif current_role == 'expert' %}
+    <span class="fw-semibold" style="color: #d97706;">专家（{{ expert_count }} 人）</span>
+    {% elif current_role == 'normal' %}
+    <span class="fw-semibold" style="color: #475569;">普通用户（{{ normal_count }} 人）</span>
+    {% else %}
+    <span class="fw-semibold" style="color: #0f766e;">全部用户（{{ total_count }} 人）</span>
+    {% endif %}
+    {% if current_role != 'all' %}
+    <a href="?role=all" class="ms-2 text-decoration-none">显示全部</a>
+    {% endif %}
 </div>
 
 <!-- 用户列表 -->
@@ -292,16 +367,17 @@
             </div>
 
             <div class="d-flex gap-2 mt-3 flex-wrap">
-                {% if item.user.username == super_admin_username %}
-                {# 超级管理员本人：所有修改/删除按钮全部隐藏 #}
-                <span class="text-muted small"><i class="bi bi-shield-fill-check me-1"></i>超级管理员（不可修改）</span>
-                {% elif is_super_admin %}
-                {# 当前用户是超级管理员：可对其他所有用户（含管理员）操作 #}
-                {% if item.user.admin == 1 %}
+                {% if item.user.username == username %}
+                <span class="text-muted small"><i class="bi bi-shield-fill-check me-1"></i>当前账号（不可修改自己）</span>
+                {% elif item.user.admin == 1 %}
+                <span class="text-muted small"><i class="bi bi-shield-lock me-1"></i>管理员账号受保护</span>
+                {% if is_super_admin %}
                 <button type="button" class="action-btn action-btn-demote" onclick="event.preventDefault(); modifyUser('{{ item.user.username }}', 'set_normal')">
                     <i class="bi bi-arrow-down me-1"></i>降为普通用户
                 </button>
+                {% endif %}
                 {% else %}
+                {% if is_super_admin %}
                 <button type="button" class="action-btn action-btn-promote" onclick="event.preventDefault(); modifyUser('{{ item.user.username }}', 'set_admin')">
                     <i class="bi bi-arrow-up me-1"></i>升为管理员
                 </button>
@@ -318,9 +394,6 @@
                 <button type="button" class="action-btn action-btn-delete" onclick="event.preventDefault(); deleteUser('{{ item.user.username }}')">
                     <i class="bi bi-trash me-1"></i>删除
                 </button>
-                {% else %}
-                {# 当前不是超级管理员：所有操作按钮隐藏，仅显示提示 #}
-                <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>仅超级管理员可修改</span>
                 {% endif %}
             </div>
         </div>
@@ -332,6 +405,32 @@
     </div>
     {% endfor %}
 </div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4" aria-label="用户分页">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?role={{ current_role }}&page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+        {% endif %}
+        {% for num in page_numbers %}
+            {% if num == '...' %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% elif num == page_obj.number %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?role={{ current_role }}&page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?role={{ current_role }}&page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

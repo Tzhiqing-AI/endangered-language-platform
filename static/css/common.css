@@ -2,9 +2,9 @@
 
 /* ==================== 基础变量 ==================== */
 :root {
-    --primary-color: #a78bfa;
-    --primary-dark: #8b5cf6;
-    --nav-bg: #a78bfa;
+    --primary-color: #0d9488;
+    --primary-dark: #0f766e;
+    --nav-bg: #0f766e;
     --chat-bg: rgba(255, 255, 255, 0.98);
     --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.08);
     --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.12);

@@ -1,0 +1,359 @@
+/* 第二阶段统一视觉：社区 / 个人中心 / 翻译 */
+:root {
+    --p2-ink: #0b1120;
+    --p2-ink-soft: #1e293b;
+    --p2-paper: #f6f7fb;
+    --p2-teal: #0f766e;
+    --p2-teal-light: #14b8a6;
+    --p2-gold: #d97706;
+    --p2-line: rgba(15, 23, 42, 0.08);
+
+    /* 统一替换旧的紫色强调色 */
+    --accent-600: #0d9488;
+    --accent-500: #0f766e;
+    --accent-400: #14b8a6;
+    --accent-100: #ccfbf1;
+}
+
+body {
+    background: var(--p2-paper);
+}
+
+.card {
+    border: 1px solid var(--p2-line);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+    transform: none;
+}
+
+.card-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    color: var(--p2-ink-soft);
+    font-weight: 700;
+}
+
+.card-body {
+    color: #334155;
+}
+
+.chart,
+.chart canvas,
+canvas {
+    max-width: 100% !important;
+}
+
+.insight-card,
+.spectrum-card {
+    min-width: 0;
+}
+
+.memory-card,
+.glossary-card {
+    border: 1px solid var(--p2-line);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.memory-card-header,
+.glossary-card-header {
+    background: #f8fafc;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    color: var(--p2-ink-soft);
+    font-weight: 700;
+}
+
+.post-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.post-title a {
+    color: var(--p2-ink);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.post-title a:hover {
+    color: var(--p2-teal);
+}
+
+.btn {
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.52rem 0.95rem;
+}
+
+.btn-primary {
+    background: var(--p2-teal);
+    border-color: var(--p2-teal);
+    color: #fff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: #0d9488;
+    border-color: #0d9488;
+    color: #fff;
+}
+
+.btn-outline-primary {
+    color: var(--p2-teal);
+    border-color: rgba(15, 118, 110, 0.35);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background: var(--p2-teal);
+    border-color: var(--p2-teal);
+    color: #fff;
+}
+
+.btn-outline-secondary {
+    color: #64748b;
+    border-color: rgba(100, 116, 139, 0.3);
+}
+
+.badge {
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.badge.bg-primary,
+.badge.bg-info {
+    background: var(--p2-teal) !important;
+}
+
+.badge.bg-secondary {
+    background: #64748b !important;
+}
+
+.badge.bg-danger {
+    background: #b91c1c !important;
+}
+
+.badge.bg-warning {
+    background: #f59e0b !important;
+    color: #111827 !important;
+}
+
+.nav-tabs {
+    border-bottom-color: #e2e8f0;
+}
+
+.nav-tabs .nav-link {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--p2-teal);
+    color: #fff;
+}
+
+.form-control,
+.form-select {
+    border-radius: 10px;
+    border-color: #e2e8f0;
+    font-size: 0.86rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--p2-teal);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.alert-info {
+    background: #ecfdf5;
+    border-color: #ccfbf1;
+    color: #0f766e;
+}
+
+.alert-danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.alert-warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.page-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.6rem;
+    padding: 2.2rem 2.4rem;
+    border-radius: 24px;
+    color: #fff;
+    background:
+        radial-gradient(circle at 86% 18%, rgba(13, 148, 136, 0.30), transparent 42%),
+        radial-gradient(circle at 10% 92%, rgba(217, 119, 6, 0.22), transparent 44%),
+        linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%);
+    box-shadow: 0 18px 40px rgba(11, 17, 32, 0.18);
+}
+
+.page-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+
+.page-hero > * {
+    position: relative;
+    z-index: 2;
+}
+
+.page-hero-kicker {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #5eead4;
+}
+
+.page-hero h1 {
+    margin: 0.45rem 0 0;
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #ffffff !important;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+
+.page-hero h1 i {
+    color: inherit;
+}
+
+.page-hero p {
+    max-width: 640px;
+    margin: 0.7rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.66);
+}
+
+.page-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-hero-actions .btn-primary {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #111827;
+}
+
+.page-hero-actions .btn-primary:hover {
+    background: #fbbf24;
+    border-color: #fbbf24;
+    color: #111827;
+}
+
+.page-hero-actions .btn-outline-primary {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+    background: transparent;
+}
+
+.page-hero-actions .btn-outline-primary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+}
+
+.page-hero-actions .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.page-hero-actions .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 767.98px) {
+    .page-hero {
+        padding: 1.8rem 1.4rem;
+        align-items: flex-start;
+    }
+}
+
+/* ==========================================================================
+   深色页头文字统一
+   所有带深色渐变背景的页头共用同一套标题字号与亮色文字，
+   避免全局 h1 的深色字体在深色背景上不可读。
+   ========================================================================== */
+.page-hero h1,
+.page-header-custom .page-title,
+.dashboard-header h1,
+.glossary-header h1,
+.memory-header h1,
+.translation-page-header h1,
+.insight-hero h1,
+.sample-hero h1,
+.hero-section .hero-title,
+.language-header .language-title,
+.rank-header h1,
+.collections-header h1 {
+    color: #ffffff !important;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.38);
+}
+
+.page-hero p,
+.page-header-custom p,
+.dashboard-header p,
+.glossary-header p,
+.memory-header p,
+.translation-page-header p,
+.insight-hero .hero-sub,
+.sample-hero p,
+.hero-section .hero-subtitle,
+.rank-header p,
+.collections-header p,
+.cta-section .cta-text {
+    color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.cta-section .cta-title {
+    color: #ffffff !important;
+}

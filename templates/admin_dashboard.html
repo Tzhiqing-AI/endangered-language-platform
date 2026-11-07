@@ -54,7 +54,7 @@
     .stat-icon.green { background: #dcfce7; color: #16a34a; }
     .stat-icon.yellow { background: #fef3c7; color: #d97706; }
     .stat-icon.red { background: #fee2e2; color: #dc2626; }
-    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .stat-icon.purple { background: #ccfbf1; color: #0f766e; }
 
     .stat-content {
         flex: 1;
@@ -158,7 +158,7 @@
         <!-- 统计卡片 -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon blue">🌍</div>
+                <div class="stat-icon blue"><i class="bi bi-globe2"></i></div>
                 <div class="stat-content">
                     <div class="stat-value">{{ total_languages }}</div>
                     <div class="stat-label">收录语言</div>
@@ -167,7 +167,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon green">👥</div>
+                <div class="stat-icon green"><i class="bi bi-people"></i></div>
                 <div class="stat-content">
                     <div class="stat-value">{{ total_users }}</div>
                     <div class="stat-label">注册用户</div>
@@ -176,7 +176,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon purple">📝</div>
+                <div class="stat-icon purple"><i class="bi bi-journal-text"></i></div>
                 <div class="stat-content">
                     <div class="stat-value">{{ total_posts }}</div>
                     <div class="stat-label">帖子总数</div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon yellow">💬</div>
+                <div class="stat-icon yellow"><i class="bi bi-chat-dots"></i></div>
                 <div class="stat-content">
                     <div class="stat-value">{{ total_replies }}</div>
                     <div class="stat-label">回复总数</div>
@@ -194,7 +194,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon red">⚠️</div>
+                <div class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="stat-content">
                     <div class="stat-value">{{ reports_pending }}</div>
                     <div class="stat-label">待处理举报</div>

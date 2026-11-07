@@ -1,275 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
+{% load custom_tags %}
 
-{% block title %}{{ language.language_name }} - 濒危语言详情{% endblock %}
+{% block title %}{{ language|language_display_name }} - 濒危语言详情{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* 语言头部 */
-    .language-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 3rem 0;
-        color: white;
-    }
-
-    .language-header-content {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .language-icon {
-        width: 80px;
-        height: 80px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-    }
-
-    .language-title {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem;
-    }
-
-    .language-meta {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .meta-badge {
-        background: rgba(255,255,255,0.2);
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.875rem;
-    }
-
-    /* 主内容区 */
-    .main-content {
-        padding: 2rem 0;
-    }
-
-    /* 信息卡片 */
-    .info-section {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-    }
-
-    .section-header {
-        background: #f8f9fa;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .section-icon {
-        font-size: 1.25rem;
-    }
-
-    .section-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    .section-body {
-        padding: 1.5rem;
-    }
-
-    /* 详情网格 */
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .detail-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.375rem;
-    }
-
-    .detail-label {
-        font-size: 0.875rem;
-        color: #64748b;
-        font-weight: 500;
-    }
-
-    .detail-value {
-        font-size: 1rem;
-        color: #1e293b;
-        font-weight: 600;
-    }
-
-    /* 濒危等级标签 */
-    .endangerment-badge {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .endangerment-unsafe { background: rgba(251, 191, 36, 0.15); color: #d97706; }
-    .endangerment-danger { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
-    .endangerment-endangered { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
-    .endangerment-seriously_endangered { background: rgba(153, 27, 27, 0.15); color: #991b1b; }
-    .endangerment-extinct { background: rgba(0, 0, 0, 0.1); color: #374151; }
-    .endangerment-unknown { background: rgba(100, 116, 139, 0.15); color: #64748b; }
-
-    /* 帖子列表 */
-    .post-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .post-item {
-        padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-        transition: all 0.2s;
-    }
-
-    .post-item:hover {
-        background: #f1f5f9;
-    }
-
-    .post-title {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.375rem;
-    }
-
-    .post-title a {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .post-title a:hover {
-        color: #6366f1;
-    }
-
-    .post-meta {
-        font-size: 0.875rem;
-        color: #64748b;
-        display: flex;
-        gap: 1rem;
-    }
-
-    /* 相关语言卡片 */
-    .related-languages {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 1rem;
-    }
-
-    .related-lang-card {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1rem;
-        text-align: center;
-        transition: all 0.2s;
-        text-decoration: none;
-        color: inherit;
-    }
-
-    .related-lang-card:hover {
-        background: #f1f5f9;
-        transform: translateY(-2px);
-        color: inherit;
-    }
-
-    .related-lang-name {
-        font-weight: 600;
-        margin-bottom: 0.375rem;
-    }
-
-    .related-lang-info {
-        font-size: 0.875rem;
-        color: #64748b;
-    }
-
-    /* 地图容器 */
-    .map-container {
-        height: 300px;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-top: 1rem;
-    }
-
-    /* 操作按钮 */
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-        flex-wrap: wrap;
-    }
-
-    .btn-action {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.2s;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        color: white;
-    }
-
-    .btn-outline {
-        background: white;
-        color: #667eea;
-        border: 2px solid #667eea;
-    }
-
-    .btn-outline:hover {
-        background: #667eea;
-        color: white;
-    }
-
-    /* 响应式 */
-    @media (max-width: 768px) {
-        .language-header-content {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .language-meta {
-            justify-content: center;
-        }
-
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .related-languages {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/language_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -277,9 +14,9 @@
 <section class="language-header">
     <div class="container">
         <div class="language-header-content">
-            <div class="language-icon">🌍</div>
+            <div class="language-icon"><i class="bi bi-globe2"></i></div>
             <div>
-                <h1 class="language-title">{{ language.language_name }}</h1>
+                <h1 class="language-title">{{ language|language_display_name }}</h1>
                 <div class="language-meta">
                     <span class="meta-badge">
                         <i class="bi bi-exclamation-triangle"></i>
@@ -291,7 +28,14 @@
                         {{ language.language_family }}
                     </span>
                     {% endif %}
-                    {% if language.country %}
+                    {% if countries %}
+                    {% for country in countries|slice:":3" %}
+                    <span class="meta-badge">
+                        <i class="bi bi-geo-alt"></i>
+                        {{ country }}
+                    </span>
+                    {% endfor %}
+                    {% elif language.country %}
                     <span class="meta-badge">
                         <i class="bi bi-geo-alt"></i>
                         {{ language.country }}
@@ -318,7 +62,7 @@
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <span class="detail-label">语言名称</span>
-                                <span class="detail-value">{{ language.language_name }}</span>
+                                <span class="detail-value">{{ language|language_display_name }}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">濒危等级</span>
@@ -346,7 +90,7 @@
                                     {% elif language.speaker_trends == 'decreasing' %}
                                         <span style="color: #ef4444;">📉 下降</span>
                                     {% elif language.speaker_trends == 'stable' %}
-                                        <span style="color: #6366f1;">➡️ 稳定</span>
+                                        <span style="color: #0f766e;">➡️ 稳定</span>
                                     {% else %}
                                         数据未知
                                     {% endif %}
@@ -358,7 +102,13 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">分布国家</span>
-                                <span class="detail-value">{{ language.country|default:"未知" }}</span>
+                                <span class="detail-value">
+                                    {% if countries %}
+                                        {{ countries|slice:":5"|join:", " }}{% if countries|length > 5 %} …{% endif %}
+                                    {% else %}
+                                        {{ language.country|default:"未知" }}
+                                    {% endif %}
+                                </span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">代际传承</span>
@@ -399,10 +149,332 @@
                     </div>
                 </div>
 
+                <!-- 风险预测 -->
+                {% if risk %}
+                <div class="info-section">
+                    <div class="section-header">
+                        <span class="section-icon"><i class="bi bi-magic"></i></span>
+                        <h2 class="section-title">风险估计</h2>
+                        <span class="risk-band-pill" style="background: {{ risk.risk_band_color }}1f; color: {{ risk.risk_band_color }}; border-color: {{ risk.risk_band_color }}55;">{{ risk.risk_band_label }}</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="risk-hero">
+                            <div class="risk-score-ring">
+                                <span class="risk-score-value">{{ risk.risk_score|floatformat:1 }}</span>
+                                <span class="risk-score-unit">RISK / 100</span>
+                            </div>
+                            <div class="risk-summary">
+                                <div class="risk-summary-line">
+                                    {% if risk.prediction_source == 'oof' %}
+                                    交叉验证估计等级 <strong>{{ risk.predicted_level_zh }}</strong>，模型对该等级的倾向程度
+                                    <strong>{% widthratio risk.confidence 1 100 %}%</strong>
+                                    {% else %}
+                                    训练集重代入等级 <strong>{{ risk.predicted_level_zh }}</strong>，模型对该等级的倾向程度
+                                    <strong>{% widthratio risk.confidence 1 100 %}%</strong>
+                                    {% endif %}
+                                </div>
+                                <div class="risk-bar">
+                                    <div class="risk-bar-fill" style="width: {{ risk.risk_score }}%; background: linear-gradient(90deg, #14b8a6 0%, {{ risk.risk_band_color }} 100%);"></div>
+                                </div>
+                                <div class="risk-note">
+                                    {% if risk.prediction_source == 'oof' %}
+                                    分数来自按语系分组的 5 折交叉验证：给出该分数的模型没有见过这条语言，属于样本外估计
+                                    {% if risk_meta.oof %}（本模型 macro F1 {{ risk_meta.oof.macro_f1|floatformat:2 }}）{% endif %}。
+                                    综合使用者规模、代际传承、使用领域、文字系统、文献与样本等特征，仅供参考，不代表确定结局；
+                                    百分比是模型输出的类别概率，树模型通常偏饱和，不宜当作校准后的准确率。
+                                    {% else %}
+                                    该分数由全量重训的 {{ risk_meta.model_name|default:"风险模型" }} 模型在训练集上重代入得到，仅作对照（OOF 产物缺失），不代表样本外表现。
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if risk.factors %}
+                        <div class="risk-factors">
+                            <div class="risk-factors-title">主要判断因素（相对典型取值的倾向程度变化，百分点）</div>
+                            <ul class="risk-factor-list">
+                                {% for factor in risk.factors|slice:":3" %}
+                                <li class="risk-factor">
+                                    <span>{{ factor.label }}</span>
+                                    <span class="delta {{ factor.direction }}">
+                                        {% if factor.direction == 'raises' %}↑{% else %}↓{% endif %}
+                                        {{ factor.delta|floatformat:1 }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 数据档案总览 -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <span class="section-icon"><i class="bi bi-diagram-3"></i></span>
+                        <h2 class="section-title">语言数据档案</h2>
+                    </div>
+                    <div class="section-body">
+                        <div class="archive-hero">
+                            <div class="archive-stat">
+                                <strong>{{ data_counts.vitality|intcomma }}</strong>
+                                <span>活力评估</span>
+                            </div>
+                            <div class="archive-stat">
+                                <strong>{{ data_counts.speaker|intcomma }}</strong>
+                                <span>使用者记录</span>
+                            </div>
+                            <div class="archive-stat">
+                                <strong>{{ data_counts.bibliography|intcomma }}</strong>
+                                <span>文献关联</span>
+                            </div>
+                            <div class="archive-stat">
+                                <strong>{{ data_counts.orthography|intcomma }}</strong>
+                                <span>正字法记录</span>
+                            </div>
+                            <div class="archive-stat">
+                                <strong>{{ data_counts.location|intcomma }}</strong>
+                                <span>位置记录</span>
+                            </div>
+                            <div class="archive-stat">
+                                <strong>{{ data_counts.activity|intcomma }}</strong>
+                                <span>活动记录</span>
+                            </div>
+                        </div>
+
+                        {% if vitality_info %}
+                        <div class="archive-sub">
+                            <h3>活力评估</h3>
+                            {% if vitality_info.record.endangerment_level %}
+                            <p class="archive-note" style="margin-top:0;color:#475569;">
+                                {{ vitality_info.record.endangerment_level }}
+                            </p>
+                            {% endif %}
+                            <div class="vitality-grid">
+                                <div class="vitality-dim">
+                                    <span>代际传承</span>
+                                    <strong>
+                                        {% if vitality_info.transmission %}等级 {{ vitality_info.transmission.level }}{% else %}暂无{% endif %}
+                                    </strong>
+                                    <p>{{ vitality_info.transmission.description|default:"暂无说明"|truncatechars:80 }}</p>
+                                </div>
+                                <div class="vitality-dim">
+                                    <span>使用者趋势</span>
+                                    <strong>
+                                        {% if vitality_info.trend %}等级 {{ vitality_info.trend.level }}{% else %}暂无{% endif %}
+                                    </strong>
+                                    <p>{{ vitality_info.trend.description|default:"暂无说明"|truncatechars:80 }}</p>
+                                </div>
+                                <div class="vitality-dim">
+                                    <span>使用领域</span>
+                                    <strong>
+                                        {% if vitality_info.domain %}等级 {{ vitality_info.domain.level }}{% else %}暂无{% endif %}
+                                    </strong>
+                                    <p>{{ vitality_info.domain.description|default:"暂无说明"|truncatechars:80 }}</p>
+                                </div>
+                            </div>
+                            {% if vitality_info.source %}
+                            <p class="archive-note">
+                                评估来源：{{ vitality_info.source.title|default:"未命名来源" }}
+                                {% if vitality_info.source.year %}（{{ vitality_info.source.year }}）{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if speaker %}
+                        <div class="archive-sub">
+                            <h3>使用者画像</h3>
+                            <div class="speaker-summary">
+                                <div>
+                                    <strong>{% if speaker.speaker_number %}{{ speaker.speaker_number|intcomma }}{% else %}—{% endif %}</strong>
+                                    <span>使用者</span>
+                                </div>
+                                <div>
+                                    <strong>{% if speaker.ethnic_population %}{{ speaker.ethnic_population|intcomma }}{% else %}—{% endif %}</strong>
+                                    <span>族群人口</span>
+                                </div>
+                                <div>
+                                    <strong>{{ speaker.date_of_info|default:"—" }}</strong>
+                                    <span>数据年份</span>
+                                </div>
+                            </div>
+                            {% if speaker_demographics %}
+                            <div class="speaker-bars">
+                                {% for item in speaker_demographics %}
+                                <div class="bar-row">
+                                    <span>{{ item.label }}</span>
+                                    <div class="bar-track"><i style="width: {{ item.pct }}%"></i></div>
+                                    <b>{{ item.value|intcomma }}</b>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if speaker.speaker_number_text %}
+                            <p class="archive-note">原始记录：{{ speaker.speaker_number_text|truncatechars:140 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 文献与语境 -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <span class="section-icon"><i class="bi bi-book"></i></span>
+                        <h2 class="section-title">文献、正字法与语境</h2>
+                    </div>
+                    <div class="section-body">
+                        {% if bibliography %}
+                        <div class="archive-sub" style="margin-top:0;padding-top:0;border-top:0;">
+                            <h3>文献记录</h3>
+                            <div class="source-list">
+                                {% for source in bibliography %}
+                                <div class="source-item">
+                                    <div class="source-title">{{ source.title }}</div>
+                                    <div class="source-meta">
+                                        {{ source.author|default:"未知作者" }}
+                                        {% if source.year %} · {{ source.year }}{% endif %}
+                                        {% if source.url %} · <a href="{{ source.url }}" target="_blank" rel="noopener">原文</a>{% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <p class="archive-note">
+                                共 {{ data_counts.bibliography }} 条文献关联，其中 {{ data_counts.bibliography_real }} 条可对到真实来源。
+                            </p>
+                        </div>
+                        {% else %}
+                        <p class="archive-note">
+                            暂无可展示的真实文献来源（共 {{ data_counts.bibliography }} 条关联，可能为占位来源）。
+                        </p>
+                        {% endif %}
+
+                        {% if orthography %}
+                        <div class="archive-sub">
+                            <h3>正字法与书写系统</h3>
+                            {% for record in orthography %}
+                            <div class="orthography-item">
+                                {% if record.scripts %}<p><b>书写系统：</b>{{ record.scripts }}</p>{% endif %}
+                                {% if record.competing_orthographies %}<p><b>竞争正字法：</b>{{ record.competing_orthographies }}</p>{% endif %}
+                                {% if record.public_comment %}<p><b>说明：</b>{{ record.public_comment|truncatechars:120 }}</p>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if language_context %}
+                        <div class="archive-sub">
+                            <h3>语言环境</h3>
+                            <div class="context-grid">
+                                <div><span>政府支持</span><p>{{ language_context.government_support|default:"—"|truncatechars:100 }}</p></div>
+                                <div><span>机构支持</span><p>{{ language_context.institutional_support|default:"—"|truncatechars:100 }}</p></div>
+                                <div><span>使用者态度</span><p>{{ language_context.speaker_attitude|default:"—"|truncatechars:100 }}</p></div>
+                                <div><span>其他语言使用</span><p>{{ language_context.other_languages_used|default:"—"|truncatechars:100 }}</p></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 分布、媒体与活动 -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <span class="section-icon"><i class="bi bi-geo-alt"></i></span>
+                        <h2 class="section-title">分布、媒体与活动</h2>
+                    </div>
+                    <div class="section-body">
+                        {% if locations %}
+                        <div class="archive-sub" style="margin-top:0;padding-top:0;border-top:0;">
+                            <h3>地理位置记录</h3>
+                            {% for loc in locations %}
+                            <div class="location-item">
+                                <b>{{ loc.places|default:"未命名地点" }}</b>
+                                {% if loc.coordinates %}<span>{{ loc.coordinates }}</span>{% endif %}
+                                {% if loc.description %}<p>{{ loc.description|truncatechars:110 }}</p>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if media %}
+                        <div class="archive-sub">
+                            <h3>媒体</h3>
+                            <div class="media-grid">
+                                {% for item in media %}
+                                <a class="media-item" href="{{ item.url }}" target="_blank" rel="noopener">
+                                    <img src="{{ item.url }}" alt="{{ language|language_display_name }}" loading="lazy">
+                                    <span>{% if item.text %}{{ item.text }}{% else %}媒体 {{ forloop.counter }}{% endif %}</span>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if activities %}
+                        <div class="archive-sub">
+                            <h3>最近活动</h3>
+                            <div class="timeline">
+                                {% for activity in activities %}
+                                <div class="timeline-item">
+                                    <span class="timeline-date">{{ activity.date|date:"Y-m-d"|default:"—" }}</span>
+                                    {{ activity.obj_description|default:"活动" }}
+                                    {% if activity.obj_type %}<small>{{ activity.obj_type }}</small>{% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if language.name_source %}
+                        <p class="archive-note">名称来源：{{ language.name_source|name_source_display }}</p>
+                        {% endif %}
+
+                        {% if not locations and not media and not activities %}
+                        <p class="archive-note">暂无更多分布与活动记录。</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 语言样本 -->
+                {% if samples %}
+                <div class="info-section">
+                    <div class="section-header">
+                        <span class="section-icon"><i class="bi bi-headphones"></i></span>
+                        <h2 class="section-title">语言样本</h2>
+                    </div>
+                    <div class="section-body">
+                        <div class="lang-sample-grid">
+                            {% for sample in samples %}
+                            <a class="lang-sample-card" href="{{ sample.play_url }}" target="_blank" rel="noopener">
+                                <div class="lang-sample-thumb">
+                                    {% if sample.thumbnail %}
+                                    <img src="{{ sample.thumbnail }}" alt="{{ sample.title }}" loading="lazy"
+                                         onerror="this.style.display='none'">
+                                    {% else %}
+                                    <i class="bi bi-play-circle"></i>
+                                    {% endif %}
+                                    <span>{{ sample.type_label }}</span>
+                                </div>
+                                <div class="lang-sample-body">
+                                    <h3>{{ sample.title }}</h3>
+                                    <p>{{ sample.date|date:"Y-m-d"|default:"" }}</p>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <p class="archive-note">
+                            共 {{ data_counts.samples }} 条样本。
+                            <a href="{% url 'Dashboard:language_samples' %}">浏览全部样本</a>
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- 相关帖子 -->
                 <div class="info-section">
                     <div class="section-header">
-                        <span class="section-icon">📝</span>
+                        <span class="section-icon"><i class="bi bi-journal-text"></i></span>
                         <h2 class="section-title">相关讨论 ({{ post_count }})</h2>
                     </div>
                     <div class="section-body">
@@ -464,9 +536,14 @@
                         <div class="related-languages">
                             {% for lang in related_languages %}
                             <a href="{% url 'Dashboard:language_detail' lang.language_id %}" class="related-lang-card">
-                                <div class="related-lang-name">{{ lang.language_name }}</div>
+                                <div class="related-lang-name">{{ lang|language_display_name }}</div>
                                 <div class="related-lang-info">
-                                    {% if lang.level_of_endangerment == 'unsafe' %}不安全
+                                    {% if lang.level_of_endangerment == 'high' %}高危
+                                    {% elif lang.level_of_endangerment == 'mid' %}中危
+                                    {% elif lang.level_of_endangerment == 'low' %}低危
+                                    {% elif lang.level_of_endangerment == 'dormant' %}休眠
+                                    {% elif lang.level_of_endangerment == 'awakening' %}复苏
+                                    {% elif lang.level_of_endangerment == 'unsafe' %}不安全
                                     {% elif lang.level_of_endangerment == 'danger' %}危险
                                     {% elif lang.level_of_endangerment == 'endangered' %}濒危
                                     {% elif lang.level_of_endangerment == 'seriously_endangered' %}垂危
@@ -491,9 +568,14 @@
                         <div class="related-languages">
                             {% for lang in same_country_languages %}
                             <a href="{% url 'Dashboard:language_detail' lang.language_id %}" class="related-lang-card">
-                                <div class="related-lang-name">{{ lang.language_name }}</div>
+                                <div class="related-lang-name">{{ lang|language_display_name }}</div>
                                 <div class="related-lang-info">
-                                    {% if lang.level_of_endangerment == 'unsafe' %}不安全
+                                    {% if lang.level_of_endangerment == 'high' %}高危
+                                    {% elif lang.level_of_endangerment == 'mid' %}中危
+                                    {% elif lang.level_of_endangerment == 'low' %}低危
+                                    {% elif lang.level_of_endangerment == 'dormant' %}休眠
+                                    {% elif lang.level_of_endangerment == 'awakening' %}复苏
+                                    {% elif lang.level_of_endangerment == 'unsafe' %}不安全
                                     {% elif lang.level_of_endangerment == 'danger' %}危险
                                     {% elif lang.level_of_endangerment == 'endangered' %}濒危
                                     {% elif lang.level_of_endangerment == 'seriously_endangered' %}垂危
@@ -513,8 +595,8 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if location %}
-<script src="https://webapi.amap.com/maps?v=1.4.15&key=9a12dd3f64fc29a910c0913d36567cd2"></script>
+{% if location and location_valid and amap_js_key %}
+<script src="https://webapi.amap.com/maps?v=1.4.15&key={{ amap_js_key }}"></script>
 <script>
 (function() {
     if (typeof AMap === 'undefined') return;
@@ -527,7 +609,7 @@
 
     var marker = new AMap.Marker({
         position: [{{ location.longitude }}, {{ location.latitude }}],
-        title: '{{ language.language_name }}'
+        title: '{{ language|language_display_name }}'
     });
 
     map.add(marker);
