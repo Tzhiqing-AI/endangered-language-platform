@@ -1,0 +1,308 @@
+{
+  "version": 1,
+  "description": "人工核实语言名称与测试记录清单。ETL enrich 的唯一事实来源。",
+  "test_records": {
+    "1": {
+      "delete": false,
+      "note": "旧库真实词条（阿伊努语），保留，不作为测试记录删除"
+    },
+    "10875": {
+      "delete": true,
+      "note": "源库测试记录（Safe / 100000 speakers），重建时跳过"
+    }
+  },
+  "unresolved": {
+    "1385": "未核实：ELCat 1385 无档案，ISO 无代码",
+    "3964": "未核实：ELCat 3964 无档案，ISO 无代码"
+  },
+  "names": {
+    "1135": {
+      "name": "Mwenyi",
+      "source": "https://elcat.colo.hawaii.edu/lang/1135"
+    },
+    "1252": {
+      "name": "Dakkang",
+      "source": "https://elcat.colo.hawaii.edu/lang/1252"
+    },
+    "1253": {
+      "name": "Zemiaki",
+      "source": "https://elcat.colo.hawaii.edu/lang/1253"
+    },
+    "1254": {
+      "name": "Chatong",
+      "source": "https://elcat.colo.hawaii.edu/lang/1254"
+    },
+    "1333": {
+      "name": "Ampibabo",
+      "source": "https://elcat.colo.hawaii.edu/lang/1333"
+    },
+    "1378": {
+      "name": "Milang",
+      "source": "https://elcat.colo.hawaii.edu/lang/1378"
+    },
+    "1418": {
+      "name": "Baïnounk Gubëeher",
+      "source": "https://elcat.colo.hawaii.edu/lang/1418"
+    },
+    "1419": {
+      "name": "Baïnounk Gujaher",
+      "source": "https://elcat.colo.hawaii.edu/lang/1419"
+    },
+    "1456": {
+      "name": "Effutu",
+      "source": "https://elcat.colo.hawaii.edu/lang/1456"
+    },
+    "1505": {
+      "name": "Laji",
+      "source": "https://elcat.colo.hawaii.edu/lang/1505"
+    },
+    "1574": {
+      "name": "Lapachu",
+      "source": "https://elcat.colo.hawaii.edu/lang/1574"
+    },
+    "1584": {
+      "name": "Baghati",
+      "source": "https://elcat.colo.hawaii.edu/lang/1584"
+    },
+    "1588": {
+      "name": "Bangani",
+      "source": "https://elcat.colo.hawaii.edu/lang/1588"
+    },
+    "1592": {
+      "name": "Bartangi",
+      "source": "https://elcat.colo.hawaii.edu/lang/1592"
+    },
+    "1599": {
+      "name": "Bhalesi",
+      "source": "https://elcat.colo.hawaii.edu/lang/1599"
+    },
+    "1601": {
+      "name": "Bhumij",
+      "source": "https://elcat.colo.hawaii.edu/lang/1601"
+    },
+    "1604": {
+      "name": "Bokar",
+      "source": "https://elcat.colo.hawaii.edu/lang/1604"
+    },
+    "1607": {
+      "name": "Bori",
+      "source": "https://elcat.colo.hawaii.edu/lang/1607"
+    },
+    "1627": {
+      "name": "Chorei",
+      "source": "https://elcat.colo.hawaii.edu/lang/1627"
+    },
+    "1675": {
+      "name": "Bearlake",
+      "source": "https://elcat.colo.hawaii.edu/lang/1675"
+    },
+    "1735": {
+      "name": "Demushbo",
+      "source": "https://elcat.colo.hawaii.edu/lang/1735"
+    },
+    "1751": {
+      "name": "Middle Chulym",
+      "source": "https://elcat.colo.hawaii.edu/lang/1751"
+    },
+    "1792": {
+      "name": "Banawá",
+      "source": "https://elcat.colo.hawaii.edu/lang/1792"
+    },
+    "2030": {
+      "name": "Awiakay",
+      "source": "https://elcat.colo.hawaii.edu/lang/2030"
+    },
+    "2088": {
+      "name": "Huzhu Mongghul",
+      "source": "https://elcat.colo.hawaii.edu/lang/2088"
+    },
+    "2089": {
+      "name": "Nese",
+      "source": "https://elcat.colo.hawaii.edu/lang/2089"
+    },
+    "2090": {
+      "name": "Kodiak Russian Creole",
+      "source": "https://elcat.colo.hawaii.edu/lang/2090"
+    },
+    "2091": {
+      "name": "Ski:xs (Southern Tsimshian)",
+      "source": "https://elcat.colo.hawaii.edu/lang/2091"
+    },
+    "2145": {
+      "name": "Dengalu",
+      "source": "https://elcat.colo.hawaii.edu/lang/2145"
+    },
+    "2150": {
+      "name": "Teushen",
+      "source": "https://elcat.colo.hawaii.edu/lang/2150"
+    },
+    "2153": {
+      "name": "Tipai",
+      "source": "https://elcat.colo.hawaii.edu/lang/2153"
+    },
+    "2442": {
+      "name": "Hare",
+      "source": "https://elcat.colo.hawaii.edu/lang/2442"
+    },
+    "2805": {
+      "name": "Taiwano",
+      "source": "https://elcat.colo.hawaii.edu/lang/2805"
+    },
+    "3065": {
+      "name": "Navwien",
+      "source": "https://elcat.colo.hawaii.edu/lang/3065"
+    },
+    "3214": {
+      "name": "Kaixana",
+      "source": "https://elcat.colo.hawaii.edu/lang/3214"
+    },
+    "3393": {
+      "name": "Forest Nenets",
+      "source": "https://elcat.colo.hawaii.edu/lang/3393"
+    },
+    "3725": {
+      "name": "Mpra",
+      "source": "https://elcat.colo.hawaii.edu/lang/3725"
+    },
+    "4009": {
+      "name": "Maya",
+      "source": "https://elcat.colo.hawaii.edu/lang/4009"
+    },
+    "4569": {
+      "name": "Sengwer",
+      "source": "https://elcat.colo.hawaii.edu/lang/4569"
+    },
+    "4570": {
+      "name": "Ts'ixa",
+      "source": "https://elcat.colo.hawaii.edu/lang/4570"
+    },
+    "4612": {
+      "name": "Ganjulé",
+      "source": "https://elcat.colo.hawaii.edu/lang/4612"
+    },
+    "4871": {
+      "name": "Namat",
+      "source": "https://elcat.colo.hawaii.edu/lang/4871"
+    },
+    "1265": {
+      "name": "Sanglechi",
+      "source": "https://iso639-3.sil.org/code/sgy"
+    },
+    "1372": {
+      "name": "Papitalai",
+      "source": "https://iso639-3.sil.org/code/pat"
+    },
+    "1690": {
+      "name": "Iowa-Oto",
+      "source": "https://iso639-3.sil.org/code/iow"
+    },
+    "2117": {
+      "name": "Jaqaru",
+      "source": "https://iso639-3.sil.org/code/jqr"
+    },
+    "2346": {
+      "name": "Geji",
+      "source": "https://iso639-3.sil.org/code/gji"
+    },
+    "2707": {
+      "name": "Warapu",
+      "source": "https://iso639-3.sil.org/code/wra"
+    },
+    "2721": {
+      "name": "Narau",
+      "source": "https://iso639-3.sil.org/code/nxu"
+    },
+    "2773": {
+      "name": "Piru",
+      "source": "https://iso639-3.sil.org/code/ppr"
+    },
+    "3094": {
+      "name": "Zeem",
+      "source": "https://iso639-3.sil.org/code/zua"
+    },
+    "3142": {
+      "name": "Ziriya",
+      "source": "https://iso639-3.sil.org/code/zir"
+    },
+    "3162": {
+      "name": "Yugh",
+      "source": "https://iso639-3.sil.org/code/yuu"
+    },
+    "3183": {
+      "name": "Yamphe",
+      "source": "https://iso639-3.sil.org/code/yma"
+    },
+    "3249": {
+      "name": "Karahawyana",
+      "source": "https://iso639-3.sil.org/code/xkh"
+    },
+    "3258": {
+      "name": "Kabixí",
+      "source": "https://iso639-3.sil.org/code/xbx"
+    },
+    "3459": {
+      "name": "Tila Chol",
+      "source": "https://iso639-3.sil.org/code/cti"
+    },
+    "3569": {
+      "name": "Mea",
+      "source": "https://iso639-3.sil.org/code/meg"
+    },
+    "3705": {
+      "name": "Judeo-Tunisian Arabic",
+      "source": "https://iso639-3.sil.org/code/ajt"
+    },
+    "3904": {
+      "name": "Baga Mboteni",
+      "source": "https://iso639-3.sil.org/code/bgm"
+    },
+    "3921": {
+      "name": "Bandjigali",
+      "source": "https://iso639-3.sil.org/code/bjd"
+    },
+    "4106": {
+      "name": "Darkhat",
+      "source": "https://iso639-3.sil.org/code/drh"
+    },
+    "4207": {
+      "name": "Eastern Gurung",
+      "source": "https://iso639-3.sil.org/code/ggn"
+    },
+    "4362": {
+      "name": "Kado",
+      "source": "https://iso639-3.sil.org/code/kdv"
+    },
+    "4456": {
+      "name": "Kunggara",
+      "source": "https://iso639-3.sil.org/code/kvs"
+    },
+    "4481": {
+      "name": "Lui",
+      "source": "https://iso639-3.sil.org/code/lba"
+    },
+    "4506": {
+      "name": "Lingkhim",
+      "source": "https://iso639-3.sil.org/code/lii"
+    },
+    "4748": {
+      "name": "Nijadali",
+      "source": "https://iso639-3.sil.org/code/nad"
+    },
+    "4835": {
+      "name": "Tingal",
+      "source": "https://iso639-3.sil.org/code/tie"
+    },
+    "2925": {
+      "name": "Jarawara",
+      "source": "https://www.pib.socioambiental.org/en/Povo:Jamamadi"
+    },
+    "3943": {
+      "name": "Xambioá",
+      "source": "https://www.pib.socioambiental.org/en/Povo:Iny_Karaj%C3%A1"
+    },
+    "3976": {
+      "name": "Javaé",
+      "source": "https://www.pib.socioambiental.org/en/Povo:Iny_Karaj%C3%A1"
+    }
+  }
+}

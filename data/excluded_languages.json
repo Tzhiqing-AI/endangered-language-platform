@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "description": "ETL 抑制名单：源库存在但未经审核、或属重复/噪声条目的 language_id。rebuild 读取源数据时整行跳过，不写目标库；verify 断言这些记录不存在。新增条目请写明 reason。",
+  "excluded": {
+    "9253": {
+      "reason": "approved=0 用户投稿；名称占位符 \"---\"，无 language_codes 记录，vitality/speakers/location/context/bibliography 均 0 条"
+    },
+    "9331": {
+      "reason": "approved=0 用户投稿；名称 \"639\"（误填国家代码），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9334": {
+      "reason": "approved=0 用户投稿；名称 \"sty\"（误填 ISO 639-3 组代码），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9390": {
+      "reason": "approved=0 用户投稿；名称 \"sty\"（与 9334 同名的重复噪声条目），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9391": {
+      "reason": "approved=0 用户投稿；名称 \"rue\"（误填语言代码），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9597": {
+      "reason": "approved=0 用户投稿；名称 \"011\"（无效占位），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9598": {
+      "reason": "approved=0 用户投稿；名称 \"EUS\"（巴斯克语代码误填），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9710": {
+      "reason": "approved=0 用户投稿；名称 \"cld\"（误填语言代码），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "9811": {
+      "reason": "approved=0 用户投稿；名称 \"mis\"（ISO 639-3 未分类占位），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "10041": {
+      "reason": "approved=0 用户投稿；名称 \"gsw\"（误填语言代码），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "10042": {
+      "reason": "approved=0 用户投稿；名称 \"ntp\"（误填语言代码），无 language_codes 记录，各类明细均为 0 条"
+    },
+    "10513": {
+      "reason": "approved=0 用户投稿；Lombard 重复条目，规范条目为 10515（后者有 350 万使用人口与 4 条样本）"
+    },
+    "10514": {
+      "reason": "approved=0 用户投稿；Lombard 重复条目，规范条目为 10515"
+    },
+    "10573": {
+      "reason": "approved=0 用户投稿；Sicilian 重复条目，规范条目为 10873（后者有 500 万使用人口）"
+    },
+    "10727": {
+      "reason": "approved=0 用户投稿；Sicilian 重复条目，规范条目为 10873"
+    },
+    "10758": {
+      "reason": "approved=0 用户投稿；Lombard 重复条目，规范条目为 10515"
+    },
+    "10831": {
+      "reason": "approved=0 用户投稿；Khasi 重复条目，规范条目为 10111（后者有使用人口数据）"
+    },
+    "10867": {
+      "reason": "approved=0 用户投稿；Chuvash 重复条目，规范条目为 9255"
+    },
+    "10868": {
+      "reason": "approved=0 用户投稿；Lombard 重复条目，规范条目为 10515"
+    },
+    "10871": {
+      "reason": "approved=0 用户投稿；Sanskrit 重复条目，规范条目为 9531（后者有 14000 使用人口）"
+    },
+    "2117": {
+      "reason": "重名条目，已合并至 848",
+      "merged_into": 848,
+      "dropped_rows": {
+        "language_country_map": 1
+      }
+    },
+    "2975": {
+      "reason": "重名条目，已合并至 2976",
+      "merged_into": 2976,
+      "dropped_rows": {
+        "language_country_map": 1
+      }
+    },
+    "4860": {
+      "reason": "重名条目，已合并至 10764",
+      "merged_into": 10764
+    },
+    "5987": {
+      "reason": "重名条目，已合并至 4403",
+      "merged_into": 4403,
+      "dropped_rows": {
+        "language_country_map": 1
+      }
+    },
+    "9263": {
+      "reason": "重名条目，已合并至 10506",
+      "merged_into": 10506
+    },
+    "9341": {
+      "reason": "重名条目，已合并至 10422",
+      "merged_into": 10422
+    },
+    "9393": {
+      "reason": "重名条目，已合并至 9392",
+      "merged_into": 9392
+    },
+    "9594": {
+      "reason": "重名条目，已合并至 10506",
+      "merged_into": 10506
+    },
+    "9691": {
+      "reason": "重名条目，已合并至 9690",
+      "merged_into": 9690
+    },
+    "9790": {
+      "reason": "重名条目，已合并至 10429",
+      "merged_into": 10429
+    },
+    "9812": {
+      "reason": "重名条目，已合并至 10507",
+      "merged_into": 10507
+    },
+    "10031": {
+      "reason": "重名条目，已合并至 10429",
+      "merged_into": 10429
+    },
+    "10033": {
+      "reason": "重名条目，已合并至 10506",
+      "merged_into": 10506
+    },
+    "10090": {
+      "reason": "重名条目，已合并至 10413",
+      "merged_into": 10413
+    },
+    "10112": {
+      "reason": "重名条目，已合并至 10111",
+      "merged_into": 10111
+    },
+    "10380": {
+      "reason": "重名条目，已合并至 10417",
+      "merged_into": 10417
+    },
+    "10469": {
+      "reason": "重名条目，已合并至 10497",
+      "merged_into": 10497
+    },
+    "10483": {
+      "reason": "重名条目，已合并至 4921",
+      "merged_into": 4921
+    },
+    "10486": {
+      "reason": "重名条目，已合并至 10435",
+      "merged_into": 10435
+    },
+    "10498": {
+      "reason": "重名条目，已合并至 10490",
+      "merged_into": 10490
+    },
+    "10815": {
+      "reason": "重名条目，已合并至 3270",
+      "merged_into": 3270
+    },
+    "10841": {
+      "reason": "重名条目，已合并至 10497",
+      "merged_into": 10497
+    },
+    "10850": {
+      "reason": "重名条目，已合并至 10849",
+      "merged_into": 10849,
+      "dropped_rows": {
+        "language_country_map": 1
+      }
+    },
+    "10865": {
+      "reason": "重名条目，已合并至 10423",
+      "merged_into": 10423
+    },
+    "10874": {
+      "reason": "重名条目，已合并至 10497",
+      "merged_into": 10497
+    },
+    "10877": {
+      "reason": "重名条目，已合并至 10515",
+      "merged_into": 10515
+    },
+    "10830": {
+      "reason": "重名条目，已合并至 10515",
+      "merged_into": 10515,
+      "note": "名称变体 LOMBARD LANGUAGE，approved=0 用户投稿，仅 1 条活动记录"
+    }
+  }
+}
