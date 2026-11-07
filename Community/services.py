@@ -408,21 +408,23 @@ def clear_recommendation_cache(post_id=None):
 # =============================================================================
 
 def get_mutual_follows(user_id, limit=10):
-    """获取共同关注"""
-    try:
-        from .nosql_services import Neo4jService
-        return Neo4jService.get_mutual_follows(user_id, limit=limit)
-    except Exception:
-        return []
+    """获取共同关注
+
+    Neo4j 连接失败时向调用方抛出异常，不再吞掉错误返回空列表，
+    这样调用方能区分「服务不可用」与「确实没有共同关注」。
+    """
+    from .nosql_services import Neo4jService
+    return Neo4jService.get_mutual_follows(user_id, limit=limit)
 
 
 def get_follow_network(user_id, depth=2):
-    """获取关注网络图谱（用于前端可视化）"""
-    try:
-        from .nosql_services import Neo4jService
-        return Neo4jService.get_follow_network(user_id, depth=depth)
-    except Exception:
-        return {'nodes': [], 'edges': []}
+    """获取关注网络图谱（用于前端可视化）
+
+    Neo4j 连接失败时向调用方抛出异常，不再吞掉错误返回空图，
+    这样调用方能区分「服务不可用」与「确实没有关系数据」。
+    """
+    from .nosql_services import Neo4jService
+    return Neo4jService.get_follow_network(user_id, depth=depth)
 
 
 # =============================================================================

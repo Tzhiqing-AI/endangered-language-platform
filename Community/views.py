@@ -30,7 +30,7 @@ from .forms import PostForm, ReplyForm, ReportForm, SearchForm
 from .services import (
     increment_view, save_post, delete_post_data, search_posts_hybrid,
     get_recommendations, get_mutual_follows, get_follow_network, _log_action,
-    refresh_tag_counts,
+    refresh_tag_counts, _neo4j_ok,
 )
 
 logger = logging.getLogger(__name__)
@@ -1231,10 +1231,15 @@ def api_follow_network(request, user_id):
             depth = 2
         depth = min(max(depth, 1), 3)
         data = get_follow_network(user_id, depth=depth)
-        return JsonResponse({'success': True, 'data': data})
+        return JsonResponse({'success': True, 'available': True, 'data': data})
     except Exception:
         logger.exception('获取关注网络失败')
-        return JsonResponse({'success': False, 'message': '社交图谱服务暂时不可用'})
+        return JsonResponse({
+            'success': False,
+            'available': False,
+            'reason': 'neo4j_unavailable',
+            'message': '社交图谱服务当前不可用，已降级显示',
+        })
 
 
 @require_POST
@@ -1249,10 +1254,15 @@ def api_mutual_follows(request, user_id):
             limit = 10
         limit = min(max(limit, 1), 50)
         data = get_mutual_follows(user_id, limit=limit)
-        return JsonResponse({'success': True, 'data': data})
+        return JsonResponse({'success': True, 'available': True, 'data': data})
     except Exception:
         logger.exception('获取共同关注失败')
-        return JsonResponse({'success': False, 'message': '共同关注服务暂时不可用'})
+        return JsonResponse({
+            'success': False,
+            'available': False,
+            'reason': 'neo4j_unavailable',
+            'message': '共同关注服务当前不可用，已降级显示',
+        })
 
 
 # ==================== 社交图谱可视化页面 ====================
@@ -1268,11 +1278,16 @@ def social_graph(request, user_id):
     # 获取 Neo4j 里使用的 id（Neo4j 节点 id 存的是 username，不是 name）
     neo4j_id = profile_user.username
 
+    # 服务端预判图谱服务可用性：不可用时页面直接展示降级提示，
+    # 前端不再发请求，避免出现没有任何说明的空图。
+    graph_available = _neo4j_ok()
+
     context = {
         'name': name,
         'username': user.username if user else '',
         'profile_user': profile_user,
         'neo4j_id': neo4j_id,
+        'graph_available': graph_available,
         'unread_count': unread_count,
     }
     return render(request, 'community/social_graph.html', context)

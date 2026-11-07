@@ -19,6 +19,16 @@
     <h2><i class="bi bi-diagram-3 me-2"></i>{{ profile_user.name }} 的社交图谱</h2>
     <p class="text-muted">基于 Neo4j 图数据库的关系网络可视化</p>
 
+    {% if not graph_available %}
+    <div class="alert alert-warning d-flex align-items-start" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <div>
+            <div class="fw-semibold">社交图谱服务当前不可用，已降级显示</div>
+            <div class="small text-muted mt-1">图谱可视化依赖 Neo4j 图数据库，服务恢复后刷新页面即可重试；页面其它内容可正常使用。</div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row">
         <div class="col-lg-9">
             <div class="card">
@@ -36,6 +46,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div id="graph-container"></div>
+                    <div id="graph-message" class="d-none" style="height:600px;"></div>
                 </div>
             </div>
         </div>
@@ -48,16 +59,22 @@
                     <div class="mb-2"><span class="badge bg-warning me-2">●</span>二度关系</div>
                     <div class="mb-2"><span class="badge bg-secondary me-2">→</span>关注方向</div>
                     <hr>
-                    <small class="text-muted">数据来源：Neo4j 图数据库<br>支持拖拽、缩放</small>
+                    <small class="text-muted">数据来源：Neo4j 图数据库<br>
+                        {% if graph_available %}支持拖拽、缩放{% else %}<span class="text-warning">当前服务不可用</span>{% endif %}
+                    </small>
                 </div>
             </div>
             <div class="card mb-3">
                 <div class="card-header"><i class="bi bi-bar-chart me-2"></i>统计信息</div>
-                <div class="card-body" id="stats-panel"><p class="text-muted">加载中...</p></div>
+                <div class="card-body" id="stats-panel">
+                    {% if graph_available %}<p class="text-muted">加载中...</p>{% else %}<p class="text-muted mb-0">服务不可用，暂无统计数据</p>{% endif %}
+                </div>
             </div>
             <div class="card">
                 <div class="card-header"><i class="bi bi-people me-2"></i>共同关注推荐</div>
-                <div class="card-body" id="mutual-panel"><p class="text-muted">加载中...</p></div>
+                <div class="card-body" id="mutual-panel">
+                    {% if graph_available %}<p class="text-muted">加载中...</p>{% else %}<p class="text-muted mb-0">共同关注服务当前不可用，已降级显示</p>{% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -70,6 +87,7 @@
 (function() {
     var userId = '{{ neo4j_id }}';
     var csrfToken = '{{ csrf_token }}';
+    var graphAvailable = {{ graph_available|yesno:"true,false" }};
     var container = document.getElementById('graph-container');
 
     var chart = echarts.init(container);
@@ -84,6 +102,32 @@
         });
     }
 
+    // 图谱区域降级/空态提示（与 ECharts 容器互斥，避免破坏图表实例）
+    function showGraphMessage(text, extraHtml) {
+        container.style.display = 'none';
+        var box = document.getElementById('graph-message');
+        box.classList.remove('d-none');
+        box.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-center px-3">' +
+            '<div class="text-muted">' + escapeHtml(text) + '</div>' +
+            (extraHtml || '') + '</div>';
+    }
+
+    function hideGraphMessage() {
+        document.getElementById('graph-message').classList.add('d-none');
+        container.style.display = '';
+        chart.resize();
+    }
+
+    // 服务不可用：图谱、统计、共同关注三个面板都给出明确说明
+    function markUnavailable(graphMsg, mutualMsg) {
+        showGraphMessage(graphMsg,
+            '<div class="small text-muted mt-1">图谱可视化依赖 Neo4j，服务恢复后点击「刷新」可重试</div>');
+        document.getElementById('stats-panel').innerHTML =
+            '<p class="text-muted mb-0">服务不可用，暂无统计数据</p>';
+        document.getElementById('mutual-panel').innerHTML =
+            '<p class="text-muted mb-0">' + escapeHtml(mutualMsg) + '</p>';
+    }
+
     // 获取数据
     function loadGraph(depth) {
         fetch('/Community/api/follow-network/' + encodeURIComponent(userId) + '/', {
@@ -93,18 +137,18 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (data.success) {
-                graphData = data.data;
+            if (data.success && data.available !== false) {
+                graphData = data.data || { nodes: [], edges: [] };
                 renderGraph();
                 updateStats();
             } else {
-                container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted">' +
-                    escapeHtml(data.message || '社交图谱服务暂时不可用') + '</div>';
+                markUnavailable(data.message || '社交图谱服务当前不可用，已降级显示',
+                                '共同关注服务当前不可用，已降级显示');
             }
         })
         .catch(function(err) {
             console.error('加载失败:', err);
-            container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-danger">加载失败</div>';
+            markUnavailable('社交图谱加载失败，请稍后重试', '共同关注服务暂时无法加载');
         });
     }
 
@@ -114,9 +158,12 @@
         var edges = graphData.edges || [];
 
         if (nodes.length === 0) {
-            container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted">暂无关系数据</div>';
+            showGraphMessage('暂无关系数据',
+                '<div class="small text-muted mt-1">图谱服务正常，该用户暂时没有可展示的关注关系</div>');
             return;
         }
+
+        hideGraphMessage();
 
         var cx = container.offsetWidth / 2 || 400;
         var cy = 300;
@@ -194,23 +241,37 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var panel = document.getElementById('mutual-panel');
-            if (data.success && data.data && data.data.length > 0) {
+            if (data.success && data.available !== false && data.data && data.data.length > 0) {
                 panel.innerHTML = data.data.map(function(u) {
                     return '<div class="d-flex align-items-center mb-2"><i class="bi bi-person-circle text-muted me-2"></i><span>' + escapeHtml(u.name || u.user_id) + '</span><span class="badge bg-light text-dark ms-auto">' + escapeHtml(u.common) + '共同</span></div>';
                 }).join('');
+            } else if (data.success && data.available !== false) {
+                panel.innerHTML = '<p class="text-muted mb-0">暂无共同关注数据</p>';
             } else {
-                panel.innerHTML = '<p class="text-muted mb-0">' + escapeHtml(data.message || '暂无共同关注数据') + '</p>';
+                panel.innerHTML = '<p class="text-muted mb-0">' +
+                    escapeHtml(data.message || '共同关注服务当前不可用，已降级显示') + '</p>';
             }
+        })
+        .catch(function(err) {
+            console.error('共同关注加载失败:', err);
+            document.getElementById('mutual-panel').innerHTML =
+                '<p class="text-muted mb-0">共同关注服务暂时无法加载</p>';
         });
     }
 
-    // 初始化
-    loadGraph(2);
-    loadMutual();
+    // 初始化：服务端已判定不可用时直接展示降级提示，不再发起注定失败的请求
+    if (graphAvailable) {
+        loadGraph(2);
+        loadMutual();
+    } else {
+        markUnavailable('社交图谱服务当前不可用，已降级显示',
+                        '共同关注服务当前不可用，已降级显示');
+    }
 
-    // 刷新按钮
+    // 刷新按钮（服务恢复后可重试，同时刷新共同关注）
     document.getElementById('btn-refresh').addEventListener('click', function() {
         loadGraph(document.getElementById('depth-select').value);
+        loadMutual();
     });
     document.getElementById('depth-select').addEventListener('change', function() {
         loadGraph(this.value);
