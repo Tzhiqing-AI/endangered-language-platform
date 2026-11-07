@@ -24,6 +24,11 @@ class User(models.Model):
         verbose_name = '用户'
         verbose_name_plural = '用户'
 
+    def set_password(self, raw_password):
+        """使用 Django 密码哈希器设置密码，避免在代码中写哈希常量。"""
+        from django.contrib.auth.hashers import make_password
+        self.password = make_password(raw_password)
+
     @property
     def is_authenticated(self):
         return True
