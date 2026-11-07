@@ -18,6 +18,17 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
+# 测试环境不依赖 Redis，避免 CI 因缺少外部服务而失败
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+
 # 日志级别降低
 LOGGING = {
     'version': 1,

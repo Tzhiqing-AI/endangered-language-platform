@@ -1,0 +1,20 @@
+# =============================================================================
+# ETL / 数据导入依赖
+# 适用：import_csv_data.py、rebuild_from_elcat_sql.py、ml/build_dataset.py
+#
+# 用法：
+#   pip install -r requirements-etl.txt
+#
+# 说明：iso639-lang 虽存在于仓库上级目录 .pylibs，但项目代码未 import，
+#       故不声明；LOCAL_LIBS_DIR 仍可作为历史环境的兜底路径（见 .env.example）。
+# =============================================================================
+-r requirements.txt
+
+# MySQL 源库直连（elcat_source → language_v2 重建）
+PyMySQL==1.1.3
+
+# 数据集构建 / CSV 读取（numpy、pandas 已在 requirements.txt 中声明为推理依赖）
+
+# ISO 639-3 语言名补全（import_csv_data.py / rebuild_from_elcat_sql.py）
+# 历史版本依赖上级目录 .pylibs 隐式提供，现显式声明
+pycountry>=24.6.1

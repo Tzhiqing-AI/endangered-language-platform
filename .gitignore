@@ -38,6 +38,14 @@ env/
 *.swo
 *~
 
+# Local audit/backup data
+backups/
+
+# Legacy CSV export (已废弃) 与本地临时脚本
+csv_output/
+tmp_*.py
+_probe_*.py
+
 # Django
 *.log
 local_settings.py

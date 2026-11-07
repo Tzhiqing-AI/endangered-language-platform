@@ -1,0 +1,22 @@
+# =============================================================================
+# 机器学习离线训练依赖
+# 适用：ml/build_dataset.py（数据集构建）、ml/train_models.py（训练/评估）
+#
+# 用法：
+#   pip install -r requirements-ml.txt
+#
+# 约束：模型训练必须离线执行；Web 进程只加载 ml/artifacts/ 下的预训练产物，
+#       Docker 镜像默认不安装本文件。
+# =============================================================================
+-r requirements-etl.txt
+
+# 训练/评估专用（推理所需 joblib/numpy/pandas/scikit-learn/lightgbm 已在基础文件）
+scipy==1.14.1
+xgboost==3.0.0
+matplotlib==3.10.1
+
+# 可选增强：TabNet 与 SHAP 可解释性（train_models.py 已用 try/except 降级）
+# 默认不安装；需要时取消注释后重新 pip install -r requirements-ml.txt
+# torch==2.13.0
+# pytorch-tabnet==4.1.0
+# shap==0.54.1
