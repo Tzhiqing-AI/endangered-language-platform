@@ -45,6 +45,15 @@ backups/
 csv_output/
 tmp_*.py
 _probe_*.py
+_cov.txt
+_perf_check.txt
+_routes.txt
+
+# ML 训练数据、模型与报告（仅代码与配置进库）
+ml/artifacts/
+ml/reports/
+ml/endangerment_dataset.csv
+ml/dataset_meta.json
 
 # Django
 *.log
@@ -52,6 +61,12 @@ local_settings.py
 db.sqlite3
 media/
 staticfiles/
+
+# Test coverage
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
 
 # OS
 .DS_Store
