@@ -345,11 +345,24 @@ class Command(BaseCommand):
         self.stdout.write(f'model: {bundle.get("model_name", "")} '
                           f'(trained_at={bundle.get("trained_at", "")})')
         self.stdout.write(f'predicted_level: {level} ({labels.get(level, "")})')
-        self.stdout.write(f'risk_score: {score:.1f}')
-        self.stdout.write(f'risk_band: {band} '
+        self.stdout.write(f'risk_tier: {result["risk_tier"]} ({result["risk_tier_label"]})')
+        self.stdout.write(f'high_risk_prob: {result["high_risk_prob"]:.4f} '
+                          f'({result["high_risk_prob_pct"]:.1f}%)')
+        self.stdout.write(f'risk_score (deprecated): {score:.1f}')
+        self.stdout.write(f'risk_band (deprecated): {band} '
                           f'({risk_service.RISK_BAND_LABELS.get(band, band)})')
-        self.stdout.write(f'confidence: {result["confidence"]:.3f}')
-        self.stdout.write('probabilities:')
+        self.stdout.write(f'confidence_raw: {result["confidence"]:.3f}')
+        self.stdout.write(f'confidence_calibrated: {result["confidence_calibrated"]:.3f}')
+        self.stdout.write('top2:')
+        for item in result['top2']:
+            self.stdout.write(
+                f'  {item["level"]:<20} {item["probability"]:.4f} '
+                f'({item["probability_pct"]:.1f}%)')
+        calibration = result['calibration']
+        self.stdout.write(
+            f'calibration: applied={calibration["applied"]} '
+            f'method={calibration["method"]} reason={calibration["reason"] or "-"}')
+        self.stdout.write('probabilities (calibrated):')
         for class_name in bundle['class_names']:
             probability = result['probabilities'].get(class_name, 0.0)
             self.stdout.write(

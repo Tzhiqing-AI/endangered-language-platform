@@ -94,9 +94,12 @@
             </div>
             <div class="risk-alert-sub">
                 模型 {{ risk_stats.model_name|default:"风险预测" }} · 覆盖 {{ risk_stats.total }} 种语言 ·
-                极高风险 <strong>{{ risk_stats.critical_count }}</strong> ·
-                高风险 <strong>{{ risk_stats.high_count }}</strong> ·
-                平均风险分 {{ risk_stats.average_score }}
+                高风险档 <strong>{{ risk_stats.tier_counts.high|default:0 }}</strong> ·
+                中风险档 <strong>{{ risk_stats.tier_counts.medium|default:0 }}</strong> ·
+                平均高危累计概率 <strong>{{ risk_stats.average_high_risk_prob_pct|floatformat:1 }}%</strong>
+                {% if not risk_stats.calibration_applied %}
+                <span class="risk-alert-warn">（概率未校准：{{ risk_stats.calibration_reason }}）</span>
+                {% endif %}
             </div>
         </div>
         <a class="risk-alert-more" href="{% url 'Dashboard:language_map' %}">
@@ -107,8 +110,8 @@
         {% for item in risk_alerts %}
         <a class="risk-alert-item" href="{% url 'Dashboard:language_detail' item.code_id %}">
             <span class="risk-alert-name" title="{{ item|language_display_name }}">{{ item|language_display_name }}</span>
-            <span class="risk-alert-band" style="color: {{ item.risk_band_color }}; background: {{ item.risk_band_color }}18;">{{ item.risk_band_label }}</span>
-            <span class="risk-alert-score">{{ item.risk_score|floatformat:1 }}</span>
+            <span class="risk-alert-band" style="color: {{ item.risk_tier_color }}; background: {{ item.risk_tier_color }}18;">{{ item.risk_tier_label }}</span>
+            <span class="risk-alert-score" title="高危及以上累积概率">{{ item.high_risk_prob_pct|floatformat:0 }}%</span>
         </a>
         {% empty %}
         <span class="risk-alert-sub">暂无达到预警阈值的语言。</span>

@@ -223,7 +223,7 @@ def _handle_language_list_get(request, user, name):
         'sort_field': sort_field,
         'order': order,
         'endangerment_levels': ENDANGERMENT_LEVELS,
-        'risk_alerts': get_alerts(limit=8, min_score=75),
+        'risk_alerts': get_alerts(limit=8, min_high_prob=0.75),
         'risk_stats': get_risk_stats(),
     }
 

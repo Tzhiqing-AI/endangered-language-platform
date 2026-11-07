@@ -155,36 +155,56 @@
                     <div class="section-header">
                         <span class="section-icon"><i class="bi bi-magic"></i></span>
                         <h2 class="section-title">风险估计</h2>
-                        <span class="risk-band-pill" style="background: {{ risk.risk_band_color }}1f; color: {{ risk.risk_band_color }}; border-color: {{ risk.risk_band_color }}55;">{{ risk.risk_band_label }}</span>
+                        <span class="risk-band-pill" style="background: {{ risk.risk_tier_color }}1f; color: {{ risk.risk_tier_color }}; border-color: {{ risk.risk_tier_color }}55;">{{ risk.risk_tier_label }}</span>
                     </div>
                     <div class="section-body">
                         <div class="risk-hero">
                             <div class="risk-score-ring">
-                                <span class="risk-score-value">{{ risk.risk_score|floatformat:1 }}</span>
-                                <span class="risk-score-unit">RISK / 100</span>
+                                <span class="risk-score-value">{{ risk.high_risk_prob_pct|floatformat:1 }}%</span>
+                                <span class="risk-score-unit">P(≥高危)</span>
                             </div>
                             <div class="risk-summary">
                                 <div class="risk-summary-line">
                                     {% if risk.prediction_source == 'oof' %}
-                                    交叉验证估计等级 <strong>{{ risk.predicted_level_zh }}</strong>，模型对该等级的倾向程度
-                                    <strong>{% widthratio risk.confidence 1 100 %}%</strong>
+                                    交叉验证估计等级 <strong>{{ risk.predicted_level_zh }}</strong>
                                     {% else %}
-                                    训练集重代入等级 <strong>{{ risk.predicted_level_zh }}</strong>，模型对该等级的倾向程度
-                                    <strong>{% widthratio risk.confidence 1 100 %}%</strong>
+                                    训练集重代入等级 <strong>{{ risk.predicted_level_zh }}</strong>
                                     {% endif %}
+                                    {% with top=risk.top2.0 second=risk.top2.1 %}
+                                    · 模型倾向：最可能 <strong>{{ top.level_zh }} {{ top.probability_pct|floatformat:1 }}%</strong>
+                                    {% if second %}，其次 <strong>{{ second.level_zh }} {{ second.probability_pct|floatformat:1 }}%</strong>（相差 {{ risk.top2_margin_pct|floatformat:1 }} 个百分点）{% endif %}
+                                    {% endwith %}
                                 </div>
-                                <div class="risk-bar">
-                                    <div class="risk-bar-fill" style="width: {{ risk.risk_score }}%; background: linear-gradient(90deg, #14b8a6 0%, {{ risk.risk_band_color }} 100%);"></div>
+                                <div class="risk-bar" title="高危及以上累积概率 {{ risk.high_risk_prob_pct|floatformat:1 }}%">
+                                    <div class="risk-bar-fill" style="width: {{ risk.high_risk_prob_pct }}%; background: linear-gradient(90deg, #14b8a6 0%, {{ risk.risk_tier_color }} 100%);"></div>
+                                </div>
+                                <div class="risk-metrics">
+                                    <span>高危及以上（濒危 / 垂危 / 灭绝）累计 <strong>{{ risk.high_risk_prob_pct|floatformat:1 }}%</strong></span>
+                                    <span>至少危险（危险及以上）累计 <strong>{{ risk.at_least_danger_prob_pct|floatformat:1 }}%</strong></span>
+                                    <span>垂危及以上累计 <strong>{{ risk.severe_risk_prob_pct|floatformat:1 }}%</strong></span>
+                                </div>
+                                <div class="risk-prob-caption">模型类别倾向（非外部验证的绝对概率）</div>
+                                <div class="risk-prob-list">
+                                    {% for row in risk.probability_rows %}
+                                    <span class="risk-prob-item">
+                                        <span class="risk-prob-label">{{ row.level_zh }}</span>
+                                        <span class="risk-prob-value">{{ row.pct|floatformat:1 }}%</span>
+                                    </span>
+                                    {% endfor %}
                                 </div>
                                 <div class="risk-note">
                                     {% if risk.prediction_source == 'oof' %}
                                     分数来自按语系分组的 5 折交叉验证：给出该分数的模型没有见过这条语言，属于样本外估计
                                     {% if risk_meta.oof %}（本模型 macro F1 {{ risk_meta.oof.macro_f1|floatformat:2 }}）{% endif %}。
-                                    综合使用者规模、代际传承、使用领域、文字系统、文献与样本等特征，仅供参考，不代表确定结局；
-                                    百分比是模型输出的类别概率，树模型通常偏饱和，不宜当作校准后的准确率。
                                     {% else %}
-                                    该分数由全量重训的 {{ risk_meta.model_name|default:"风险模型" }} 模型在训练集上重代入得到，仅作对照（OOF 产物缺失），不代表样本外表现。
+                                    该结果由全量重训的 {{ risk_meta.model_name|default:"风险模型" }} 模型在训练集上重代入得到，仅作对照（OOF 产物缺失），不代表样本外表现。
                                     {% endif %}
+                                    {% if risk.calibration.applied %}
+                                    概率已用 OOF 数据做温度缩放校准（T={{ risk.calibration.temperature|floatformat:2 }}）。
+                                    {% else %}
+                                    校准文件不可用（{{ risk.calibration.reason }}），当前显示未校准的原始模型输出。
+                                    {% endif %}
+                                    累积概率与类别倾向只用于排序和预警参考，不代表经过外部验证的绝对灭绝概率。
                                 </div>
                             </div>
                         </div>
@@ -409,6 +429,21 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% else %}
+                        <div class="archive-sub">
+                            <h3>媒体</h3>
+                            <div class="archive-empty">
+                                <i class="bi bi-image"></i>
+                                <div>
+                                    <strong>该语言暂未收录图像或影像资料</strong>
+                                    <p>
+                                        档案库中的媒体条目只覆盖了少量语言，这不代表这门语言不存在影像记录。
+                                        如果手上有老照片、纪录片片段或田野录音，欢迎在社区分享，或联系管理员归入档案。
+                                    </p>
+                                    <a href="{% url 'Dashboard:language_samples' %}">去看看样本库里已有的资料 →</a>
+                                </div>
+                            </div>
+                        </div>
                         {% endif %}
 
                         {% if activities %}
@@ -437,13 +472,13 @@
                 </div>
 
                 <!-- 语言样本 -->
-                {% if samples %}
                 <div class="info-section">
                     <div class="section-header">
                         <span class="section-icon"><i class="bi bi-headphones"></i></span>
                         <h2 class="section-title">语言样本</h2>
                     </div>
                     <div class="section-body">
+                        {% if samples %}
                         <div class="lang-sample-grid">
                             {% for sample in samples %}
                             <a class="lang-sample-card" href="{{ sample.play_url }}" target="_blank" rel="noopener">
@@ -467,9 +502,22 @@
                             共 {{ data_counts.samples }} 条样本。
                             <a href="{% url 'Dashboard:language_samples' %}">浏览全部样本</a>
                         </p>
+                        {% else %}
+                        <div class="archive-empty">
+                            <i class="bi bi-headphones"></i>
+                            <div>
+                                <strong>暂无该语言的音频或视频样本</strong>
+                                <p>
+                                    样本库目前还没有收录这门语言的录音、视频或词汇表。
+                                    如果你身边有母语者愿意录音，或能找到公开的音频档案，可以在社区发帖说明，
+                                    也可以联系管理员，把资料整理后补充进来。
+                                </p>
+                                <a href="{% url 'Dashboard:language_samples' %}">浏览其他语言的样本 →</a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
 
                 <!-- 相关帖子 -->
                 <div class="info-section">

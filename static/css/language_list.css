@@ -522,6 +522,11 @@
         color: #b91c1c;
     }
 
+    .risk-alert-warn {
+        color: #b45309;
+        font-weight: 600;
+    }
+
     /* 分页 */
     .pagination-container {
         padding: 1.25rem 1.5rem;
