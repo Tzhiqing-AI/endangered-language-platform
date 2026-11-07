@@ -1,822 +1,1014 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}濒危语言可视化 - 濒危语言保护平台{% endblock %}
+{% block title %}语言洞察 - 濒危语言数据档案{% endblock %}
 
 {% block extra_css %}
 <style>
-    .viz-page-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-        margin: 0 -2rem 2rem -2rem;
-        padding: 3rem 2rem;
-        color: white;
+    :root {
+        --ink: #0b1120;
+        --ink-soft: #1e293b;
+        --paper: #f6f7fb;
+        --card: #ffffff;
+        --line: rgba(15, 23, 42, 0.08);
+        --gold: #d97706;
+        --gold-soft: #fef3c7;
+        --teal: #0f766e;
+        --risk-high: #991b1b;
+        --risk-mid: #dc2626;
+        --risk-low: #ea580c;
+        --risk-dormant: #475569;
+        --risk-awake: #0d9488;
+    }
+
+    .insight-page {
+        background: var(--paper);
+        margin: -1.5rem -2rem 0 -2rem;
+        padding: 2rem;
+    }
+
+    .insight-hero {
         position: relative;
         overflow: hidden;
+        border-radius: 28px;
+        padding: 3.5rem 3rem;
+        color: #fff;
+        background:
+            radial-gradient(circle at 82% 18%, rgba(217, 119, 6, 0.28), transparent 42%),
+            radial-gradient(circle at 12% 88%, rgba(13, 148, 136, 0.22), transparent 44%),
+            linear-gradient(135deg, #0b1120 0%, #111827 55%, #1e293b 100%);
+        box-shadow: 0 24px 60px rgba(11, 17, 32, 0.24);
     }
-    .viz-page-header::before {
+
+    .insight-hero::after {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(circle at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 50%, rgba(245,158,11,0.1) 0%, transparent 50%);
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent 75%);
         pointer-events: none;
     }
-    .viz-page-header::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M20 0L40 20L20 40L0 20z'/%3E%3C/g%3E%3C/svg%3E");
-        pointer-events: none;
-    }
-    .viz-stat-bar {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-    .viz-stat-item {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 1.25rem;
-        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        transition: all 0.3s;
-    }
-    .viz-stat-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    .viz-stat-number {
-        font-size: 1.75rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .viz-stat-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--primary-400, #94a3b8);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-top: 0.25rem;
-    }
-    .viz-card {
-        background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        margin-bottom: 2rem;
-        overflow: hidden;
-        transition: box-shadow 0.3s;
-    }
-    .viz-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    .viz-card-header {
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid var(--border-light, rgba(15,23,42,0.04));
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .viz-card-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--primary-800, #1e293b);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .viz-card-title i {
-        color: var(--accent-500, #6366f1);
-    }
-    .viz-card-body {
-        padding: 1.5rem;
-    }
-    .chart-area {
-        width: 100%;
-        height: 400px;
-    }
-    .analysis-input {
-        width: 100%;
-        border: 1.5px solid var(--border-color, rgba(15,23,42,0.08));
-        border-radius: 12px;
-        padding: 0.875rem 1.25rem;
-        font-size: 0.9375rem;
-        transition: all 0.3s;
-        background: var(--primary-50, #f8fafc);
-    }
-    .analysis-input:focus {
-        border-color: var(--accent-500, #6366f1);
-        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-        outline: none;
-        background: #ffffff;
-    }
-    .analysis-btn {
-        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
-        color: white;
-        border: none;
-        padding: 0.625rem 1.5rem;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.3s;
+
+    .hero-eyebrow {
+        position: relative;
+        z-index: 2;
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
-        box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+        gap: 0.6rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #fbbf24;
+        margin-bottom: 1.2rem;
     }
-    .analysis-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+
+    .hero-eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 1px;
+        background: #fbbf24;
     }
-    .analysis-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
+
+    .insight-hero h1 {
+        position: relative;
+        z-index: 2;
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        max-width: 820px;
     }
-    .analysis-btn .spinner-border {
-        width: 1rem;
-        height: 1rem;
-        border-width: 0.15em;
+
+    .insight-hero h1 span {
+        color: #fcd34d;
     }
-    .analysis-loading {
+
+    .hero-sub {
+        position: relative;
+        z-index: 2;
+        margin: 1.2rem 0 0;
+        max-width: 680px;
+        font-size: 1rem;
+        line-height: 1.85;
+        color: rgba(255, 255, 255, 0.72);
+    }
+
+    .hero-actions {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-top: 1.8rem;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.72rem 1.2rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .hero-btn.primary {
+        background: #f59e0b;
+        color: #111827;
+    }
+
+    .hero-btn.primary:hover {
+        background: #fbbf24;
+        transform: translateY(-2px);
+        color: #111827;
+    }
+
+    .hero-btn.ghost {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #fff;
+    }
+
+    .hero-btn.ghost:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .hero-stats {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-top: 2.5rem;
+        padding-top: 1.6rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .hero-stat strong {
+        display: block;
+        font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #fff;
+    }
+
+    .hero-stat span {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .insight-section {
+        margin-top: 2.4rem;
+    }
+
+    .section-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .section-head h2 {
+        margin: 0.2rem 0 0;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+    }
+
+    .section-head p {
+        max-width: 520px;
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.7;
+        color: #64748b;
+    }
+
+    .kicker {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+    }
+
+    .spectrum-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 1.4rem 1.5rem 1.2rem;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .spectrum-bar {
+        display: flex;
+        height: 46px;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #e2e8f0;
+    }
+
+    .spectrum-seg {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
-        padding: 2rem;
-        color: var(--accent-600, #4f46e5);
-        font-weight: 500;
+        min-width: 2px;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: filter 0.2s;
     }
-    .analysis-loading .spinner-border {
-        width: 1.5rem;
-        height: 1.5rem;
-        border-width: 0.2em;
+
+    .spectrum-seg:hover { filter: brightness(1.12); }
+    .spectrum-seg.unsafe { background: linear-gradient(180deg, #f59e0b, #b45309); }
+    .spectrum-seg.danger { background: linear-gradient(180deg, #f97316, #c2410c); }
+    .spectrum-seg.endangered { background: linear-gradient(180deg, #ef4444, #b91c1c); }
+    .spectrum-seg.seriously_endangered { background: linear-gradient(180deg, #b91c1c, #7f1d1d); }
+    .spectrum-seg.extinct { background: linear-gradient(180deg, #64748b, #334155); }
+    .spectrum-seg.awakening { background: linear-gradient(180deg, #14b8a6, #0f766e); }
+    .spectrum-seg.safe { background: linear-gradient(180deg, #10b981, #047857); }
+    .spectrum-seg.unknown { background: #cbd5e1; color: #334155; }
+    .spectrum-seg span { padding: 0 0.4rem; overflow: hidden; text-overflow: ellipsis; }
+    .spectrum-caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.9rem;
+        font-size: 0.78rem;
+        color: #64748b;
     }
-    .analysis-result-box {
-        background: linear-gradient(135deg, var(--primary-50, #f8fafc) 0%, rgba(99,102,241,0.03) 100%);
-        border: 1px solid var(--border-color, rgba(15,23,42,0.08));
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1.25rem;
-        white-space: pre-line;
-        line-height: 1.7;
-        color: var(--primary-700, #334155);
-        font-size: 0.9375rem;
+
+    .spectrum-caption b { color: var(--ink); }
+
+    .insight-grid {
+        display: grid;
+        gap: 1.2rem;
+        margin-top: 1.2rem;
     }
-    .map-search-input {
-        border: 1.5px solid var(--border-color, rgba(15,23,42,0.08));
-        border-radius: 10px;
-        padding: 0.625rem 1rem;
-        font-size: 0.9375rem;
-        transition: all 0.3s;
+
+    .insight-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .insight-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 1.4rem 1.5rem 1.3rem;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
     }
-    .map-search-input:focus {
-        border-color: var(--accent-500, #6366f1);
-        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-        outline: none;
+
+    .insight-card header {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 0.9rem;
     }
-    .map-search-btn {
-        background: linear-gradient(135deg, var(--accent-500, #6366f1) 0%, var(--accent-600, #4f46e5) 100%);
-        color: white;
-        border: none;
-        padding: 0.625rem 1.25rem;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.3s;
+
+    .insight-card header span {
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: var(--gold);
     }
-    .map-search-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+
+    .insight-card h3 {
+        margin: 0;
+        font-size: 1.02rem;
+        font-weight: 800;
+        color: var(--ink);
     }
-    .lang-list-item {
-        padding: 0.625rem 0.875rem;
-        margin-bottom: 0.375rem;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-size: 0.875rem;
-        color: var(--primary-600, #475569);
-        border: 1px solid transparent;
+
+    .chart { width: 100%; height: 280px; }
+    .chart.tall { height: 320px; }
+
+    .chart-note, .card-desc {
+        margin: 0.6rem 0 0;
+        font-size: 0.76rem;
+        line-height: 1.6;
+        color: #64748b;
     }
-    .lang-list-item:hover {
-        background: rgba(99,102,241,0.06);
-        border-color: rgba(99,102,241,0.15);
-        color: var(--accent-600, #4f46e5);
+
+    .voice-list { margin-top: 0.6rem; }
+
+    .voice-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 96px 72px;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.62rem 0.2rem;
+        border-bottom: 1px dashed rgba(15, 23, 42, 0.08);
+        text-decoration: none;
+        color: inherit;
     }
-    .lang-list-item .badge {
-        font-size: 0.625rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 6px;
+
+    .voice-row:last-child { border-bottom: none; }
+    .voice-row:hover .voice-name { color: var(--gold); }
+    .voice-name { font-weight: 700; font-size: 0.86rem; color: var(--ink); }
+    .voice-country { font-size: 0.74rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .voice-number { text-align: right; font-size: 0.86rem; font-weight: 800; color: var(--risk-high); }
+    .voice-number small { font-size: 0.66rem; font-weight: 500; color: #64748b; margin-left: 1px; }
+
+    .dormant-banner {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
     }
-    #map-container {
+
+    .dormant-banner strong { font-size: 1.9rem; font-weight: 800; color: #334155; }
+    .dormant-banner span { font-size: 0.8rem; color: #64748b; }
+
+    .awakening-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.9rem;
+    }
+
+    .awakening-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.38rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(13, 148, 136, 0.1);
+        color: #0f766e;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .awakening-chip:hover { background: rgba(13, 148, 136, 0.18); color: #0f766e; }
+    .empty { color: #64748b; font-size: 0.82rem; }
+
+    .coverage-list { display: grid; gap: 0.8rem; margin-top: 0.4rem; }
+
+    .coverage-row {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr) 48px;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .coverage-row span { font-size: 0.8rem; color: #475569; }
+    .coverage-bar { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+    .coverage-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f59e0b, #0d9488); }
+    .coverage-row b { font-size: 0.78rem; color: var(--ink); text-align: right; }
+
+    .story-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .story-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 220px;
+        padding: 1.25rem 1.35rem 1.1rem;
+        border-radius: 20px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        text-decoration: none;
+        color: inherit;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .story-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: #cbd5e1;
+    }
+
+    .story-card.level-high::before { background: #991b1b; }
+    .story-card.level-mid::before { background: #dc2626; }
+    .story-card.level-low::before { background: #ea580c; }
+    .story-card.level-dormant::before { background: #475569; }
+    .story-card.level-awakening::before { background: #0d9488; }
+    .story-card.level-unknown::before { background: #cbd5e1; }
+
+    .story-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1); color: inherit; }
+
+    .story-top { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.7rem; font-weight: 700; }
+    .story-level { color: var(--gold); letter-spacing: 0.06em; }
+    .story-country { color: #64748b; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .story-card h3 { margin: 0.75rem 0 0.3rem; font-size: 1.18rem; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+    .story-speakers { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 0.2rem; }
+    .story-speakers strong { font-size: 1.5rem; font-weight: 800; color: var(--ink-soft); }
+    .story-speakers span { font-size: 0.7rem; color: #64748b; }
+    .story-note { margin: 0.7rem 0 0; font-size: 0.76rem; line-height: 1.65; color: #64748b; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .story-link { margin-top: auto; padding-top: 0.9rem; font-size: 0.76rem; font-weight: 700; color: var(--gold); }
+
+    .sample-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .voice-sample-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .voice-sample-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09);
+        color: inherit;
+    }
+
+    .voice-sample-thumb {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        background: linear-gradient(135deg, #0f172a, #334155);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 2rem;
+    }
+
+    .voice-sample-thumb img {
         width: 100%;
-        height: 500px;
-        border-radius: 12px;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .voice-sample-thumb span {
+        position: absolute;
+        top: 0.6rem;
+        left: 0.6rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(11, 17, 32, 0.72);
+        color: #fff;
+        font-size: 0.64rem;
+        font-weight: 700;
+    }
+
+    .voice-sample-body { padding: 0.8rem 0.9rem 0.95rem; }
+
+    .voice-sample-body h3 {
+        margin: 0;
+        font-size: 0.84rem;
+        font-weight: 800;
+        line-height: 1.5;
+        color: var(--ink);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    @media (max-width: 767.98px) {
-        .viz-page-header { padding: 2rem 1.5rem; }
-        .chart-area { height: 300px; }
-        #map-container { height: 350px; }
-        .viz-stat-bar { grid-template-columns: repeat(2, 1fr); }
+
+    .voice-sample-body p {
+        margin: 0.3rem 0 0;
+        font-size: 0.7rem;
+        color: var(--teal);
+        font-weight: 700;
+    }
+
+    .dimension-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .dimension-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 1.3rem 1.35rem;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .dimension-card h3 { margin: 0 0 1rem; font-size: 1rem; font-weight: 800; color: var(--ink); }
+
+    .dimension-row { margin-bottom: 0.9rem; }
+    .dimension-row:last-child { margin-bottom: 0; }
+    .dimension-head { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.76rem; color: #475569; }
+    .dimension-head b { color: var(--ink); }
+    .dimension-bar { height: 6px; margin: 0.3rem 0 0.3rem; border-radius: 999px; background: #eef2f7; overflow: hidden; }
+    .dimension-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f59e0b, #0d9488); }
+    .dimension-row p { margin: 0; font-size: 0.7rem; line-height: 1.5; color: #64748b; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .speaker-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.8rem;
+    }
+
+    .speaker-card {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.6rem;
+        padding: 1rem 1.1rem;
+        border-radius: 16px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .speaker-card:hover { transform: translateY(-2px); border-color: rgba(217, 119, 6, 0.35); color: inherit; }
+    .speaker-card h3 { margin: 0; font-size: 0.9rem; font-weight: 800; color: var(--ink); }
+    .speaker-card p { margin: 0.2rem 0 0; font-size: 0.7rem; color: #64748b; }
+    .speaker-card strong { font-size: 1.1rem; font-weight: 800; color: var(--gold); white-space: nowrap; }
+
+    .ai-panel {
+        margin-top: 2.4rem;
+        padding: 1.5rem;
+        border-radius: 20px;
+        background: #fff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .ai-panel h2 { margin: 0 0 0.35rem; font-size: 1.1rem; font-weight: 800; color: var(--ink); }
+    .ai-panel p { margin: 0 0 0.9rem; font-size: 0.8rem; color: #64748b; }
+    .ai-form { display: flex; gap: 0.6rem; }
+    .ai-form input { flex: 1; padding: 0.7rem 1rem; border: 1px solid #e2e8f0; border-radius: 999px; font-size: 0.85rem; }
+    .ai-form button { padding: 0.7rem 1.2rem; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font-size: 0.82rem; font-weight: 700; }
+    .ai-result { margin-top: 1rem; padding: 1rem; border-radius: 14px; background: #f8fafc; font-size: 0.85rem; line-height: 1.7; color: #334155; display: none; }
+
+    @media (max-width: 991.98px) {
+        .insight-page { margin: -1rem -1rem 0 -1rem; padding: 1rem; }
+        .insight-hero { padding: 2.4rem 1.6rem; }
+        .hero-stats { grid-template-columns: repeat(2, 1fr); }
+        .insight-grid.two, .dimension-grid { grid-template-columns: 1fr; }
+        .story-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .sample-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .speaker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .section-head { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+    }
+
+    @media (max-width: 575.98px) {
+        .story-grid, .speaker-grid, .sample-strip { grid-template-columns: 1fr; }
+        .chart { height: 240px; }
+        .voice-row { grid-template-columns: minmax(0, 1fr) 64px; }
+        .voice-country { display: none; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="viz-page-header">
-    <div class="container position-relative" style="z-index:2;">
-        <h1 class="mb-2" style="font-size:2.25rem; font-weight:800; letter-spacing:-0.02em;"><i class="bi bi-bar-chart-line me-3"></i>数据可视化</h1>
-        <p style="opacity:0.8; font-size:1rem; max-width:600px;">沉浸式探索濒危语言数据，多维度呈现语言保护现状与趋势</p>
-        <nav aria-label="breadcrumb" class="mt-2">
-            <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
-                <li class="breadcrumb-item"><a href="javascript:history.back()" style="color:rgba(255,255,255,0.8);">返回</a></li>
-                <li class="breadcrumb-item active" style="color:rgba(255,255,255,0.6);">数据可视化</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="viz-stat-bar">
-    <div class="viz-stat-item">
-        <div class="viz-stat-number">{{ data.unsafe|default:0 }}</div>
-        <div class="viz-stat-label">不安全</div>
-    </div>
-    <div class="viz-stat-item">
-        <div class="viz-stat-number">{{ data.danger|default:0 }}</div>
-        <div class="viz-stat-label">危险</div>
-    </div>
-    <div class="viz-stat-item">
-        <div class="viz-stat-number">{{ data.endangered|default:0 }}</div>
-        <div class="viz-stat-label">濒危</div>
-    </div>
-    <div class="viz-stat-item">
-        <div class="viz-stat-number">{{ data.seriously_endangered|default:0 }}</div>
-        <div class="viz-stat-label">垂危</div>
-    </div>
-    <div class="viz-stat-item">
-        <div class="viz-stat-number">{{ data.extinct|default:0 }}</div>
-        <div class="viz-stat-label">灭绝</div>
-    </div>
-</div>
-
-<div class="viz-card">
-    <div class="viz-card-header">
-        <div class="viz-card-title"><i class="bi bi-bar-chart-fill"></i> 濒危语言数据统计</div>
-    </div>
-    <div class="viz-card-body">
-        <div class="chart-area" id="barChart"></div>
-    </div>
-</div>
-
-<div class="viz-card">
-    <div class="viz-card-header">
-        <div class="viz-card-title"><i class="bi bi-graph-up-arrow"></i> 濒危语言关注度趋势</div>
-    </div>
-    <div class="viz-card-body">
-        <div class="chart-area" id="lineChart"></div>
-    </div>
-</div>
-
-<div class="viz-card">
-    <div class="viz-card-header">
-        <div class="viz-card-title"><i class="bi bi-cpu"></i> 濒危语言分析助手</div>
-    </div>
-    <div class="viz-card-body">
-        <div class="d-flex gap-2">
-            <input type="text" class="form-control analysis-input" id="analysis-input" placeholder="请输入需要分析的内容..." value="">
-            <button type="button" class="analysis-btn" id="analysis-btn" onclick="submitAnalysis()">
-                <i class="bi bi-lightning-charge-fill"></i> 分析
-            </button>
+<div class="insight-page">
+    <section class="insight-hero">
+        <div class="hero-eyebrow">DATA STORY · 濒危语言数据档案</div>
+        <h1>每一种语言，<br><span>都是一次消失中的世界观</span></h1>
+        <p class="hero-sub">
+            这里汇集了 {{ stats.total|intcomma }} 种语言、{{ stats.vitality|intcomma }} 份活力评估、
+            {{ stats.bibliography|intcomma }} 条文献关联和 {{ stats.orthography|intcomma }} 条正字法记录。
+            它们不是冷冰冰的表格，而是正在被使用的声音、文字、地名和记忆。
+        </p>
+        <div class="hero-actions">
+            <a href="{% url 'Dashboard:language_list' %}" class="hero-btn primary">
+                <i class="bi bi-compass"></i> 浏览语言档案
+            </a>
+            <a href="{% url 'Dashboard:language_map' %}" class="hero-btn ghost">
+                <i class="bi bi-geo-alt"></i> 打开互动地图
+            </a>
         </div>
-        {% csrf_token %}
-        <div id="analysis-loading" style="display: none;">
-            <div class="analysis-loading">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">加载中...</span>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <strong>{{ stats.total|intcomma }}</strong>
+                <span>语言记录</span>
+            </div>
+            <div class="hero-stat">
+                <strong>{{ stats.seriously_endangered|intcomma }}</strong>
+                <span>垂危语言</span>
+            </div>
+            <div class="hero-stat">
+                <strong>{{ stats.extinct|intcomma }}</strong>
+                <span>已灭绝</span>
+            </div>
+            <div class="hero-stat">
+                <strong>{{ stats.awakening|intcomma }}</strong>
+                <span>正在复苏</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="insight-section">
+        <div class="section-head">
+            <div>
+                <span class="kicker">SPECTRUM</span>
+                <h2>濒危光谱</h2>
+            </div>
+            <p>颜色越深，语言离日常使用越远。每一段长度都对应真实的语言数量。</p>
+        </div>
+        <div class="spectrum-card">
+            <div class="spectrum-bar">
+                {% for item in level_data %}
+                <div class="spectrum-seg {{ item.key }}" style="width: {{ item.pct }}%" title="{{ item.name }}：{{ item.value }} 种">
+                    <span>{{ item.name }} {{ item.value }}</span>
                 </div>
-                <span>正在分析，请稍候...</span>
+                {% endfor %}
             </div>
-        </div>
-        <div id="analysis-result" style="display: {% if result %}block{% else %}none{% endif %};">
-            <div class="analysis-result-box" id="analysis-result-content">
-                {{ result|safe }}
+            <div class="spectrum-caption">
+                {% for item in level_data %}
+                <span><b>{{ item.name }}</b> {{ item.value }} 种 · {{ item.pct }}%</span>
+                {% endfor %}
             </div>
+            <p class="chart-note" style="margin-top: 0.9rem;">这里展示的是本系统统一的 UNESCO 五级分类（不安全 / 危险 / 濒危 / 垂危 / 灭绝）。ELCat 原始分级保留在语言详情与数据管理页的辅助标签中。</p>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class="viz-card">
-    <div class="viz-card-header">
-        <div class="viz-card-title"><i class="bi bi-radar"></i> 濒危语言多维度对比</div>
+    <div class="insight-grid two">
+        <section class="insight-card">
+            <header><span>01</span><h3>等级构成</h3></header>
+            <div id="levelChart" class="chart"></div>
+        </section>
+        <section class="insight-card">
+            <header><span>02</span><h3>使用者年龄结构</h3></header>
+            <div id="speakerChart" class="chart"></div>
+            <p class="chart-note">基于 {{ stats.speaker_numeric|intcomma }} 条有明确数值的使用者记录；空值不参与统计。</p>
+        </section>
     </div>
-    <div class="viz-card-body">
-        <div class="chart-area" id="radarChart"></div>
-    </div>
-</div>
 
-<div class="viz-card" id="languageMapSection">
-    <div class="viz-card-header">
-        <div class="viz-card-title"><i class="bi bi-geo-alt-fill"></i> 濒危语言地理分布</div>
-        <a href="{% url 'Dashboard:language_map' %}" class="btn btn-sm btn-primary"><i class="bi bi-box-arrow-up-right me-1"></i>打开互动地图</a>
+    <div class="insight-grid two">
+        <section class="insight-card">
+            <header><span>03</span><h3>语系版图</h3></header>
+            <div id="familyChart" class="chart tall"></div>
+        </section>
+        <section class="insight-card">
+            <header><span>04</span><h3>国家分布</h3></header>
+            <div id="countryChart" class="chart tall"></div>
+        </section>
     </div>
-    <div class="viz-card-body">
-        <div class="row">
-            <div class="col-md-3 mb-3 mb-md-0">
-                <div style="background:var(--primary-50, #f8fafc); border-radius:12px; padding:1rem; max-height:500px; overflow-y:auto;">
-                    <h6 style="font-weight:700; color:var(--primary-700, #334155); margin-bottom:0.75rem; font-size:0.8125rem; text-transform:uppercase; letter-spacing:0.05em;">
-                        <i class="bi bi-list-ul me-1"></i> 语言列表
-                    </h6>
-                    <ul id="language-list" style="list-style:none; padding:0; margin:0;"></ul>
+
+    <section class="insight-card" style="margin-top:1.2rem;">
+        <header><span>09</span><h3>大区分布</h3></header>
+        <div id="regionChart" class="chart tall"></div>
+        <p class="chart-note">按国家所属大区聚合；一种语言分布在多个国家时，会在多个大区中出现。</p>
+    </section>
+
+    <div class="insight-grid two">
+        <section class="insight-card">
+            <header><span>05</span><h3>最后的声音</h3></header>
+            <p class="card-desc">使用人数不超过 10 人的语言。数字越小，声音越接近沉默。</p>
+            <div class="voice-list">
+                {% for lang in last_speakers %}
+                <a href="{% url 'Dashboard:language_detail' lang.language_id %}" class="voice-row">
+                    <span class="voice-name">{{ lang.language_name }}</span>
+                    <span class="voice-country">{{ lang.country|default:"—" }}</span>
+                    <span class="voice-number">{{ lang.number_of_speakers }}<small>人</small></span>
+                </a>
+                {% empty %}
+                <p class="empty">暂无数据</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="insight-card">
+            <header><span>06</span><h3>沉睡与复苏</h3></header>
+            <div class="dormant-banner">
+                <strong>{{ stats.extinct|intcomma }}</strong>
+                <span>种语言已灭绝，仍有记录与文献可循</span>
+            </div>
+            <p class="card-desc" style="margin-top:1rem;">正在复苏的语言：</p>
+            <div class="awakening-list">
+                {% for lang in awakening %}
+                <a href="{% url 'Dashboard:language_detail' lang.language_id %}" class="awakening-chip">
+                    <i class="bi bi-sunrise"></i>{{ lang.language_name }}
+                </a>
+                {% empty %}
+                <p class="empty">暂无复苏记录</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="insight-grid two">
+        <section class="insight-card">
+            <header><span>07</span><h3>文献记录最多的语言</h3></header>
+            <div id="bibChart" class="chart tall"></div>
+            <p class="chart-note">共 {{ stats.bibliography|intcomma }} 条文献关联，其中 {{ stats.bibliography_real|intcomma }} 条可对到真实来源。</p>
+        </section>
+        <section class="insight-card">
+            <header><span>08</span><h3>数据完整度</h3></header>
+            <p class="card-desc">以 {{ stats.total|intcomma }} 种语言为分母，衡量每一类数据覆盖了多少语言。</p>
+            <div class="coverage-list" style="margin-top:1rem;">
+                {% for item in coverage_data %}
+                <div class="coverage-row">
+                    <span>{{ item.label }}</span>
+                    <div class="coverage-bar"><i style="width: {{ item.pct }}%"></i></div>
+                    <b>{{ item.pct }}%</b>
                 </div>
+                {% endfor %}
             </div>
-            <div class="col-md-9">
-                <div class="d-flex gap-2 mb-3">
-                    <input type="text" id="search-input" class="form-control map-search-input" placeholder="输入濒危语言名称搜索...">
-                    <button class="map-search-btn" onclick="searchLanguage()"><i class="bi bi-search me-1"></i>搜索</button>
-                </div>
-                <div id="map-container"></div>
-            </div>
-        </div>
+        </section>
     </div>
+
+    <section class="insight-section">
+        <div class="section-head">
+            <div>
+                <span class="kicker">STORIES</span>
+                <h2>语言故事</h2>
+            </div>
+            <p>从 {{ stats.total|intcomma }} 种语言里挑出的六个样本：它们分布在不同的洲，却都在经历同一种压力。</p>
+        </div>
+        <div class="story-grid">
+            {% for story in stories %}
+            <a href="{% url 'Dashboard:language_detail' story.id %}" class="story-card level-{{ story.level_key }}">
+                <div class="story-top">
+                    <span class="story-level">{{ story.level_label }}</span>
+                    <span class="story-country">{{ story.country|default:"—" }}</span>
+                </div>
+                <h3>{{ story.name }}</h3>
+                <div class="story-speakers">
+                    <strong>{% if story.speakers %}{{ story.speakers|intcomma }}{% else %}—{% endif %}</strong>
+                    <span>使用者</span>
+                </div>
+                {% if story.vitality %}
+                <p class="story-note">{{ story.vitality }}</p>
+                {% elif story.speaker_text %}
+                <p class="story-note">{{ story.speaker_text }}</p>
+                {% endif %}
+                <span class="story-link">查看语言档案 →</span>
+            </a>
+            {% empty %}
+            <p class="empty">暂无语言故事</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="insight-section">
+        <div class="section-head">
+            <div>
+                <span class="kicker">VOICES</span>
+                <h2>听见它们</h2>
+            </div>
+            <p>语言不只是文字。这里是从 {{ sample_total|intcomma }} 条真实样本中挑出的声音与影像。</p>
+        </div>
+        <div class="sample-strip">
+            {% for sample in featured_samples %}
+            <a class="voice-sample-card" href="{{ sample.play_url }}" target="_blank" rel="noopener">
+                <div class="voice-sample-thumb">
+                    {% if sample.thumbnail %}
+                    <img src="{{ sample.thumbnail }}" alt="{{ sample.title }}" loading="lazy"
+                         onerror="this.style.display='none'">
+                    {% else %}
+                    <i class="bi bi-play-circle"></i>
+                    {% endif %}
+                    <span>{{ sample.type_label }}</span>
+                </div>
+                <div class="voice-sample-body">
+                    <h3>{{ sample.title }}</h3>
+                    <p>{{ sample.language_name }}</p>
+                </div>
+            </a>
+            {% empty %}
+            <p class="empty">暂无语言样本</p>
+            {% endfor %}
+        </div>
+        <div style="margin-top:1rem;">
+            <a href="{% url 'Dashboard:language_samples' %}" class="hero-btn primary"
+               style="background:#0b1120; color:#fff;">
+                浏览全部样本 <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <section class="insight-section">
+        <div class="section-head">
+            <div>
+                <span class="kicker">VITALITY</span>
+                <h2>活力的三个维度</h2>
+            </div>
+            <p>代际传承、使用者趋势和使用领域，构成了语言活力的三个切面。</p>
+        </div>
+        <div class="dimension-grid">
+            {% for dim in vitality_dimensions %}
+            <div class="dimension-card">
+                <h3>{{ dim.title }}</h3>
+                {% for row in dim.rows %}
+                <div class="dimension-row" title="{{ row.description }}">
+                    <div class="dimension-head">
+                        <span>等级 {{ row.level }}</span>
+                        <b>{{ row.count }} 种</b>
+                    </div>
+                    <div class="dimension-bar"><i style="width: {{ row.pct }}%"></i></div>
+                    <p>{{ row.description|truncatechars:80 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="insight-section">
+        <div class="section-head">
+            <div>
+                <span class="kicker">COMMUNITIES</span>
+                <h2>仍然庞大的语言社群</h2>
+            </div>
+            <p>按使用人数排序。它们提醒我们：濒危语言并不是“没有人使用”的语言。</p>
+        </div>
+        <div class="speaker-grid">
+            {% for lang in top_speakers %}
+            <a href="{% url 'Dashboard:language_detail' lang.language_id %}" class="speaker-card">
+                <div>
+                    <h3>{{ lang.language_name }}</h3>
+                    <p>{{ lang.country|default:"—" }}</p>
+                </div>
+                <strong>{{ lang.number_of_speakers|intcomma }}</strong>
+            </a>
+            {% empty %}
+            <p class="empty">暂无使用者数据</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="ai-panel">
+        <h2><i class="bi bi-stars me-2"></i>AI 数据解读</h2>
+        <p>输入一个关于这些数据的问题，让 AI 结合语言档案给出解释。</p>
+        {% if username %}
+        <form class="ai-form" id="ai-form">
+            {% csrf_token %}
+            <input type="text" name="language_text" id="analysis-input"
+                   placeholder="例如：为什么濒危语言主要分布在哪些语系？" autocomplete="off">
+            <button type="submit"><i class="bi bi-lightning-charge-fill me-1"></i>解读</button>
+        </form>
+        <div class="ai-result" id="analysis-result">{% if result %}{{ result|safe }}{% endif %}</div>
+        {% else %}
+        <p class="card-desc">登录后可使用 AI 数据解读功能。</p>
+        {% endif %}
+    </section>
 </div>
 
-<!-- Load ECharts and AMap BEFORE initialization code -->
-<script src="{% static 'js/echarts.js' %}"></script>
-<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=9a12dd3f64fc29a910c0913d36567cd2"></script>
+{{ level_data|json_script:"level-data" }}
+{{ speaker_data|json_script:"speaker-data" }}
+{{ family_data|json_script:"family-data" }}
+{{ country_data|json_script:"country-data" }}
+{{ region_data|json_script:"region-data" }}
+{{ bib_data|json_script:"bib-data" }}
+{% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/echarts.min.js' %}"></script>
 <script>
-(function() {
-    var barChartEl = document.getElementById('barChart');
-    var lineChartEl = document.getElementById('lineChart');
-    var radarChartEl = document.getElementById('radarChart');
-
-    if (typeof echarts === 'undefined' || !barChartEl || !lineChartEl || !radarChartEl) {
-        console.error('ECharts not loaded or chart elements not found');
-        return;
+(function () {
+    function readData(id) {
+        var el = document.getElementById(id);
+        return el ? JSON.parse(el.textContent) : [];
     }
 
-    var barChart = echarts.init(barChartEl);
-    barChart.setOption({
-        tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e2e8f0', borderWidth: 1, textStyle: { color: '#1e293b' } },
-        grid: { left: '3%', right: '4%', bottom: '12%', containLabel: true },
+    var levelData = readData('level-data');
+    var speakerData = readData('speaker-data');
+    var familyData = readData('family-data');
+    var countryData = readData('country-data');
+    var regionData = readData('region-data');
+    var bibData = readData('bib-data');
+
+    var levelColors = ['#991b1b', '#dc2626', '#ea580c', '#475569', '#0d9488', '#cbd5e1'];
+    var charts = [];
+
+    function initChart(id, option) {
+        var el = document.getElementById(id);
+        if (!el || typeof echarts === 'undefined') return;
+        var chart = echarts.init(el);
+        chart.setOption(option);
+        charts.push(chart);
+    }
+
+    initChart('levelChart', {
+        tooltip: { trigger: 'item', formatter: '{b}<br/>{c} 种（{d}%）' },
+        series: [{
+            type: 'pie',
+            radius: ['48%', '72%'],
+            center: ['50%', '50%'],
+            label: { color: '#334155', fontSize: 11, formatter: '{b}\n{c}' },
+            labelLine: { lineStyle: { color: '#cbd5e1' } },
+            data: levelData.map(function (item, index) {
+                return {
+                    name: item.name,
+                    value: item.value,
+                    itemStyle: { color: levelColors[index % levelColors.length] }
+                };
+            })
+        }]
+    });
+
+    initChart('speakerChart', {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 20, right: 20, top: 30, bottom: 10, containLabel: true },
         xAxis: {
             type: 'category',
-            data: ['不安全', '危险', '濒危', '垂危', '灭绝'],
-            axisLabel: { interval: 0, rotate: 0, color: '#64748b', fontSize: 12 },
+            data: speakerData.map(function (item) { return item.name; }),
+            axisLabel: { color: '#64748b' },
             axisLine: { lineStyle: { color: '#e2e8f0' } }
         },
-        yAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+        yAxis: {
+            type: 'value',
+            axisLabel: { color: '#64748b' },
+            splitLine: { lineStyle: { color: '#f1f5f9' } }
+        },
         series: [{
-            data: [{{ data.unsafe|default:0 }}, {{ data.danger|default:0 }}, {{ data.endangered|default:0 }}, {{ data.seriously_endangered|default:0 }}, {{ data.extinct|default:0 }}],
             type: 'bar',
-            barWidth: '50%',
+            data: speakerData.map(function (item) { return item.value; }),
+            barWidth: '46%',
             itemStyle: {
                 borderRadius: [6, 6, 0, 0],
                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    { offset: 0, color: '#6366f1' },
-                    { offset: 1, color: '#818cf8' }
+                    { offset: 0, color: '#0d9488' },
+                    { offset: 1, color: '#5eead4' }
                 ])
             },
-            emphasis: { itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#4f46e5' }, { offset: 1, color: '#6366f1' }]) } }
+            label: { show: true, position: 'top', color: '#334155', fontSize: 11 }
         }]
     });
 
-    var lineChart = echarts.init(lineChartEl);
-    var colors = ['#6366f1','#818cf8','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899','#14b8a6'];
-
-    // 使用后端传递的真实数据
-    var languageNames = [
-        {% for name in language_names %}
-            '{{ name|default:"未知" }}'{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-    var languageSpeakers = [
-        {% for count in language_speakers %}
-            {{ count }}{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-    var languageCounts = [
-        {% for count in language_counts %}
-            {{ count }}{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    // 折线图：各语系平均使用人数
-    var lineSeries = [{
-        name: '平均使用人数',
-        type: 'bar',
-        data: languageSpeakers,
-        itemStyle: {
-            borderRadius: [6, 6, 0, 0],
-            color: function(params) {
-                return colors[params.dataIndex % colors.length];
-            }
-        },
-        label: {
-            show: true,
-            position: 'top',
-            formatter: '{c}',
-            fontSize: 11,
-            color: '#64748b'
-        }
-    }, {
-        name: '语言数量',
-        type: 'line',
-        yAxisIndex: 1,
-        data: languageCounts,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 8,
-        lineStyle: { width: 3, color: '#ef4444' },
-        itemStyle: { color: '#ef4444' }
-    }];
-
-    lineChart.setOption({
-        tooltip: {
-            trigger: 'axis',
-            backgroundColor: 'rgba(255,255,255,0.95)',
-            borderColor: '#e2e8f0',
-            borderWidth: 1,
-            textStyle: { color: '#1e293b' },
-            formatter: function(params) {
-                var result = '<strong>' + params[0].name + '</strong><br/>';
-                params.forEach(function(item) {
-                    result += item.marker + ' ' + item.seriesName + ': ' +
-                        (item.seriesName === '平均使用人数' ? item.value.toLocaleString() + ' 人' : item.value + ' 种') + '<br/>';
-                });
-                return result;
-            }
-        },
-        legend: { data: ['平均使用人数', '语言数量'], bottom: 0, textStyle: { color: '#64748b', fontSize: 11 } },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
-        xAxis: {
-            type: 'category',
-            data: languageNames,
-            axisLabel: { color: '#64748b', rotate: 30, fontSize: 11 },
-            axisLine: { lineStyle: { color: '#e2e8f0' } }
-        },
-        yAxis: [
-            { type: 'value', name: '使用人数', axisLabel: { color: '#94a3b8', formatter: function(v) { return v >= 10000 ? (v/10000).toFixed(0) + '万' : v; } }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
-            { type: 'value', name: '语言数量', axisLabel: { color: '#94a3b8' }, splitLine: { show: false } }
-        ],
-        series: lineSeries
-    });
-
-    var radarChart = echarts.init(radarChartEl);
-    var endangermentData = [
-        {% for item in endangerment_data %}
-            { name: '{{ item.name }}', avg_speakers: {{ item.avg_speakers }}, count: {{ item.count }}, max_speakers: {{ item.max_speakers }} }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    // 计算雷达图最大值
-    var maxSpeakers = 0, maxCount = 0, maxMax = 0;
-    endangermentData.forEach(function(d) {
-        if (d.avg_speakers > maxSpeakers) maxSpeakers = d.avg_speakers;
-        if (d.count > maxCount) maxCount = d.count;
-        if (d.max_speakers > maxMax) maxMax = d.max_speakers;
-    });
-    maxSpeakers = Math.ceil(maxSpeakers * 1.2 / 1000) * 1000;
-    maxCount = Math.ceil(maxCount * 1.2 / 10) * 10;
-    maxMax = Math.ceil(maxMax * 1.2 / 10000) * 10000;
-
-    var radarSeriesData = endangermentData.map(function(d, i) {
-        return {
-            value: [d.avg_speakers, d.count, d.max_speakers],
-            name: d.name,
-            lineStyle: { color: colors[i] },
-            itemStyle: { color: colors[i] },
-            areaStyle: { color: colors[i].replace(')', ',0.1)').replace('rgb', 'rgba') }
-        };
-    });
-
-    radarChart.setOption({
-        tooltip: {
-            trigger: 'item',
-            backgroundColor: 'rgba(255,255,255,0.95)',
-            borderColor: '#e2e8f0',
-            borderWidth: 1,
-            textStyle: { color: '#1e293b' },
-            formatter: function(params) {
-                var d = params.data;
-                return '<strong>' + d.name + '</strong><br/>' +
-                    '平均使用人数: ' + d.value[0].toLocaleString() + ' 人<br/>' +
-                    '语言数量: ' + d.value[1] + ' 种<br/>' +
-                    '最大使用人数: ' + d.value[2].toLocaleString() + ' 人';
-            }
-        },
-        legend: {
-            data: endangermentData.map(function(d) { return d.name; }),
-            bottom: 0,
-            textStyle: { color: '#64748b', fontSize: 11 }
-        },
-        radar: {
-            indicator: [
-                { name: '平均使用人数', max: maxSpeakers },
-                { name: '语言数量', max: maxCount },
-                { name: '最大使用人数', max: maxMax }
-            ],
-            axisName: { color: '#64748b', fontSize: 12 },
-            splitArea: { areaStyle: { color: ['rgba(99,102,241,0.02)','rgba(99,102,241,0.04)','rgba(99,102,241,0.02)','rgba(99,102,241,0.04)','rgba(99,102,241,0.02)'] } },
-            splitLine: { lineStyle: { color: '#e2e8f0' } },
-            axisLine: { lineStyle: { color: '#e2e8f0' } }
-        },
-        series: [{
-            name: '濒危等级对比',
-            type: 'radar',
-            data: radarSeriesData
-        }]
-    });
-
-    window.addEventListener('resize', function() {
-        barChart.resize();
-        lineChart.resize();
-        radarChart.resize();
-    });
-})();
-</script>
-
-<script>
-(function() {
-    if (typeof AMap === 'undefined') {
-        console.error('AMap not loaded');
-        return;
+    function horizontalBar(id, data, color, unit) {
+        initChart(id, {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function (params) {
+                    return params[0].name + '<br/>' + params[0].value + ' ' + unit;
+                }
+            },
+            grid: { left: 110, right: 36, top: 10, bottom: 10, containLabel: true },
+            xAxis: {
+                type: 'value',
+                axisLabel: { color: '#64748b' },
+                splitLine: { lineStyle: { color: '#f1f5f9' } }
+            },
+            yAxis: {
+                type: 'category',
+                data: data.map(function (item) { return item.name; }).reverse(),
+                axisLabel: { color: '#475569', fontSize: 11 },
+                axisLine: { lineStyle: { color: '#e2e8f0' } }
+            },
+            series: [{
+                type: 'bar',
+                data: data.map(function (item) { return item.value; }).reverse(),
+                barWidth: '56%',
+                itemStyle: { color: color, borderRadius: [0, 6, 6, 0] },
+                label: { show: true, position: 'right', color: '#64748b', fontSize: 11 }
+            }]
+        });
     }
 
-    var map = new AMap.Map('map-container', {
-        zoom: 4,
-        mapStyle: 'amap://styles/normal',  // 标准底图，显示街道和建筑
-        viewMode: '2D',
-        pitch: 0
+    horizontalBar('familyChart', familyData, '#d97706', '种');
+    horizontalBar('countryChart', countryData, '#0f766e', '种');
+    horizontalBar('regionChart', regionData, '#0f766e', '种');
+    horizontalBar('bibChart', bibData, '#d97706', '条');
+
+    window.addEventListener('resize', function () {
+        charts.forEach(function (chart) { chart.resize(); });
     });
 
-    // 添加建筑物 3D 图层（显示建筑轮廓）
-    AMap.plugin('AMap.Buildings', function() {
-        var buildings = new AMap.Buildings({
-            zIndex: 13,
-            opacity: 0.8,
-            wallColor: [200, 200, 220],
-            roofColor: [180, 180, 200],
-            viewMode: '2D',
-            heightFactor: 1
-        });
-        map.add(buildings);
-    });
-
-    AMap.plugin('AMap.Geolocation', function() {
-        var geolocation = new AMap.Geolocation({
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0,
-            convert: true,
-            showButton: true,
-            showMarker: true,
-            showCircle: true
-        });
-        map.addControl(geolocation);
-        geolocation.getCurrentPosition(function(status, result) {
-            if (status === 'complete') {
-                map.setCenter([result.position.lng, result.position.lat]);
-            } else {
-                setTimeout(function() {
-                    geolocation.getCurrentPosition(function(status, result) {
-                        if (status === 'complete') {
-                            map.setCenter([result.position.lng, result.position.lat]);
-                        } else {
-                            map.setCenter([105.200213, 36.076518]);
-                        }
-                    });
-                }, 3000);
-            }
-        });
-    });
-
-    function searchLanguage() {
-        var input = document.getElementById('search-input').value;
-        var found = false;
-        endangeredLanguages.forEach(function(lang) {
-            if (lang.name === input) {
-                // 跳转到该位置并放大
-                map.setCenter([lang.longitude, lang.latitude]);
-                map.setZoom(10);
-
-                // 创建信息窗口内容
-                var infoContent = '<div style="padding:14px;max-width:320px;"><h4 style="margin:0 0 10px;color:#1e293b;font-size:16px;font-weight:700;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">' + lang.name + '</h4><div style="font-size:13px;color:#475569;line-height:1.9;">';
-                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">濒危等级：</span><span style="font-weight:600;color:' + (dangerColors[lang.endangerment]||'#64748b') + ';">' + lang.endangerment + '</span></div>';
-                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">使用人数：</span><span style="font-weight:500;">' + lang.speakers + '</span></div>';
-                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">主要分布：</span><span style="font-weight:500;">' + lang.region + '</span></div>';
-                infoContent += '<div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">地理坐标：</span><span style="font-weight:500;font-size:12px;">' + lang.latitude.toFixed(4) + ', ' + lang.longitude.toFixed(4) + '</span></div>';
-                infoContent += '</div></div>';
-
-                var infoWindow = new AMap.InfoWindow({
-                    content: infoContent,
-                    offset: new AMap.Pixel(0, -35),
-                    autoMove: false
-                });
-                infoWindow.open(map, new AMap.LngLat(lang.longitude, lang.latitude));
-
-                // 添加一个显著的标记
-                var marker = new AMap.Marker({
-                    position: [lang.longitude, lang.latitude],
-                    map: map,
-                    icon: new AMap.Icon({
-                        size: new AMap.Size(32, 48),
-                        image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-                        imageSize: new AMap.Size(32, 48)
-                    }),
-                    offset: new AMap.Pixel(-16, -48)
-                });
-
-                found = true;
-            }
-        });
-        if (!found) alert('未找到该濒危语言');
-    }
-    var endangeredLanguages = [
-        { "name": "满语", "longitude": 125.328125, "latitude": 43.884041, "endangerment": "垂危", "speakers": "约100人", "region": "中国·黑龙江" },
-        { "name": "锡伯语", "longitude": 87.619981, "latitude": 43.829414, "endangerment": "濒危", "speakers": "约40000人", "region": "中国·新疆" },
-        { "name": "鄂温克语", "longitude": 119.744736, "latitude": 49.273465, "endangerment": "垂危", "speakers": "约28000人", "region": "中国·内蒙古" },
-        { "name": "达斡尔语", "longitude": 122.014679, "latitude": 48.01129, "endangerment": "濒危", "speakers": "约100000人", "region": "中国·内蒙古" },
-        { "name": "赫哲语", "longitude": 134.098381, "latitude": 48.239601, "endangerment": "垂危", "speakers": "约50人", "region": "中国·黑龙江" },
-        { "name": "鄂伦春语", "longitude": 123.394485, "latitude": 50.324703, "endangerment": "垂危", "speakers": "约1000人", "region": "中国·内蒙古" },
-        { "name": "独龙语", "longitude": 98.720001, "latitude": 28.520001, "endangerment": "濒危", "speakers": "约6000人", "region": "中国·云南" },
-        { "name": "仫佬语", "longitude": 109.219986, "latitude": 24.460001, "endangerment": "不安全", "speakers": "约50000人", "region": "中国·广西" },
-        { "name": "门巴语", "longitude": 91.880005, "latitude": 28.369999, "endangerment": "垂危", "speakers": "约6000人", "region": "中国·西藏" },
-        { "name": "珞巴语", "longitude": 93.079994, "latitude": 29.0, "endangerment": "垂危", "speakers": "约3000人", "region": "中国·西藏" },
-        { "name": "裕固语", "longitude": 100.669998, "latitude": 38.769997, "endangerment": "垂危", "speakers": "约4000人", "region": "中国·甘肃" },
-        { "name": "撒拉语", "longitude": 102.980003, "latitude": 35.930000, "endangerment": "濒危", "speakers": "约70000人", "region": "中国·青海" },
-        { "name": "保安语", "longitude": 102.980003, "latitude": 35.930000, "endangerment": "垂危", "speakers": "约12000人", "region": "中国·甘肃" },
-        { "name": "塔塔尔语", "longitude": 87.619981, "latitude": 43.829414, "endangerment": "濒危", "speakers": "约5000人", "region": "中国·新疆" },
-        { "name": "上海吴语", "longitude": 121.473616, "latitude": 31.23037, "endangerment": "垂危", "speakers": "约10000000人", "region": "中国·上海" },
-        { "name": "塔吉克语", "longitude": 75.0, "latitude": 38.983333, "endangerment": "垂危", "speakers": "约40000人", "region": "中国·新疆" },
-        { "name": "柯尔克孜语", "longitude": 81.150002, "latitude": 42.866669, "endangerment": "不安全", "speakers": "约3000000人", "region": "吉尔吉斯斯坦" },
-        { "name": "水语", "longitude": 107.480003, "latitude": 26.060001, "endangerment": "不安全", "speakers": "约300000人", "region": "中国·贵州" },
-        { "name": "仡佬语", "longitude": 107.75, "latitude": 27.5, "endangerment": "濒危", "speakers": "约6000人", "region": "中国·贵州" },
-        { "name": "德昂语", "longitude": 97.900002, "latitude": 24.0, "endangerment": "濒危", "speakers": "约13000人", "region": "缅甸·掸邦" },
-        { "name": "阿伊努语", "longitude": 142.766667, "latitude": 43.466667, "endangerment": "垂危", "speakers": "不足10人", "region": "日本·北海道" },
-        { "name": "切罗基语", "longitude": -84.3859, "latitude": 35.1016, "endangerment": "濒危", "speakers": "约2000人", "region": "美国·俄克拉荷马" },
-        { "name": "夏威夷语", "longitude": -157.8583, "latitude": 21.3069, "endangerment": "濒危", "speakers": "约24000人", "region": "美国·夏威夷" },
-        { "name": "萨米语", "longitude": 24.2270, "latitude": 69.2000, "endangerment": "濒危", "speakers": "约30000人", "region": "挪威·芬马克" }
-    ];
-
-    window.searchLanguage = searchLanguage;
-
-    var dangerColors = { '不安全': '#f59e0b', '危险': '#f97316', '濒危': '#ef4444', '垂危': '#dc2626', '灭绝': '#991b1b' };
-
-    for (var i = 0; i < endangeredLanguages.length; i++) {
-        (function(index) {
-            var language = endangeredLanguages[index];
-            var marker = new AMap.Marker({
-                position: new AMap.LngLat(language.longitude, language.latitude),
-                title: language.name
+    var aiForm = document.getElementById('ai-form');
+    if (aiForm) {
+        aiForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var input = document.getElementById('analysis-input');
+            var resultBox = document.getElementById('analysis-result');
+            var text = input.value.trim();
+            if (!text) return;
+            resultBox.style.display = 'block';
+            resultBox.textContent = '正在解读，请稍候…';
+            var formData = new FormData();
+            formData.append('language_text', text);
+            formData.append('csrfmiddlewaretoken', aiForm.querySelector('[name=csrfmiddlewaretoken]').value);
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            }).then(function (response) {
+                return response.json();
+            }).then(function (data) {
+                resultBox.textContent = data.answer || data.message || '暂无结果';
+            }).catch(function () {
+                resultBox.textContent = '解读服务暂时不可用，请稍后重试。';
             });
-            marker.setMap(map);
-            var infoWindow = new AMap.InfoWindow({
-                content: '<div style="padding:12px;max-width:280px;"><h4 style="margin:0 0 8px;color:#1e293b;font-size:15px;font-weight:600;">' + language.name + '</h4><div style="font-size:13px;color:#475569;line-height:1.8;"><div><b>濒危等级：</b><span style="color:' + (dangerColors[language.endangerment]||'#64748b') + ';">' + language.endangerment + '</span></div><div><b>使用人数：</b>' + language.speakers + '</div><div><b>主要分布：</b>' + language.region + '</div></div></div>',
-                offset: new AMap.Pixel(0, -30),
-                autoMove: true
-            });
-            AMap.event.addListener(marker, 'click', function(e) {
-                infoWindow.open(map, e.target.getPosition());
-            });
-        })(i);
-    }
-
-    function generateLanguageList() {
-        var listContainer = document.getElementById('language-list');
-        endangeredLanguages.forEach(function(lang) {
-            var listItem = document.createElement('li');
-            listItem.className = 'lang-list-item';
-            listItem.innerHTML = '<div class="d-flex justify-content-between align-items-center"><span>' + lang.name + '</span><span class="badge" style="background:' + (dangerColors[lang.endangerment]||'#64748b') + ';color:#fff;">' + lang.endangerment + '</span></div>';
-            listItem.onclick = function() {
-                map.setCenter([lang.longitude, lang.latitude]);
-                // 创建信息窗口内容
-                var infoContent = '<div style="padding:14px;max-width:320px;"><h4 style="margin:0 0 10px;color:#1e293b;font-size:16px;font-weight:700;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">' + lang.name + '</h4><div style="font-size:13px;color:#475569;line-height:1.9;">';
-                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">濒危等级：</span><span style="font-weight:600;color:' + (dangerColors[lang.endangerment]||'#64748b') + ';">' + lang.endangerment + '</span></div>';
-                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">使用人数：</span><span style="font-weight:500;">' + lang.speakers + '</span></div>';
-                infoContent += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">主要分布：</span><span style="font-weight:500;">' + lang.region + '</span></div>';
-                infoContent += '<div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">地理坐标：</span><span style="font-weight:500;font-size:12px;">' + lang.latitude.toFixed(4) + ', ' + lang.longitude.toFixed(4) + '</span></div>';
-                infoContent += '</div></div>';
-                var infoWindow = new AMap.InfoWindow({
-                    content: infoContent,
-                    offset: new AMap.Pixel(0, -35),
-                    autoMove: false
-                });
-                infoWindow.open(map, new AMap.LngLat(lang.longitude, lang.latitude));
-                // 添加一个显著的标记
-                var marker = new AMap.Marker({
-                    position: [lang.longitude, lang.latitude],
-                    map: map,
-                    icon: new AMap.Icon({
-                        size: new AMap.Size(32, 48),
-                        image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-                        imageSize: new AMap.Size(32, 48)
-                    }),
-                    offset: new AMap.Pixel(-16, -48)
-                });
-            };
-            listContainer.appendChild(listItem);
         });
-    }
-
-    // Run after AMap is loaded
-    if (document.readyState === 'complete') {
-        generateLanguageList();
-    } else {
-        window.addEventListener('load', generateLanguageList);
     }
 })();
-</script>
-
-<script>
-var analysisCsrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
-
-function submitAnalysis() {
-    var input = document.getElementById('analysis-input');
-    var text = input.value.trim();
-    if (!text) {
-        alert('请输入需要分析的内容');
-        return;
-    }
-
-    var btn = document.getElementById('analysis-btn');
-    var loading = document.getElementById('analysis-loading');
-    var resultDiv = document.getElementById('analysis-result');
-    var resultContent = document.getElementById('analysis-result-content');
-
-    // 保存当前滚动位置
-    var scrollPosition = window.scrollY || document.documentElement.scrollTop;
-
-    // 显示加载状态
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> 分析中';
-    loading.style.display = 'block';
-    resultDiv.style.display = 'none';
-
-    // 发送AJAX请求
-    var formData = new FormData();
-    formData.append('language_text', text);
-    formData.append('csrfmiddlewaretoken', analysisCsrfToken);
-
-    fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        loading.style.display = 'none';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> 分析';
-
-        if (data.status === 'success') {
-            resultContent.innerHTML = data.answer;
-            resultDiv.style.display = 'block';
-            input.value = '';
-        } else {
-            resultContent.innerHTML = '<span style="color: #ef4444;">' + (data.message || '分析失败，请稍后重试') + '</span>';
-            resultDiv.style.display = 'block';
-        }
-
-        // 恢复滚动位置
-        window.scrollTo(0, scrollPosition);
-    })
-    .catch(function(err) {
-        loading.style.display = 'none';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> 分析';
-        resultContent.innerHTML = '<span style="color: #ef4444;">网络错误，请稍后重试</span>';
-        resultDiv.style.display = 'block';
-        window.scrollTo(0, scrollPosition);
-        console.error(err);
-    });
-}
-
-// 回车提交
-document.getElementById('analysis-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        submitAnalysis();
-    }
-});
-
-// 地图搜索框回车提交
-document.getElementById('search-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        searchLanguage();
-    }
-});
 </script>
 {% endblock %}
