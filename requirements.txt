@@ -28,6 +28,9 @@ coreapi==2.3.3
 # OpenAI / Moonshot
 openai==1.70.0
 
+# 联网搜索的 HTTP 传输层（openai 已传递依赖，这里显式声明固定版本）
+httpx==0.28.1
+
 # 安全（AI 输出 HTML 清洗）
 bleach==6.2.0
 

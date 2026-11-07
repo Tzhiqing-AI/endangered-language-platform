@@ -204,6 +204,40 @@ canvas {
     color: #92400e;
 }
 
+/* 页面顶部深色卡片：列表/管理/搜索/翻译等页面共用同一套圆角、内边距与阴影 */
+.page-header-custom,
+.translation-page-header {
+    position: relative;
+    overflow: hidden;
+    margin: 0 0 1.6rem;
+    padding: 2.4rem;
+    border-radius: 28px;
+    color: #fff;
+    background:
+        radial-gradient(circle at 84% 18%, rgba(13, 148, 136, 0.30), transparent 42%),
+        radial-gradient(circle at 10% 90%, rgba(217, 119, 6, 0.22), transparent 44%),
+        linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%);
+    box-shadow: 0 24px 60px rgba(11, 17, 32, 0.20);
+}
+
+.page-header-custom::before,
+.translation-page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+    .page-header-custom,
+    .translation-page-header {
+        padding: 1.8rem 1.4rem;
+        border-radius: 22px;
+    }
+}
+
 .page-hero {
     position: relative;
     overflow: hidden;
@@ -356,4 +390,16 @@ canvas {
 
 .cta-section .cta-title {
     color: #ffffff !important;
+}
+
+/* ==========================================================================
+   全屏对话页（智能问答）
+   .main-content 默认上下各 32px 内边距；对话应用按 -32px 计算高度，
+   两者叠加会多出 32px 页面滚动。这里把上下收至 16px（左右仍保持
+   32px 内容基线），配合 .chat-app 的高度公式，1366 宽及以上刚好一屏，
+   卡片也不会贴死浏览器边缘。
+   ========================================================================== */
+.main-content:has(.chat-app) {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
 }

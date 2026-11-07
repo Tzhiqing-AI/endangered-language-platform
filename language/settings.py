@@ -68,6 +68,28 @@ OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'kimi-k2.7-code')
 # kimi-k2.7-code / kimi-k3 等推理模型强制 temperature=1
 OPENAI_TEMPERATURE = float(os.getenv('OPENAI_TEMPERATURE', '1'))
 
+# =============================================================================
+# 联网搜索 - Tavily
+# 未配置 API Key 时自动降级为 NullProvider，前端开关置灰，不会报错。
+# =============================================================================
+SEARCH_ENABLED = os.getenv('SEARCH_ENABLED', '1').strip().lower() in ('1', 'true', 'yes', 'on')
+SEARCH_PROVIDER = os.getenv('SEARCH_PROVIDER', 'tavily').strip().lower()
+# SEARCH_API_KEY 优先；兼容项目 .env 中已有的 TAVILY_API_KEY
+SEARCH_API_KEY = os.getenv('SEARCH_API_KEY', '').strip() or os.getenv('TAVILY_API_KEY', '').strip()
+SEARCH_BASE_URL = os.getenv('SEARCH_BASE_URL', 'https://api.tavily.com').strip()
+SEARCH_TIMEOUT = float(os.getenv('SEARCH_TIMEOUT', '6'))
+SEARCH_CONNECT_TIMEOUT = float(os.getenv('SEARCH_CONNECT_TIMEOUT', '3'))
+SEARCH_TOP_K = int(os.getenv('SEARCH_TOP_K', '5'))
+SEARCH_MAX_QUERY_CHARS = int(os.getenv('SEARCH_MAX_QUERY_CHARS', '200'))
+SEARCH_MAX_SNIPPET_CHARS = int(os.getenv('SEARCH_MAX_SNIPPET_CHARS', '400'))
+SEARCH_CACHE_TTL = int(os.getenv('SEARCH_CACHE_TTL', '600'))
+SEARCH_EMPTY_CACHE_TTL = int(os.getenv('SEARCH_EMPTY_CACHE_TTL', '60'))
+# 每日真实搜索拦截上限：0 或留空 = 不限制（开发阶段默认不拦截）。
+# 每日/月度计数与日志仍保留；Tavily 侧仍有 1000 credits/月、100 次/分钟的硬限制。
+_SEARCH_DAILY_LIMIT_RAW = os.getenv('SEARCH_DAILY_LIMIT', '').strip()
+SEARCH_DAILY_LIMIT = int(_SEARCH_DAILY_LIMIT_RAW) if _SEARCH_DAILY_LIMIT_RAW.isdigit() else 0
+SEARCH_RETRY_MAX_WAIT = float(os.getenv('SEARCH_RETRY_MAX_WAIT', '3'))
+
 # 高德地图前端 Key（不要写进模板，按环境注入）
 AMAP_JS_KEY = os.getenv('AMAP_JS_KEY', '')
 

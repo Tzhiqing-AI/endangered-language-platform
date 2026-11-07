@@ -5,18 +5,6 @@
 
 {% block extra_css %}
 <style>
-    .translation-page-header {
-        background:
-            radial-gradient(circle at 85% 15%, rgba(13,148,136,0.30), transparent 42%),
-            radial-gradient(circle at 10% 90%, rgba(217,119,6,0.22), transparent 44%),
-            linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%);
-        margin: 0 -2rem 2rem -2rem;
-        padding: 3rem 2rem;
-        color: white;
-        position: relative;
-        z-index: 1;
-        border-radius: 0 0 28px 28px;
-    }
     .translation-panels {
         display: grid;
         grid-template-columns: 1fr 60px 1fr;
@@ -115,6 +103,64 @@
     }
     .swap-btn i {
         font-size: 1.25rem;
+    }
+    .translate-search-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.2rem;
+    }
+    .translate-search-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        color: var(--primary-700, #334155);
+        user-select: none;
+    }
+    .translate-search-toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .translate-search-track {
+        width: 34px;
+        height: 18px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        position: relative;
+        transition: background 0.2s ease;
+        flex: 0 0 auto;
+    }
+    .translate-search-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+        transition: transform 0.2s ease;
+    }
+    .translate-search-toggle input:checked + .translate-search-track {
+        background: var(--accent-500, #0f766e);
+    }
+    .translate-search-toggle input:checked + .translate-search-track .translate-search-thumb {
+        transform: translateX(16px);
+    }
+    .translate-search-toggle.is-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .translate-search-hint {
+        font-size: 0.7rem;
+        line-height: 1.45;
+        color: var(--primary-400, #94a3b8);
+        text-align: right;
+        max-width: 260px;
     }
     .translate-action-bar {
         display: flex;
@@ -235,16 +281,13 @@
         .swap-btn-wrapper {
             transform: rotate(90deg);
         }
-        .translation-page-header {
-            padding: 2rem 1.5rem;
-        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="translation-page-header">
-    <div class="container position-relative" style="z-index:2;">
+<div class="translation-page-header page-header-custom">
+    <div class="container position-relative">
         <h1 class="mb-2"><i class="bi bi-translate me-3"></i>濒危语言翻译</h1>
         <nav aria-label="breadcrumb" class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
@@ -271,6 +314,19 @@
                 <i class="bi bi-lightning-charge-fill"></i> 开始翻译
             </button>
             <span class="char-count" id="charCount">0 字</span>
+        </div>
+        <div class="translate-search-wrap">
+            <label class="translate-search-toggle {% if not search_available %}is-disabled{% endif %}"
+                   title="{% if search_available %}联网结果可能不准确，请核对来源{% else %}未配置搜索服务{% endif %}">
+                <input type="checkbox" name="web_search" id="translationWebSearch" value="1"
+                       {% if web_search_requested %}checked{% endif %}
+                       {% if not search_available %}disabled{% endif %}>
+                <span class="translate-search-track"><span class="translate-search-thumb"></span></span>
+                <span>联网参考译法</span>
+            </label>
+            <div class="translate-search-hint">
+                {% if search_available %}仅在模型标记“不确定”时检索一次；联网结果可能不准确，请核对来源。{% else %}未配置搜索服务{% endif %}
+            </div>
         </div>
     </div>
 

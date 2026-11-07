@@ -49,3 +49,8 @@ DEBUG = False
 
 # 测试用的 OpenAI API Key
 OPENAI_API_KEY = 'test-api-key-for-ci'
+
+# 测试环境默认关闭联网搜索，避免消耗真实额度；需要测试时用 override_settings 打开并 mock
+SEARCH_ENABLED = False
+SEARCH_API_KEY = ''
+SEARCH_PROVIDER = 'tavily'

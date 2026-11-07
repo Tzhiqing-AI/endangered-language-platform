@@ -12,7 +12,6 @@
     .chat-app {
         display: flex;
         height: calc(100vh - var(--navbar-height) - var(--footer-height) - 32px);
-        min-height: 600px;
         gap: 0;
         overflow: hidden;
         background: #ffffff;
@@ -35,11 +34,11 @@
     }
 
     .chat-sidebar-header {
-        padding: var(--space-5);
+        padding: var(--space-3) var(--space-4);
         border-bottom: 1px solid var(--border-light);
         background: #ffffff;
         flex-shrink: 0;
-        min-height: 80px;
+        min-height: 64px;
     }
 
     .btn-new-session {
@@ -75,8 +74,7 @@
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: var(--space-3);
-        max-height: calc(100vh - var(--navbar-height) - var(--footer-height) - 160px);
+        padding: var(--space-2);
         scroll-behavior: smooth;
     }
 
@@ -195,14 +193,14 @@
     }
 
     .chat-messages-header {
-        padding: var(--space-4) var(--space-6);
+        padding: var(--space-3) var(--space-4);
         border-bottom: 1px solid var(--border-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
         background: #ffffff;
         flex-shrink: 0;
-        min-height: 64px;
+        min-height: 56px;
     }
 
     .chat-messages-title {
@@ -259,13 +257,12 @@
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: var(--space-6);
+        padding: var(--space-4);
         display: flex;
         flex-direction: column;
-        gap: var(--space-5);
+        gap: var(--space-4);
         min-width: 0;
         background: #ffffff;
-        max-height: calc(100vh - var(--navbar-height) - var(--footer-height) - 120px);
         scroll-behavior: smooth;
     }
 
@@ -372,6 +369,126 @@
         box-shadow: var(--shadow-sm);
     }
 
+    /* 联网搜索开关与来源 */
+    .chat-search-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.65rem;
+    }
+
+    .chat-search-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        color: var(--text-secondary, #475569);
+        user-select: none;
+    }
+
+    .chat-search-toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .chat-search-track {
+        width: 34px;
+        height: 18px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        position: relative;
+        transition: background 0.2s ease;
+        flex: 0 0 auto;
+    }
+
+    .chat-search-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+        transition: transform 0.2s ease;
+    }
+
+    .chat-search-toggle input:checked + .chat-search-track {
+        background: var(--accent-500, #10b981);
+    }
+
+    .chat-search-toggle input:checked + .chat-search-track .chat-search-thumb {
+        transform: translateX(16px);
+    }
+
+    .chat-search-toggle.is-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .chat-search-hint {
+        font-size: 0.72rem;
+        line-height: 1.5;
+        color: var(--text-tertiary, #94a3b8);
+    }
+
+    .chat-search-badge {
+        align-self: flex-start;
+        margin-top: 0.45rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 0.7rem;
+        line-height: 1.4;
+    }
+
+    .chat-offline-badge {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    .chat-sources {
+        margin-top: 0.55rem;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        background: #ffffff;
+    }
+
+    .chat-sources-title {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-secondary, #475569);
+        margin-bottom: 0.35rem;
+    }
+
+    .chat-sources a {
+        display: block;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        color: var(--accent-600, #059669);
+        text-decoration: none;
+        margin-bottom: 0.25rem;
+        word-break: break-all;
+    }
+
+    .chat-sources a:hover {
+        text-decoration: underline;
+    }
+
+    .chat-source-note {
+        font-size: 0.7rem;
+        line-height: 1.45;
+        color: var(--text-tertiary, #94a3b8);
+        margin-top: 0.3rem;
+    }
+
     /* 错误消息气泡（红色警示） */
     .chat-error-bubble {
         background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
@@ -448,15 +565,15 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: var(--space-5);
-        gap: var(--space-4);
+        padding: var(--space-4);
+        gap: var(--space-3);
     }
 
     .chat-input-panel-header {
         display: flex;
         align-items: center;
         gap: var(--space-3);
-        padding-bottom: var(--space-4);
+        padding-bottom: var(--space-3);
         border-bottom: 1px solid var(--border-color);
     }
 
@@ -608,7 +725,7 @@
         align-items: center;
         justify-content: center;
         height: 100%;
-        padding: 3rem 2rem;
+        padding: 1.5rem 1.25rem;
         text-align: center;
     }
 
@@ -622,7 +739,7 @@
         align-items: center;
         justify-content: center;
         font-size: 2rem;
-        margin-bottom: var(--space-6);
+        margin-bottom: var(--space-4);
         box-shadow: var(--shadow-lg);
     }
 
@@ -748,7 +865,7 @@
     @media (max-width: 991.98px) {
         .chat-app {
             flex-direction: column;
-            height: calc(100vh - var(--navbar-height) - var(--footer-height) - 24px);
+            height: calc(100vh - var(--navbar-height) - var(--footer-height) - 32px);
             border-radius: var(--radius-xl);
         }
 
@@ -821,7 +938,7 @@
     @media (max-width: 575.98px) {
         .chat-app {
             border-radius: var(--radius-lg);
-            height: calc(100vh - var(--navbar-height) - var(--footer-height) - 16px);
+            height: calc(100vh - var(--navbar-height) - var(--footer-height) - 32px);
         }
 
         .chat-messages {
@@ -877,7 +994,7 @@
             </div>
             {% else %}
             {% for time, question, answer in chat_history %}
-            <div class="chat-session-item{% if forloop.first %} active{% endif %}"
+            <div class="chat-session-item"
                  data-before="{{ time|date:'Y-m-d H:i:s' }}"
                  onclick="switchSession(this)">
                 <div class="session-title">{{ question|truncatechars:20 }}</div>
@@ -911,7 +1028,7 @@
         </div>
 
         <div class="chat-messages" id="messageHistory">
-            {% if not result and length == 0 %}
+            {% if not result %}
             <div class="chat-welcome" id="chatWelcome">
                 <div class="chat-welcome-icon"><i class="bi bi-robot"></i></div>
                 <h3>濒危语言学习助手</h3>
@@ -924,31 +1041,6 @@
                 </div>
             </div>
             {% endif %}
-
-            {% for time, question, answer in chat_history %}
-            <div class="chat-msg chat-msg-user" data-msg-type="user">
-                <div class="chat-msg-content">
-                    <div class="chat-msg-bubble">{{ question }}</div>
-                    <div class="chat-msg-meta">{{ name }} · {{ time|date:'H:i' }}</div>
-                </div>
-                <div class="chat-msg-avatar"><i class="bi bi-person-fill"></i></div>
-            </div>
-            <div class="chat-msg chat-msg-ai" data-msg-type="ai">
-                <div class="chat-msg-avatar"><i class="bi bi-robot"></i></div>
-                <div class="chat-msg-content">
-                    <div class="chat-msg-bubble">{{ answer|safe }}</div>
-                    <div class="chat-msg-actions">
-                        <button class="chat-msg-action-btn" title="复制" onclick="copyMessage(this)">
-                            <i class="bi bi-clipboard"></i>
-                        </button>
-                        <button class="chat-msg-action-btn" title="删除" onclick="deleteMessage(this)">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-                    </div>
-                    <div class="chat-msg-meta">助手 · {{ time|date:'H:i' }}</div>
-                </div>
-            </div>
-            {% endfor %}
 
             {% if result %}
             <div class="chat-msg chat-msg-user" data-msg-type="user">
@@ -993,6 +1085,17 @@
                 {% csrf_token %}
                 <div class="chat-input-panel-group">
                     <textarea class="chat-textarea" name="language_text" id="chatTextarea" placeholder="在此输入您的问题..." onkeydown="handleKeyDown(event)" oninput="toggleSendBtn()"></textarea>
+                </div>
+                <div class="chat-search-row">
+                    <label class="chat-search-toggle {% if not search_available %}is-disabled{% endif %}"
+                           title="{% if search_available %}联网结果可能不准确，请核对来源{% else %}未配置搜索服务{% endif %}">
+                        <input type="checkbox" id="webSearchToggle" {% if not search_available %}disabled{% endif %}>
+                        <span class="chat-search-track"><span class="chat-search-thumb"></span></span>
+                        <span>联网搜索</span>
+                    </label>
+                    <span class="chat-search-hint">
+                        {% if search_available %}默认关闭；联网结果可能不准确，请核对来源。{% else %}未配置搜索服务{% endif %}
+                    </span>
                 </div>
                 <div class="chat-input-panel-actions">
                     <div class="chat-input-panel-tips">
@@ -1096,6 +1199,7 @@ function sendMessage() {
 
     var formData = new FormData();
     formData.append('language_text', message);
+    formData.append('web_search', document.getElementById('webSearchToggle')?.checked ? '1' : '0');
     formData.append('csrfmiddlewaretoken', csrfToken);
 
     fetch(window.location.pathname, {
@@ -1127,6 +1231,7 @@ function sendMessage() {
                 </div>
             `;
             messages.appendChild(aiMsg);
+            renderChatSources(aiMsg.querySelector('.chat-msg-content'), data);
             scrollToBottom();
         } else {
             showChatError(data.message || '发送失败，请稍后重试');
@@ -1134,12 +1239,60 @@ function sendMessage() {
     })
     .catch(function(err) {
         hideTypingIndicator();
-        showChatError('网络错误，请稍后重试');
+        showChatError('服务异常或网络中断，请稍后重试');
         console.error(err);
     })
     .finally(function() {
         sendBtn.disabled = false;
     });
+}
+
+function renderChatSources(content, data) {
+    if (!content) return;
+    var actions = content.querySelector('.chat-msg-actions');
+
+    if (data.offline) {
+        var offlineBadge = document.createElement('div');
+        offlineBadge.className = 'chat-search-badge chat-offline-badge';
+        offlineBadge.textContent = '离线示例 · 非实时（' + (data.offline_notice || 'AI 服务不可用') + '）';
+        content.insertBefore(offlineBadge, actions || null);
+    }
+
+    if (data.search_status && data.search_status !== 'off' && data.search_status !== 'not_used' && data.search_notice) {
+        var badge = document.createElement('div');
+        badge.className = 'chat-search-badge';
+        badge.textContent = data.search_notice;
+        content.insertBefore(badge, actions || null);
+    }
+
+    var sources = data.sources || [];
+    if (!sources.length) return;
+
+    var box = document.createElement('div');
+    box.className = 'chat-sources';
+
+    var title = document.createElement('div');
+    title.className = 'chat-sources-title';
+    title.textContent = '参考来源';
+    box.appendChild(title);
+
+    sources.forEach(function(source, index) {
+        if (!source.url || !/^https?:/i.test(source.url)) return;
+        var link = document.createElement('a');
+        link.href = source.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '[' + (index + 1) + '] ' + (source.title || source.site || source.url);
+        if (source.site) link.title = source.site;
+        box.appendChild(link);
+    });
+
+    var note = document.createElement('div');
+    note.className = 'chat-source-note';
+    note.textContent = '联网结果可能不准确，请核对来源。';
+    box.appendChild(note);
+
+    content.insertBefore(box, actions || null);
 }
 
 function showChatError(message) {
@@ -1201,11 +1354,22 @@ function switchSession(item) {
     fetch('/Dashboard/language_chat/history/?before=' + encodeURIComponent(beforeTime), {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(function(response) { return response.json(); })
+    .then(function(response) {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
     .then(function(data) {
-        if (data.status === 'success' && data.messages.length > 0) {
-            var html = '';
-            data.messages.forEach(function(msg) {
+        var items = (data && data.status === 'success' && Array.isArray(data.messages)) ? data.messages : [];
+        var hasContent = items.some(function(msg) {
+            return (msg.question || '').trim() || (msg.answer || '').trim();
+        });
+        if (!hasContent) {
+            throw new Error('empty history');
+        }
+        var html = '';
+            items.forEach(function(msg) {
                 html += `
                 <div class="chat-msg chat-msg-user" data-msg-type="user">
                     <div class="chat-msg-content">
@@ -1232,10 +1396,11 @@ function switchSession(item) {
             });
             messages.innerHTML = html;
             scrollToBottom();
-        }
     })
     .catch(function(err) {
         console.error('加载历史记录失败:', err);
+        cancelSessionSelection();
+        showChatNotice('该对话不存在或加载失败，已取消选择');
     });
 
     if (window.innerWidth <= 991) {
@@ -1252,7 +1417,26 @@ function formatTime(timeStr) {
     }
 }
 
+// 取消左侧会话选中态，回到“新对话”标题
+function cancelSessionSelection() {
+    document.querySelectorAll('.chat-session-item').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.getElementById('currentSessionTitle').textContent = '智能问答助手';
+}
+
+// 复用 base.html 的 alert 样式做右上角提示
+function showChatNotice(text) {
+    var notice = document.createElement('div');
+    notice.className = 'alert-custom alert-warning';
+    notice.style.cssText = 'position:fixed;top:calc(var(--navbar-height) + 16px);right:24px;z-index:2000;';
+    notice.innerHTML = '<i class="bi bi-exclamation-circle alert-icon"></i><div class="alert-content">' + escapeHtml(text) + '</div>';
+    document.body.appendChild(notice);
+    setTimeout(function() { notice.remove(); }, 4000);
+}
+
 function newSession() {
+    cancelSessionSelection();
     var textarea = document.getElementById('chatTextarea');
     textarea.value = '';
     toggleSendBtn();
