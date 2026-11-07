@@ -190,7 +190,6 @@ def post_detail(request, post_id):
             user_likes = set()
 
         # 从 MySQL 获取所有回复的真实 like_count
-        from django.db.models import Q
         mysql_like_counts = {}
         if all_mongo_reply_ids:
             for r in Reply.objects.filter(id__in=all_mongo_reply_ids).values('id', 'like_count'):

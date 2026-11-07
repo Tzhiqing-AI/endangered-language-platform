@@ -49,7 +49,7 @@
                     {% endif %}
 
                     <div class="post-content mb-4">
-                        {{ post.content|linebreaks }}
+                        {{ post.content|urlize|linebreaks }}
                     </div>
 
                     {% if post.tags.exists %}
