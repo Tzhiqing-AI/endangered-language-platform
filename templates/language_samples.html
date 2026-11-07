@@ -234,6 +234,23 @@
         border: 1px dashed #e2e8f0;
     }
 
+    .sample-empty p {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+
+    .sample-empty a {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #0f766e;
+        text-decoration: none;
+    }
+
+    .sample-empty a:hover {
+        text-decoration: underline;
+    }
+
     .sample-pagination {
         display: flex;
         justify-content: center;
@@ -334,7 +351,16 @@
         </article>
         {% empty %}
         <div class="sample-empty">
-            <i class="bi bi-collection-play me-2"></i>没有找到匹配的样本
+            {% if all_total %}
+            <i class="bi bi-collection-play me-2"></i>
+            <p class="mb-2">没有找到匹配「{% if query %}{{ query }}{% else %}当前类型{% endif %}」的样本。</p>
+            <p class="mb-3">样本标题多为其他语言的原名或拉丁转写，可以试试更短的关键词，或先浏览全部类型。</p>
+            <a href="{% url 'Dashboard:language_samples' %}">清空筛选，查看全部样本 →</a>
+            {% else %}
+            <i class="bi bi-collection-play me-2"></i>
+            <p class="mb-2">样本库暂时还没有收录内容。</p>
+            <p class="mb-0">如果你有录音、视频或词汇表，可以在社区发帖说明，或联系管理员补充。</p>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
