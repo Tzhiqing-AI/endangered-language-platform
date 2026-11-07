@@ -88,6 +88,13 @@ def upsert_rows(model, incoming: Dict[int, dict], fields: Iterable[str], *,
                 owned = set(model.objects.values_list(pk_name, flat=True))
             stale = owned - set(keys)
             stats['deleted'] = _delete_ids(model, stale)
+            if stale:
+                # 被 prune 的行必须同步移出台账，否则残留归属会让下一次
+                # prune 误删手工重建的同主键行；目标行早已不存在的
+                # 僵尸台账也在这一步一并清掉。
+                ETLManagedRow.objects.filter(
+                    scope=scope, table_name=table, row_id__in=list(stale)
+                ).delete()
 
         for chunk in _chunks(creates, batch_size):
             model.objects.bulk_create(chunk, batch_size=batch_size)
