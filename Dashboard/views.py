@@ -4,7 +4,6 @@ Dashboard 应用视图模块
 此文件仅用于向后兼容，所有视图已拆分到以下模块：
 - language_views: 语言列表、搜索功能
 - ai_views: AI 翻译、可视化、聊天功能
-- nlp_views: NLP 自然语言处理功能
 
 新视图请添加到对应的专用模块中。
 """
@@ -32,11 +31,8 @@ from Dashboard.ai_views import (
     glossary_manage,
 )
 
-# NLP 功能视图
-from Dashboard.nlp_views import (
-    nlp_page,
-    nlp_process,
-)
+# 语言样本库
+from Dashboard.sample_views import language_samples
 
 __all__ = [
     'language',
@@ -47,8 +43,7 @@ __all__ = [
     'language_visualization',
     'language_map',
     'language_chat',
-    'nlp_page',
-    'nlp_process',
+    'language_samples',
     'user_management',
     'user_management_post',
     'get_chat_history',
