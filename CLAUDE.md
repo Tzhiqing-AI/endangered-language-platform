@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Django 4.2 project — "濒危语言保护平台" (Endangered Language Protection Network). Provides language catalog, community forum, REST API, and AI-powered features (translation, NLP, chat).
+Django 6.0 project — "濒危语言保护平台" (Endangered Language Protection Network). Provides language catalog, community forum, REST API, and AI-powered features (translation, chat).
 
 ## Commands
 
@@ -39,7 +39,7 @@ python manage.py showmigrations
 ```
 language/
 ├── language/          # Project config (settings, urls, wsgi/asgi)
-├── Dashboard/         # Core: Language model, AI views, NLP, admin dashboard
+├── Dashboard/         # Core: Language model, AI views, admin dashboard
 ├── User/             # User model, auth, profile, expert certification
 ├── Community/        # Forum: posts, replies, likes, follows, messages
 ├── rest_api/         # DRF REST API (serializers, views, permissions)
@@ -87,12 +87,12 @@ language/
 - Static: `STATIC_ROOT = BASE_DIR/staticfiles`, `STATICFILES_DIRS = [BASE_DIR/static]`
 - Media: `MEDIA_ROOT = BASE_DIR/media`
 - Cache: LocMemCache (for rate limiting)
-- Custom template tag: `language.context.user_context` — injects user data into all templates
+- Custom context processors: `language.context.user_context` / `site_context` — injects user role and AMap key
+- Custom auth bridge: `language.middleware.SessionUserMiddleware` — maps the app session user to `request.user` for Django/DRF permissions
 
-### AI & NLP
+### AI
 - AI: OpenAI-compatible API (default Moonshot/Kimi endpoint `https://api.moonshot.cn/v1`)
 - AI views: `Dashboard/ai_views.py` — translation, visualization, chat, web search
-- NLP: `Dashboard/nlp_views.py` — sentiment analysis, keyword extraction, summarization, polishing
 - Chat history: `User.models.ChatHistory` — limited to 50 per user session
 - Retry config: 3 retries with 1s initial delay, exponential backoff
 
@@ -119,7 +119,6 @@ language/
 - Django 4.2, DRF, coreapi
 - MySQL client (`mysqlclient`)
 - OpenAI SDK (for AI features)
-- SnowNLP (for NLP features)
 - Pillow (for image uploads)
 - python-dotenv
 - requests (for web search)
