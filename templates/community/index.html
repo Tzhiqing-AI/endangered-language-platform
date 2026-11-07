@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_tags %}
 
 {% block title %}社区论坛 - 濒危语言保护{% endblock %}
 
@@ -6,40 +7,44 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="bi bi-people me-2"></i>社区论坛</h2>
-                <div class="d-flex gap-2">
-                    <form action="{% url 'Community:search_posts' %}" method="get" class="d-flex gap-2">
-                        <input type="text" name="keyword" class="form-control" placeholder="语义搜索帖子..." style="width: 220px;">
-                        <button type="submit" class="btn btn-outline-primary">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </form>
-                    <a href="{% url 'Community:reputation_rank' %}" class="btn btn-outline-primary" title="声望排行榜">
-                        <i class="bi bi-trophy"></i>
-                    </a>
-                    {% if name %}
-                    <a href="{% url 'Community:user_collections' %}" class="btn btn-outline-primary" title="我的收藏">
-                        <i class="bi bi-bookmark"></i>
-                    </a>
-                    <a href="{% url 'Community:messages' %}" class="btn btn-outline-primary position-relative">
-                        <i class="bi bi-bell"></i>
-                        {% if unread_count > 0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ unread_count }}
-                        </span>
-                        {% endif %}
-                    </a>
-                    <a href="{% url 'Community:create_post' %}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>发布帖子
-                    </a>
-                    {% else %}
-                    <a href="{% url 'User:login' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>登录后发帖
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
+    <section class="page-hero">
+        <div>
+            <span class="page-hero-kicker">COMMUNITY · 语言社区</span>
+            <h1><i class="bi bi-people me-2"></i>社区论坛</h1>
+            <p>讨论语言保护、分享资料、向专家提问。每一条帖子，都是语言继续被使用的一次尝试。</p>
+        </div>
+        <div class="page-hero-actions">
+            <form action="{% url 'Community:search_posts' %}" method="get" class="d-flex gap-2">
+                <input type="text" name="keyword" class="form-control" placeholder="语义搜索帖子..." style="width: 220px;">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+            <a href="{% url 'Community:reputation_rank' %}" class="btn btn-outline-primary" title="声望排行榜">
+                <i class="bi bi-trophy"></i>
+            </a>
+            {% if name %}
+            <a href="{% url 'Community:user_collections' %}" class="btn btn-outline-primary" title="我的收藏">
+                <i class="bi bi-bookmark"></i>
+            </a>
+            <a href="{% url 'Community:messages' %}" class="btn btn-outline-primary position-relative">
+                <i class="bi bi-bell"></i>
+                {% if unread_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ unread_count }}
+                </span>
+                {% endif %}
+            </a>
+            <a href="{% url 'Community:create_post' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>发布帖子
+            </a>
+            {% else %}
+            <a href="{% url 'User:login' %}" class="btn btn-outline-primary">
+                <i class="bi bi-box-arrow-in-right me-1"></i>登录后发帖
+            </a>
+            {% endif %}
+        </div>
+    </section>
 
             <ul class="nav nav-tabs mb-4" role="tablist">
                 <li class="nav-item">
@@ -92,7 +97,7 @@
                                     {% if post.related_language %}
                                     <div class="mt-2">
                                         <span class="badge bg-info">
-                                            <i class="bi bi-globe me-1"></i>{{ post.related_language.language_name }}
+                                            <i class="bi bi-globe me-1"></i>{{ post.related_language|language_display_name }}
                                         </span>
                                         <span class="badge bg-secondary">{{ post.language_level }}</span>
                                     </div>

@@ -7,7 +7,7 @@
 {% block extra_css %}
 <style>
     .collections-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #0b1120 100%);
         padding: 2.5rem 0;
         color: white;
     }
@@ -42,7 +42,7 @@
     }
 
     .collection-title a:hover {
-        color: #6366f1;
+        color: #0f766e;
     }
 
     .collection-meta {
@@ -95,20 +95,28 @@
                 <ul class="pagination justify-content-center">
                     {% if collects.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ collects.previous_page_number }}">上一页</a>
+                        <a class="page-link" href="?page={{ collects.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>
                     </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
                     {% endif %}
 
-                    {% for num in collects.paginator.page_range %}
-                    <li class="page-item {% if num == collects.number %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
+                    {% for num in page_numbers %}
+                        {% if num == '...' %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% elif num == collects.number %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
                     {% endfor %}
 
                     {% if collects.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ collects.next_page_number }}">下一页</a>
+                        <a class="page-link" href="?page={{ collects.next_page_number }}"><i class="bi bi-chevron-right"></i></a>
                     </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
                     {% endif %}
                 </ul>
             </nav>

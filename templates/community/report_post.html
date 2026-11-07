@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}举报帖子 - 濒危语言保护平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-hero {
+        position: relative;
+        overflow: hidden;
+        margin: 0 0 1.5rem;
+        padding: 2.2rem;
+        border-radius: 24px;
+        color: #fff;
+        background:
+            radial-gradient(circle at 84% 18%, rgba(13, 148, 136, 0.30), transparent 42%),
+            radial-gradient(circle at 10% 90%, rgba(217, 119, 6, 0.22), transparent 44%),
+            linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%);
+    }
+    .report-hero h1 { color: #fff; font-size: 2rem; font-weight: 800; margin: 0 0 .4rem; }
+    .report-hero .breadcrumb { margin: 0; background: transparent; padding: 0; }
+    .report-hero .breadcrumb-item a { color: rgba(255,255,255,.78); text-decoration: none; }
+    .report-hero .breadcrumb-item.active { color: rgba(255,255,255,.55); }
+    .report-card { background: #fff; border: 1px solid rgba(15,23,42,.08); border-radius: 18px; padding: 1.6rem; box-shadow: 0 10px 30px rgba(15,23,42,.05); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="report-hero">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'Dashboard:language' %}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'Community:community_home' %}">社区论坛</a></li>
+            <li class="breadcrumb-item active" aria-current="page">举报</li>
+        </ol>
+    </nav>
+    <h1><i class="bi bi-flag me-2"></i>举报帖子</h1>
+    <p class="mb-0" style="color: rgba(255,255,255,.72);">请说明问题，管理员会尽快核实处理。</p>
+</section>
+
+<div class="report-card">
+    <p class="text-muted mb-4">
+        举报对象：<strong class="text-dark">{{ post.title }}</strong>
+        <span class="ms-2">作者：{{ post.author.name|default:post.author.username }}</span>
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.reason.id_for_label }}">举报原因</label>
+            {{ form.reason }}
+            {% if form.reason.errors %}<div class="text-danger small mt-1">{{ form.reason.errors }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.description.id_for_label }}">详细描述</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>提交举报</button>
+            <a href="{% url 'Community:post_detail' post_id=post.id %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

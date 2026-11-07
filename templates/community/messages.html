@@ -27,7 +27,7 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="badge bg-{% if msg.msg_type == 'like' %}danger{% elif msg.msg_type == 'reply' %}primary{% elif msg.msg_type == 'follow' %}success{% else %}secondary{% endif %} me-2">
-                                {{ msg.get_msg_type_display }}
+                                {% if msg.msg_type == 'mention' and msg.sender %}私信{% else %}{{ msg.get_msg_type_display }}{% endif %}
                             </span>
                             {% if msg.sender %}
                             <a href="{% url 'Community:user_profile' user_id=msg.sender.username %}" class="text-decoration-none">{{ msg.sender.name }}</a>

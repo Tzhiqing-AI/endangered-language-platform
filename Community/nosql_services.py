@@ -40,22 +40,6 @@ class RedisService:
         r.zadd(key, {str(post_id): score})
 
     @staticmethod
-    def increment_view_async(post_id):
-        """异步记录浏览（消息队列，Worker 批量更新 MySQL）"""
-        r = get_redis()
-        r.lpush('view_queue', str(post_id))
-
-    @staticmethod
-    def get_view_queue_batch(batch_size=50):
-        """批量获取待处理的浏览记录"""
-        r = get_redis()
-        pipe = r.pipeline()
-        for _ in range(batch_size):
-            pipe.lpop('view_queue')
-        results = pipe.execute()
-        return [int(x) for x in results if x is not None]
-
-    @staticmethod
     def distributed_lock(lock_name, timeout=10):
         """分布式锁（上下文管理器）"""
         import time
@@ -106,7 +90,11 @@ def get_mongo_db():
     global _mongo_client, _mongo_db
     if _mongo_db is None:
         from pymongo import MongoClient
-        _mongo_client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=3000)
+        _mongo_client = MongoClient(
+            settings.MONGODB_URI,
+            serverSelectionTimeoutMS=3000,
+            tz_aware=True,
+        )
         _mongo_db = _mongo_client[settings.MONGODB_NAME]
         # 创建索引
         _mongo_db.posts.create_index('post_id', unique=True)
@@ -253,18 +241,15 @@ class MongoService:
 
     @staticmethod
     def rebuild_comments(post_id):
-        """从 MySQL 重建帖子的嵌套评论到 MongoDB（初始化用）"""
+        """从 MySQL 重建帖子的完整嵌套评论树到 MongoDB。"""
         from Community.models import Reply
         db = get_mongo_db()
-        # 获取所有未删除的评论
-        replies = Reply.objects.filter(
+        replies = list(Reply.objects.filter(
             post_id=post_id, is_deleted=False
-        ).select_related('author').order_by('created_at')
+        ).select_related('author').order_by('created_at'))
 
-        top_level = []
-        children_map = {}
-        for r in replies:
-            doc = {
+        docs = {
+            r.id: {
                 'reply_id': r.id,
                 'user_id': r.author.username,
                 'user_name': r.author.name or r.author.username,
@@ -273,14 +258,15 @@ class MongoService:
                 'like_count': r.like_count,
                 'children': [],
             }
-            if r.parent_id:
-                children_map.setdefault(r.parent_id, []).append(doc)
+            for r in replies
+        }
+        top_level = []
+        for r in replies:
+            doc = docs[r.id]
+            if r.parent_id and r.parent_id in docs:
+                docs[r.parent_id]['children'].append(doc)
             else:
                 top_level.append(doc)
-
-        # 把子评论挂到父评论下
-        for comment in top_level:
-            comment['children'] = children_map.get(comment['reply_id'], [])
 
         db.posts.update_one(
             {'post_id': int(post_id)},
@@ -370,25 +356,6 @@ class Neo4jService:
     @staticmethod
     def get_follow_network(user_id, depth=2, limit=50):
         """获取用户关注网络（用于前端图谱可视化）"""
-        # #region debug-point E:neo4j-query
-        import json, urllib.request
-        _p = '.dbg/echarts-not-rendering.env'
-        _u, _s = 'http://127.0.0.1:7777/event', 'echarts-not-rendering'
-        try:
-            with open(_p) as f:
-                c = f.read()
-                _u = next((l.split('=', 1)[1] for l in c.split('\n') if l.startswith('DEBUG_SERVER_URL=')), _u)
-                _s = next((l.split('=', 1)[1] for l in c.split('\n') if l.startswith('DEBUG_SESSION_ID=')), _s)
-        except Exception:
-            pass
-        def _dbg(hid, msg, data):
-            try:
-                urllib.request.urlopen(urllib.request.Request(_u, data=json.dumps({"sessionId": _s, "runId": "post-fix", "hypothesisId": hid, "location": "nosql_services.py:get_follow_network", "msg": "[DEBUG] " + msg, "data": data}).encode(), headers={"Content-Type": "application/json"}), timeout=1)
-            except Exception:
-                pass
-        _dbg('E', 'get_follow_network-entry', {"input_user_id": user_id, "depth": depth})
-        # #endregion
-
         driver = get_neo4j_driver()
         with driver.session() as session:
             # 手动提取中心用户字段，避免 dict(Record) 失败
@@ -407,13 +374,10 @@ class Neo4jService:
             # 获取中心用户的真实 id（可能与 URL 传入的不同）
             actual_id = center_node['id']
 
-            # #region debug-point E:center-resolved
-            _dbg('E', 'center-resolved', {"input_user_id": user_id, "actual_id": actual_id, "center_name": center_node['name']})
-            # #endregion
-
             # 按跳数逐层查询，避免边塌缩
             all_nodes = {center_node['id']: center_node}
             all_edges = []
+            edge_keys = set()
             current_ids = [actual_id]
 
             for hop in range(1, depth + 1):
@@ -438,16 +402,12 @@ class Neo4jService:
                     # 添加边（去重 + 过滤自环）
                     if from_id != nid:
                         edge_key = '%s->%s' % (from_id, nid)
-                        if edge_key not in [e['source'] + '->' + e['target'] for e in all_edges]:
+                        if edge_key not in edge_keys:
+                            edge_keys.add(edge_key)
                             all_edges.append({'source': from_id, 'target': nid})
                 current_ids = next_ids
 
             nodes = list(all_nodes.values())
-
-            # #region debug-point D:neo4j-result
-            _dbg('D', 'neo4j-result', {"input_user_id": user_id, "actual_id": actual_id, "node_count": len(nodes), "edge_count": len(all_edges), "nodes": nodes[:5], "edges": all_edges[:5]})
-            # #endregion
-
             return {'nodes': nodes, 'edges': all_edges}
 
 

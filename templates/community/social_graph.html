@@ -4,7 +4,9 @@
 {% block title %}社交图谱 - {{ profile_user.name }}{% endblock %}
 
 {% block extra_css %}
+<style>
 #graph-container { width: 100%; height: 600px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -66,37 +68,21 @@
 <script src="{% static 'js/echarts.min.js' %}"></script>
 <script>
 (function() {
-    // #region debug-point A:CSP-and-init
-    var __dbgUrl = 'http://127.0.0.1:7777/event';
-    var __sess = 'echarts-not-rendering';
-    function __dbg(hid, msg, data) {
-        fetch(__dbgUrl, { method: 'POST', body: JSON.stringify({ sessionId: __sess, runId: 'post-fix', hypothesisId: hid, location: 'social_graph.html', msg: '[DEBUG] ' + msg, data: data || {}, ts: Date.now() }) }).catch(function(){});
-    }
-    // #endregion
-
     var userId = '{{ neo4j_id }}';
     var csrfToken = '{{ csrf_token }}';
     var container = document.getElementById('graph-container');
 
-    // #region debug-point C:container-size
-    __dbg('C', 'container-size-before-init', { offsetWidth: container.offsetWidth, offsetHeight: container.offsetHeight, clientWidth: container.clientWidth, clientHeight: container.clientHeight });
-    // #endregion
-
     var chart = echarts.init(container);
-    // #region debug-point B:echarts-init
-    __dbg('B', 'echarts-init', { version: echarts.version, chartId: chart.id, containerSize: [container.offsetWidth, container.offsetHeight] });
-    // #endregion
-
     var graphData = { nodes: [], edges: [] };
 
     // 监听窗口大小变化
     window.addEventListener('resize', function() { chart.resize(); });
 
-    // 全局错误捕获
-    // #region debug-point B:global-errors
-    window.addEventListener('error', function(e) { __dbg('B', 'window-error', { message: e.message, filename: e.filename, lineno: e.lineno, colno: e.colno }); });
-    window.addEventListener('unhandledrejection', function(e) { __dbg('B', 'unhandledrejection', { reason: String(e.reason) }); });
-    // #endregion
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch];
+        });
+    }
 
     // 获取数据
     function loadGraph(depth) {
@@ -107,13 +93,13 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            // #region debug-point D:api-response
-            __dbg('D', 'api-follow-network-response', { success: data.success, nodeCount: data.data && data.data.nodes ? data.data.nodes.length : 0, edgeCount: data.data && data.data.edges ? data.data.edges.length : 0, firstNodes: data.data && data.data.nodes ? data.data.nodes.slice(0, 3) : [], firstEdges: data.data && data.data.edges ? data.data.edges.slice(0, 3) : [] });
-            // #endregion
             if (data.success) {
                 graphData = data.data;
                 renderGraph();
                 updateStats();
+            } else {
+                container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted">' +
+                    escapeHtml(data.message || '社交图谱服务暂时不可用') + '</div>';
             }
         })
         .catch(function(err) {
@@ -127,11 +113,6 @@
         var nodes = graphData.nodes || [];
         var edges = graphData.edges || [];
 
-        // #region debug-point E:center-match
-        var centerNode = nodes.find(function(n) { return n.id === userId; });
-        __dbg('E', 'center-match-check', { userId: userId, centerFound: !!centerNode, centerId: centerNode ? centerNode.id : null, centerName: centerNode ? centerNode.name : null, allIds: nodes.map(function(n){ return n.id; }) });
-        // #endregion
-
         if (nodes.length === 0) {
             container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted">暂无关系数据</div>';
             return;
@@ -144,7 +125,7 @@
             var isCenter = (n.id === userId);
             if (isCenter) {
                 return { id: n.id, name: n.name || n.id, x: cx, y: cy, symbolSize: 55, fixed: true,
-                    itemStyle: { color: '#6366f1', borderColor: '#fff', borderWidth: 2, shadowBlur: 15 },
+                    itemStyle: { color: '#0f766e', borderColor: '#fff', borderWidth: 2, shadowBlur: 15 },
                     label: { show: true, fontSize: 14, fontWeight: 'bold' }
                 };
             }
@@ -159,51 +140,37 @@
 
         var echartEdges = edges.map(function(e) {
             return { source: e.source, target: e.target,
-                lineStyle: { color: '#94a3b8', width: 2 },
+                lineStyle: { color: '#64748b', width: 2 },
                 symbol: ['none', 'arrow'], symbolSize: 10
             };
         });
 
-        // #region debug-point D:edge-match
-        var nodeIdSet = {};
-        echartNodes.forEach(function(n) { nodeIdSet[n.id] = true; if (n.name) nodeIdSet[n.name] = true; });
-        var unmatchedEdges = echartEdges.filter(function(e) { return !nodeIdSet[e.source] || !nodeIdSet[e.target]; });
-        __dbg('D', 'edge-node-match', { nodeCount: echartNodes.length, edgeCount: echartEdges.length, unmatchedEdgeCount: unmatchedEdges.length, sampleUnmatched: unmatchedEdges.slice(0, 3) });
-        // #endregion
-
-        // #region debug-point B:set-option
-        try {
-            chart.setOption({
-                tooltip: {
-                    trigger: 'item',
-                    formatter: function(params) {
-                        if (params.dataType === 'node') {
-                            var isCenter = (params.data.id === userId);
-                            return '<b>' + params.data.name + '</b><br/>' + (isCenter ? '当前用户' : '关注关系');
-                        }
-                        if (params.dataType === 'edge') {
-                            return params.data.source + ' → ' + params.data.target;
-                        }
-                        return '';
+        chart.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        var isCenter = (params.data.id === userId);
+                        return '<b>' + escapeHtml(params.data.name) + '</b><br/>' + (isCenter ? '当前用户' : '关注关系');
                     }
-                },
-                animationDuration: 800,
-                series: [{
-                    type: 'graph',
-                    layout: 'none',
-                    roam: true,
-                    draggable: true,
-                    data: echartNodes,
-                    edges: echartEdges,
-                    label: { show: true, position: 'bottom', color: '#334155' },
-                    emphasis: { focus: 'adjacency', lineStyle: { width: 4, color: '#6366f1' } }
-                }]
-            });
-            __dbg('B', 'set-option-success', { nodeCount: echartNodes.length, edgeCount: echartEdges.length });
-        } catch (err) {
-            __dbg('B', 'set-option-error', { error: String(err), stack: err.stack || '' });
-        }
-        // #endregion
+                    if (params.dataType === 'edge') {
+                        return escapeHtml(params.data.source) + ' → ' + escapeHtml(params.data.target);
+                    }
+                    return '';
+                }
+            },
+            animationDuration: 800,
+            series: [{
+                type: 'graph',
+                layout: 'none',
+                roam: true,
+                draggable: true,
+                data: echartNodes,
+                edges: echartEdges,
+                label: { show: true, position: 'bottom', color: '#334155' },
+                emphasis: { focus: 'adjacency', lineStyle: { width: 4, color: '#0f766e' } }
+            }]
+        });
     }
 
     // 更新统计信息
@@ -229,10 +196,10 @@
             var panel = document.getElementById('mutual-panel');
             if (data.success && data.data && data.data.length > 0) {
                 panel.innerHTML = data.data.map(function(u) {
-                    return '<div class="d-flex align-items-center mb-2"><i class="bi bi-person-circle text-muted me-2"></i><span>' + (u.name || u.user_id) + '</span><span class="badge bg-light text-dark ms-auto">' + u.common + '共同</span></div>';
+                    return '<div class="d-flex align-items-center mb-2"><i class="bi bi-person-circle text-muted me-2"></i><span>' + escapeHtml(u.name || u.user_id) + '</span><span class="badge bg-light text-dark ms-auto">' + escapeHtml(u.common) + '共同</span></div>';
                 }).join('');
             } else {
-                panel.innerHTML = '<p class="text-muted mb-0">暂无共同关注数据</p>';
+                panel.innerHTML = '<p class="text-muted mb-0">' + escapeHtml(data.message || '暂无共同关注数据') + '</p>';
             }
         });
     }

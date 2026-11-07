@@ -20,6 +20,7 @@ urlpatterns = [
     path('collections/', views.user_collections, name='user_collections'),
     path('reputation/', views.user_reputation_rank, name='reputation_rank'),
     path('messages/', views.messages, name='messages'),
+    path('message/send/<str:user_id>/', views.send_message, name='send_message'),
     path('messages/mark-read/', views.mark_read_messages, name='mark_read_messages'),
     path('search/', views.search_posts, name='search_posts'),
     path('category/<int:category_id>/', views.category_posts, name='category_posts'),
@@ -27,6 +28,8 @@ urlpatterns = [
     # 内容审核管理
     path('moderation/queue/', views.moderation_queue, name='moderation_queue'),
     path('moderation/action/', views.moderate_content, name='moderate_content'),
+    path('moderation/reports/', views.report_queue, name='report_queue'),
+    path('moderation/reports/action/', views.report_action, name='report_action'),
     # 社交图谱 API（Neo4j）
     path('api/follow-network/<str:user_id>/', views.api_follow_network, name='api_follow_network'),
     path('api/mutual-follows/<str:user_id>/', views.api_mutual_follows, name='api_mutual_follows'),

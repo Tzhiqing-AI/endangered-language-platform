@@ -1,0 +1,38 @@
+{% load static %}
+<div class="reply-item mb-3 p-3 border rounded" id="reply-{{ reply.id }}">
+    <div class="d-flex">
+        <div class="reply-avatar me-3">
+            <i class="bi bi-person-circle fs-3 text-muted"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <strong>
+                        <a href="{% url 'Community:user_profile' user_id=reply.author.username %}" class="text-decoration-none">{{ reply.author.name }}</a>
+                    </strong>
+                    <small class="text-muted ms-2">{{ reply.created_at|date:"Y-m-d H:i" }}</small>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary btn-reply-like {% if reply.is_liked %}active{% endif %}" data-reply-id="{{ reply.id }}">
+                        <i class="bi bi-heart{% if reply.is_liked %}-fill{% endif %}"></i>
+                        <span>{{ reply.like_count }}</span>
+                    </button>
+                    {% if name %}
+                    <button class="btn btn-outline-secondary btn-reply" data-reply-id="{{ reply.id }}" data-author-name="{{ reply.author.name }}">
+                        <i class="bi bi-reply"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="reply-content mt-2">{{ reply.content|linebreaks }}</div>
+
+            {% if reply.children_list and depth < 6 %}
+            <div class="reply-children mt-3 ms-4 border-start ps-3">
+                {% for child in reply.children_list %}
+                    {% include "community/_reply.html" with reply=child depth=depth|add:1 %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

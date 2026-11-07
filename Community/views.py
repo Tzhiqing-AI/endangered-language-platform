@@ -1,15 +1,17 @@
 import json
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import transaction
 from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from language.utils import login_required_custom, login_required_redirect
+from django.contrib import messages as flash_messages
+from language.utils import login_required_custom, login_required_redirect, rate_limit
 from django.utils import timezone
-from Dashboard.common import get_user_context
-from Dashboard.common import ENDANGERMENT_LEVELS
+from Dashboard.common import get_user_context, pagination_window
+from Dashboard.models import Language
 from Community.constants import (
     COMMUNITY_HOT_POSTS_LIMIT,
     COMMUNITY_LATEST_POSTS_LIMIT,
@@ -28,6 +30,7 @@ from .forms import PostForm, ReplyForm, ReportForm, SearchForm
 from .services import (
     increment_view, save_post, delete_post_data, search_posts_hybrid,
     get_recommendations, get_mutual_follows, get_follow_network, _log_action,
+    refresh_tag_counts,
 )
 
 logger = logging.getLogger(__name__)
@@ -202,27 +205,31 @@ def post_detail(request, post_id):
         _apply_like_data(mongo_replies)
         replies_with_children = mongo_replies
     else:
-        replies = Reply.objects.filter(post=post, parent=None, is_deleted=False).select_related('author').order_by('created_at')
-        reply_ids = list(replies.values_list('id', flat=True))
-        children_replies = Reply.objects.filter(parent__in=reply_ids, is_deleted=False).order_by('created_at')
-        children_by_parent = {}
-        for child in children_replies:
-            if child.parent_id not in children_by_parent:
-                children_by_parent[child.parent_id] = []
-            children_by_parent[child.parent_id].append(child)
-        all_reply_ids = reply_ids + [c.id for c in children_replies]
+        # 无 MongoDB 时从 MySQL 构建完整回复树（支持任意层级）
+        all_replies = list(Reply.objects.filter(
+            post=post, is_deleted=False
+        ).select_related('author').order_by('created_at'))
+        all_reply_ids = [r.id for r in all_replies]
         if user and all_reply_ids:
-            user_likes = set(Like.objects.filter(user=user, reply_id__in=all_reply_ids).values_list('reply_id', flat=True))
+            user_likes = set(Like.objects.filter(
+                user=user, reply_id__in=all_reply_ids
+            ).values_list('reply_id', flat=True))
         else:
             user_likes = set()
-        replies_with_children = []
-        for reply in replies:
-            reply_children = children_by_parent.get(reply.id, [])
-            for child in reply_children:
-                child.is_liked = child.id in user_likes
+
+        children_by_parent = {}
+        for reply in all_replies:
             reply.is_liked = reply.id in user_likes
-            reply.children_list = reply_children
-            replies_with_children.append(reply)
+            children_by_parent.setdefault(reply.parent_id, []).append(reply)
+
+        def _build_tree(parent_id=None):
+            nodes = []
+            for reply in children_by_parent.get(parent_id, []):
+                reply.children_list = _build_tree(reply.id)
+                nodes.append(reply)
+            return nodes
+
+        replies_with_children = _build_tree(None)
 
     # ChromaDB 语义推荐：相似帖子
     similar_posts = []
@@ -267,9 +274,7 @@ def post_detail(request, post_id):
 
     related_language_label = ''
     if post.related_language:
-        related_language_label = ENDANGERMENT_LEVELS.get(
-            post.related_language.level_of_endangerment, '未知'
-        )
+        related_language_label = post.related_language.legacy_level_display
 
     context = {
         'name': name,
@@ -311,9 +316,7 @@ def create_post(request):
                 post.moderation_queue = 'pending'
 
             if post.related_language:
-                post.language_level = ENDANGERMENT_LEVELS.get(
-                    post.related_language.level_of_endangerment, ''
-                )
+                post.language_level = post.related_language.legacy_level_display
 
             post.save()
             form.save_m2m()
@@ -321,10 +324,7 @@ def create_post(request):
             # 同步到所有非关系型数据库
             save_post(post)
 
-            # 更新所有关联标签的 post_count
-            for tag in post.tags.all():
-                tag.post_count = Post.objects.filter(tags=tag, status='published').count()
-                tag.save()
+            refresh_tag_counts(post.tags.all())
 
             if user.expert == 1:
                 Message.objects.create(
@@ -366,9 +366,13 @@ def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id, author=user)
     
     if request.method == 'POST':
+        old_tags = list(post.tags.all())
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
             form.save()
+            post.refresh_from_db()
+            refresh_tag_counts(set(old_tags) | set(post.tags.all()))
+            save_post(post)
             from .services import clear_recommendation_cache
             clear_recommendation_cache(post.id)
             return redirect('Community:post_detail', post_id=post.id)
@@ -410,10 +414,7 @@ def delete_post(request, post_id):
     from .services import clear_recommendation_cache
     clear_recommendation_cache(post_id)
 
-    # 更新所有关联标签的 post_count
-    for tag in post.tags.all():
-        tag.post_count = Post.objects.filter(tags=tag, status='published').count()
-        tag.save()
+    refresh_tag_counts(post.tags.all())
 
     return JsonResponse({'success': True, 'message': '删除成功'})
 
@@ -469,6 +470,10 @@ def report_post(request, post_id):
             from django.contrib import messages
             messages.success(request, '举报已提交，我们会尽快处理')
             return redirect('Community:post_detail', post_id=post.id)
+
+        if is_ajax:
+            errors = {field: [str(e) for e in errs] for field, errs in form.errors.items()}
+            return JsonResponse({'success': False, 'message': '请检查举报内容', 'errors': errors}, status=400)
     else:
         form = ReportForm()
 
@@ -480,31 +485,40 @@ def report_post(request, post_id):
 @login_required_redirect
 def create_reply(request, post_id):
     user, name, _ = get_user_context(request)
-    post = get_object_or_404(Post, id=post_id)
-    
+    post = get_object_or_404(Post, id=post_id, status='published')
+
     if post.is_closed:
         return JsonResponse({'success': False, 'message': '该帖子已关闭评论'})
-    
+
     if request.method == 'POST':
         form = ReplyForm(request.POST)
         if form.is_valid():
             reply = form.save(commit=False)
             reply.post = post
             reply.author = user
-            
+
             parent_id = request.POST.get('parent_id')
             if parent_id:
-                reply.parent_id = int(parent_id)
-            
+                try:
+                    parent_id = int(parent_id)
+                except (TypeError, ValueError):
+                    return JsonResponse({'success': False, 'message': '父回复参数不正确'}, status=400)
+                parent = Reply.objects.filter(
+                    id=parent_id, post=post, is_deleted=False
+                ).first()
+                if not parent:
+                    return JsonResponse({'success': False, 'message': '父回复不存在或不属于该帖子'}, status=400)
+                reply.parent = parent
+
             reply.save()
             post.increment_reply()
 
-            # 同步评论到 MongoDB（嵌套文档结构）
+            # 以 MySQL 为准重建 MongoDB 嵌套评论，保证深层回复也可见
             try:
                 from .nosql_services import MongoService
-                MongoService.add_comment(post_id, reply)
+                MongoService.rebuild_comments(post_id)
             except Exception:
-                pass
+                logger.warning('MongoDB 评论同步失败', exc_info=True)
 
             # 更新推荐缓存（新评论可能影响帖子热度）
             from .services import clear_recommendation_cache
@@ -536,6 +550,7 @@ def create_reply(request, post_id):
 
 
 # ==================== 点赞回复 ====================
+@require_POST
 @login_required_custom
 def like_reply(request, reply_id):
     user, name, _ = get_user_context(request)
@@ -550,6 +565,7 @@ def like_reply(request, reply_id):
 
 
 # ==================== 删除回复 ====================
+@require_POST
 @login_required_redirect
 def delete_reply(request, reply_id):
     user, name, _ = get_user_context(request)
@@ -566,12 +582,12 @@ def delete_reply(request, reply_id):
     reply.save()
     reply.post.decrement_reply()
 
-    # 同步删除 MongoDB 中的评论
+    # 以 MySQL 为准重建 MongoDB 评论
     try:
         from .nosql_services import MongoService
-        MongoService.remove_comment(reply.post_id, reply_id)
+        MongoService.rebuild_comments(reply.post_id)
     except Exception:
-        pass
+        logger.warning('MongoDB 评论同步失败', exc_info=True)
 
     return JsonResponse({'success': True, 'message': '删除成功'})
 
@@ -580,32 +596,33 @@ def delete_reply(request, reply_id):
 
 def user_profile(request, user_id):
     user, name, _ = get_user_context(request)
-    profile_user = get_object_or_404(User, username=user_id)
+    profile_user = get_object_or_404(User, username=user_id, is_active=True)
 
+    is_own_profile = bool(user and user.username == profile_user.username)
     posts = Post.objects.filter(author=profile_user, status='published').order_by('-created_at')
     replies = Reply.objects.filter(author=profile_user, is_deleted=False).order_by('-created_at')
-    collects = Collect.objects.filter(user=profile_user).order_by('-created_at')
+    collects = Collect.objects.filter(user=profile_user).order_by('-created_at') if is_own_profile else Collect.objects.none()
 
-    # MongoDB 浏览足迹
+    # 浏览足迹属于隐私数据，仅本人可见
     footprints = []
-    try:
-        from .nosql_services import get_mongo_db
-        db = get_mongo_db()
-        logs = list(db.user_logs.find(
-            {'user_id': profile_user.username, 'action': 'view', 'post_id': {'$ne': None}}
-        ).sort('created_at', -1).limit(20))
-        # 去重（同一个帖子只显示一次，保留最新记录）
-        seen_posts = set()
-        for log in logs:
-            pid = log.get('post_id')
-            if pid and pid not in seen_posts:
-                seen_posts.add(pid)
-                footprints.append({
-                    'post_id': pid,
-                    'created_at': log.get('created_at'),
-                })
-    except Exception:
-        pass
+    if is_own_profile:
+        try:
+            from .nosql_services import get_mongo_db
+            db = get_mongo_db()
+            logs = list(db.user_logs.find(
+                {'user_id': profile_user.username, 'action': 'view', 'post_id': {'$ne': None}}
+            ).sort('created_at', -1).limit(20))
+            seen_posts = set()
+            for log in logs:
+                pid = log.get('post_id')
+                if pid and pid not in seen_posts:
+                    seen_posts.add(pid)
+                    footprints.append({
+                        'post_id': pid,
+                        'created_at': log.get('created_at'),
+                    })
+        except Exception:
+            pass
 
     # 批量查询足迹对应的帖子，构建 (post, timestamp) 列表
     footprint_items = []
@@ -650,6 +667,8 @@ def user_profile(request, user_id):
         'name': name,
         'username': username,
         'profile_user': profile_user,
+        'profile': getattr(profile_user, 'profile', None),
+        'is_own_profile': is_own_profile,
         'posts': page_obj,
         'replies': replies[:COMMUNITY_USER_REPLIES_LIMIT],
         'collects': collects[:COMMUNITY_USER_COLLECTS_LIMIT],
@@ -667,7 +686,7 @@ def user_profile(request, user_id):
 @login_required_custom
 def follow_user(request, user_id):
     user, name, _ = get_user_context(request)
-    target_user = get_object_or_404(User, username=user_id)
+    target_user = get_object_or_404(User, username=user_id, is_active=True)
     from Community.services import toggle_follow
     result = toggle_follow(user, target_user)
     if result['error']:
@@ -675,6 +694,41 @@ def follow_user(request, user_id):
     return JsonResponse({
         'success': True,
         'is_following': result['following']
+    })
+
+
+# ==================== 发私信 ====================
+@rate_limit(max_requests=5, window_seconds=60)
+@login_required_redirect
+def send_message(request, user_id):
+    """给其他用户发送私信。"""
+    user, name, _ = get_user_context(request)
+    recipient = get_object_or_404(User, username=user_id, is_active=True)
+
+    if recipient.username == user.username:
+        flash_messages.error(request, '不能给自己发私信')
+        return redirect('Community:user_profile', user_id=user.username)
+
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if not content:
+            flash_messages.error(request, '私信内容不能为空')
+        elif len(content) > 500:
+            flash_messages.error(request, '私信内容不能超过 500 个字符')
+        else:
+            Message.objects.create(
+                recipient=recipient,
+                sender=user,
+                msg_type='mention',
+                content=content,
+            )
+            flash_messages.success(request, '私信已发送')
+            return redirect('Community:user_profile', user_id=recipient.username)
+
+    return render(request, 'community/send_message.html', {
+        'name': name,
+        'username': user.username,
+        'recipient': recipient,
     })
 
 
@@ -713,10 +767,12 @@ def messages(request):
 
 
 # ==================== 标记消息已读 ====================
+@require_POST
 @login_required_custom
 def mark_read_messages(request):
     user, name, _ = get_user_context(request)
     Message.objects.filter(recipient=user, is_read=False).update(is_read=True)
+    cache.delete(f'unread_count:{user.username}')
     return JsonResponse({'success': True})
 
 
@@ -807,6 +863,7 @@ def search_posts(request):
         'username': username,
         'form': form,
         'posts': page_obj,
+        'page_numbers': pagination_window(page_obj.number, paginator.num_pages),
         'keyword': keyword,
         'unread_count': unread_count,
     }
@@ -847,6 +904,7 @@ def category_posts(request, category_id):
         'username': username,
         'category': category,
         'posts': page_obj,
+        'page_numbers': pagination_window(page_obj.number, paginator.num_pages),
         'unread_count': unread_count,
     }
     return render(request, 'community/category_posts.html', context)
@@ -886,6 +944,7 @@ def tag_posts(request, tag_id):
         'username': username,
         'tag': tag,
         'posts': page_obj,
+        'page_numbers': pagination_window(page_obj.number, paginator.num_pages),
         'unread_count': unread_count,
     }
     return render(request, 'community/tag_posts.html', context)
@@ -1006,6 +1065,9 @@ def moderate_content(request):
             content.is_deleted = False
         content.save()
 
+    if content_type == 'post':
+        refresh_tag_counts(content.tags.all())
+
     # 发送通知
     if action in ['approve', 'reject', 'hide']:
         action_text = {'approve': '通过', 'reject': '拒绝', 'hide': '隐藏'}[action]
@@ -1015,6 +1077,76 @@ def moderate_content(request):
             content=f'您发布的内容已被管理员{action_text}。',
             post=content if content_type == 'post' else None
         )
+
+    return JsonResponse({'success': True})
+
+
+# ==================== 举报处理 ====================
+@login_required_redirect
+def report_queue(request):
+    """管理员/专家处理用户举报。"""
+    user, name, admin = get_user_context(request)
+    if admin != 1 and user.expert != 1:
+        return render(request, '403.html', {'message': '无权访问举报队列'}, status=403)
+
+    pending_reports = Report.objects.filter(status='pending').select_related(
+        'reporter', 'post', 'post__author', 'reply', 'reply__author'
+    ).order_by('created_at')
+    handled_reports = Report.objects.exclude(status='pending').select_related(
+        'reporter', 'post', 'reply'
+    ).order_by('-created_at')[:30]
+    unread_count = _get_unread_count(user)
+
+    return render(request, 'community/report_queue.html', {
+        'name': name,
+        'username': user.username,
+        'pending_reports': pending_reports,
+        'handled_reports': handled_reports,
+        'unread_count': unread_count,
+    })
+
+
+@require_POST
+@login_required_redirect
+def report_action(request):
+    """处理举报：隐藏内容或驳回举报。"""
+    user, name, admin = get_user_context(request)
+    if admin != 1 and user.expert != 1:
+        return JsonResponse({'success': False, 'message': '无权处理举报'}, status=403)
+
+    report_id = request.POST.get('id')
+    action = request.POST.get('action')
+    if action not in ('hide', 'dismiss'):
+        return JsonResponse({'success': False, 'message': '无效操作'}, status=400)
+
+    report = get_object_or_404(Report.objects.select_related('post', 'reply'), id=report_id)
+
+    with transaction.atomic():
+        if action == 'dismiss':
+            report.status = 'dismissed'
+            report.save(update_fields=['status'])
+            flash_messages.success(request, '举报已驳回')
+        else:
+            report.status = 'processed'
+            report.save(update_fields=['status'])
+            if report.post:
+                report.post.status = 'hidden'
+                report.post.needs_moderation = False
+                report.post.save(update_fields=['status', 'needs_moderation'])
+                ContentModeration.objects.create(
+                    content_type='post', content_id=report.post_id,
+                    moderator=user, action='hide', reason=report.description,
+                )
+                refresh_tag_counts(report.post.tags.all())
+            elif report.reply:
+                report.reply.is_deleted = True
+                report.reply.save(update_fields=['is_deleted'])
+                report.reply.post.decrement_reply()
+                ContentModeration.objects.create(
+                    content_type='reply', content_id=report.reply_id,
+                    moderator=user, action='hide', reason=report.description,
+                )
+            flash_messages.success(request, '举报已处理，内容已隐藏')
 
     return JsonResponse({'success': True})
 
@@ -1045,6 +1177,7 @@ def user_collections(request):
         'name': name,
         'username': user.username,
         'collects': page_obj,
+        'page_numbers': pagination_window(page_obj.number, paginator.num_pages),
     }
 
     return render(request, 'community/user_collections.html', context)
@@ -1052,20 +1185,28 @@ def user_collections(request):
 
 # ==================== 用户声望排行 ====================
 def user_reputation_rank(request):
-    """用户声望排行榜"""
+    """用户声望排行榜：实时计算，避免 reputation_score 长期为 0。"""
     user, name, _ = get_user_context(request)
 
-    # 计算声望分数：帖子数*10 + 收到的点赞数*5 + 收到的回复数*3 + 专家认证*100
-    active_users = User.objects.filter(is_active=True)
+    from django.db.models import ExpressionWrapper, F, IntegerField
 
-    # 如果声望分数都是0，则按帖子数排序（注意：切片后的 QuerySet 不能再 filter）
-    if not active_users.filter(reputation_score__gt=0).exists():
-        top_users = active_users.annotate(
-            post_count=Count('posts'),
-            total_likes=Count('posts__like_users'),
-        ).order_by('-post_count')[:20]
-    else:
-        top_users = active_users.order_by('-reputation_score')[:20]
+    top_users = User.objects.filter(is_active=True).annotate(
+        post_count=Count('posts', filter=Q(posts__status='published'), distinct=True),
+        like_received=Count('posts__like_users', filter=Q(posts__status='published'), distinct=True),
+        reply_received=Count(
+            'posts__replies',
+            filter=Q(posts__status='published', posts__replies__is_deleted=False),
+            distinct=True,
+        ),
+        score=ExpressionWrapper(
+            F('post_count') * 10 + F('like_received') * 5 + F('reply_received') * 3
+            + F('expert') * 100 + F('admin') * 50,
+            output_field=IntegerField(),
+        ),
+    ).order_by('-score', '-post_count', 'username')[:20]
+
+    for item in top_users:
+        item.reputation_score = item.score
 
     context = {
         'name': name,
@@ -1076,97 +1217,24 @@ def user_reputation_rank(request):
     return render(request, 'community/reputation_rank.html', context)
 
 
-    def _calculate_user_reputation(user):
-        """
-        计算用户声望分数
-
-        声望计算规则：
-        - 发帖数 * 10
-        - 收到的点赞数 * 5
-        - 收到的回复数 * 3
-        - 专家认证 +100
-        - 管理员 +50
-        """
-        from django.db.models import Count
-
-        post_count = Post.objects.filter(author=user, status='published').count()
-
-        # 收到的点赞数
-        like_count = Like.objects.filter(
-            post__author=user
-        ).count()
-
-        # 收到的回复数
-        reply_count = Reply.objects.filter(
-            post__author=user,
-            is_deleted=False
-        ).count()
-
-        # 基础分数
-        score = post_count * 10 + like_count * 5 + reply_count * 3
-
-        # 专家加分
-        if user.expert == 1:
-            score += 100
-
-        # 管理员加分
-        if user.admin == 1:
-            score += 50
-
-        return score
-
-
 # ==================== 社交图谱 API（Neo4j） ====================
 
 @require_POST
 @login_required_custom
 def api_follow_network(request, user_id):
     """获取用户关注网络图谱（用于 ECharts 可视化）"""
-    # #region debug-point D:api-entry
-    import json, urllib.request, os
-    _p = '.dbg/echarts-not-rendering.env'
-    _u, _s = 'http://127.0.0.1:7777/event', 'echarts-not-rendering'
     try:
-        with open(_p) as f:
-            c = f.read()
-            _u = next((l.split('=', 1)[1] for l in c.split('\n') if l.startswith('DEBUG_SERVER_URL=')), _u)
-            _s = next((l.split('=', 1)[1] for l in c.split('\n') if l.startswith('DEBUG_SESSION_ID=')), _s)
-    except Exception:
-        pass
-    def _dbg(hid, msg, data):
-        try:
-            urllib.request.urlopen(urllib.request.Request(_u, data=json.dumps({"sessionId": _s, "runId": "post-fix", "hypothesisId": hid, "location": "views.py:api_follow_network", "msg": "[DEBUG] " + msg, "data": data}).encode(), headers={"Content-Type": "application/json"}), timeout=1)
-        except Exception:
-            pass
-    # #endregion
-    try:
-        # Neo4j 里节点 id 存的是 username，不是 name
-        from User.models import User
-        try:
-            user = User.objects.get(username=user_id)
-            neo4j_id = user.username
-        except User.DoesNotExist:
-            neo4j_id = user_id
-
-        # #region debug-point E:url-to-neo4j-id
-        _dbg('E', 'url-to-neo4j-id', {"url_user_id": user_id, "resolved_neo4j_id": neo4j_id, "user_name": user.name if 'user' in dir() and user else None, "user_username": user.username if 'user' in dir() and user else None})
-        # #endregion
-
         from .services import get_follow_network
-        depth = int(request.POST.get('depth', 2))
-        depth = min(depth, 3)
-        data = get_follow_network(neo4j_id, depth=depth)
-
-        # #region debug-point D:api-return
-        _dbg('D', 'api-return', {"neo4j_id": neo4j_id, "depth": depth, "node_count": len(data.get('nodes', [])), "edge_count": len(data.get('edges', [])), "first_nodes": data.get('nodes', [])[:3], "first_edges": data.get('edges', [])[:3]})
-        # #endregion
-
+        try:
+            depth = int(request.POST.get('depth', 2))
+        except (TypeError, ValueError):
+            depth = 2
+        depth = min(max(depth, 1), 3)
+        data = get_follow_network(user_id, depth=depth)
         return JsonResponse({'success': True, 'data': data})
-    except Exception as e:
-        # #region debug-point B:api-exception
-        _dbg('B', 'api-exception', {"error": str(e)})
-        # #endregion
-        return JsonResponse({'success': False, 'message': str(e)})
+    except Exception:
+        logger.exception('获取关注网络失败')
+        return JsonResponse({'success': False, 'message': '社交图谱服务暂时不可用'})
 
 
 @require_POST
@@ -1175,11 +1243,16 @@ def api_mutual_follows(request, user_id):
     """获取共同关注推荐"""
     try:
         from .services import get_mutual_follows
-        limit = int(request.POST.get('limit', 10))
+        try:
+            limit = int(request.POST.get('limit', 10))
+        except (TypeError, ValueError):
+            limit = 10
+        limit = min(max(limit, 1), 50)
         data = get_mutual_follows(user_id, limit=limit)
         return JsonResponse({'success': True, 'data': data})
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
+    except Exception:
+        logger.exception('获取共同关注失败')
+        return JsonResponse({'success': False, 'message': '共同关注服务暂时不可用'})
 
 
 # ==================== 社交图谱可视化页面 ====================
@@ -1188,7 +1261,7 @@ def api_mutual_follows(request, user_id):
 def social_graph(request, user_id):
     """社交图谱可视化页面（Neo4j + ECharts）"""
     user, name, _ = get_user_context(request)
-    profile_user = get_object_or_404(User, username=user_id)
+    profile_user = get_object_or_404(User, username=user_id, is_active=True)
 
     unread_count = _get_unread_count(user) if user else 0
 

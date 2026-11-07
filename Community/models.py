@@ -22,7 +22,7 @@ class Category(models.Model):
 
 class Tag(models.Model):
     name = models.CharField('标签名称', max_length=30, unique=True)
-    color = models.CharField('颜色', max_length=20, default='#6366f1')
+    color = models.CharField('颜色', max_length=20, default='#0f766e')
     post_count = models.IntegerField('帖子数', default=0)
 
     class Meta:

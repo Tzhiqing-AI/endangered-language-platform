@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}发送私信 - 濒危语言保护平台{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 760px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-envelope-paper me-2"></i>发送私信</h2>
+            <p class="text-muted mb-0">收件人：{{ recipient.name|default:recipient.username }}</p>
+        </div>
+        <a href="{% url 'Community:user_profile' user_id=recipient.username %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回主页
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" for="message-content">私信内容</label>
+                    <textarea id="message-content" name="content" class="form-control" rows="6" maxlength="500"
+                              placeholder="请输入想说的话（最多 500 字）" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send me-1"></i>发送
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}举报处理 - 濒危语言保护平台{% endblock %}
+
+{% block content %}
+<section class="p-4 rounded-4 mb-4" style="background: linear-gradient(135deg, #0b1120 0%, #111827 58%, #1e293b 100%); color:#fff;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2" style="background:transparent;padding:0;">
+            <li class="breadcrumb-item"><a href="{% url 'Dashboard:language' %}" style="color:rgba(255,255,255,.78);text-decoration:none;">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'Community:community_home' %}" style="color:rgba(255,255,255,.78);text-decoration:none;">社区论坛</a></li>
+            <li class="breadcrumb-item active" style="color:rgba(255,255,255,.55);">举报处理</li>
+        </ol>
+    </nav>
+    <h1 class="h3 mb-1" style="color:#fff;font-weight:800;"><i class="bi bi-flag me-2"></i>举报处理</h1>
+    <p class="mb-0" style="color:rgba(255,255,255,.66);">核实举报内容，选择隐藏内容或驳回举报。</p>
+</section>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">待处理举报（{{ pending_reports|length }}）</div>
+    <div class="card-body p-0">
+        {% if pending_reports %}
+        <div class="list-group list-group-flush">
+            {% for report in pending_reports %}
+            <div class="list-group-item p-3">
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <div>
+                        <span class="badge bg-warning text-dark me-2">{{ report.get_reason_display }}</span>
+                        {% if report.post %}
+                        <strong>{{ report.post.title }}</strong>
+                        <span class="text-muted small ms-2">帖子作者：{{ report.post.author.name|default:report.post.author.username }}</span>
+                        {% elif report.reply %}
+                        <strong>回复：{{ report.reply.content|truncatechars:50 }}</strong>
+                        <span class="text-muted small ms-2">回复作者：{{ report.reply.author.name|default:report.reply.author.username }}</span>
+                        {% endif %}
+                        <div class="small text-muted mt-1">举报人：{{ report.reporter.name|default:report.reporter.username }} · {{ report.created_at|date:"Y-m-d H:i" }}</div>
+                        {% if report.description %}<div class="mt-1">{{ report.description }}</div>{% endif %}
+                    </div>
+                    <div class="d-flex gap-2 align-items-start">
+                        {% if report.post %}
+                        <a href="{% url 'Community:post_detail' post_id=report.post.id %}" class="btn btn-sm btn-outline-secondary" target="_blank">查看</a>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-danger btn-report-action" data-id="{{ report.id }}" data-action="hide">隐藏内容</button>
+                        <button class="btn btn-sm btn-outline-secondary btn-report-action" data-id="{{ report.id }}" data-action="dismiss">驳回</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-4 text-muted"><i class="bi bi-check2-circle me-2"></i>暂无待处理举报</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-bold">最近处理记录</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead><tr><th>内容</th><th>举报人</th><th>原因</th><th>状态</th><th>时间</th></tr></thead>
+                <tbody>
+                {% for report in handled_reports %}
+                <tr>
+                    <td>{{ report.post.title|default:report.reply.content|default:"-"|truncatechars:40 }}</td>
+                    <td>{{ report.reporter.name|default:report.reporter.username }}</td>
+                    <td>{{ report.get_reason_display }}</td>
+                    <td>{% if report.status == 'processed' %}<span class="badge bg-danger">已处理</span>{% else %}<span class="badge bg-secondary">已驳回</span>{% endif %}</td>
+                    <td>{{ report.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-muted text-center py-3">暂无记录</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('.btn-report-action').on('click', function() {
+    var id = $(this).data('id');
+    var action = $(this).data('action');
+    if (!confirm(action === 'hide' ? '确定隐藏这条内容吗？' : '确定驳回这条举报吗？')) return;
+    $.post('{% url "Community:report_action" %}', {
+        id: id,
+        action: action,
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+    }, function(res) {
+        if (res.success) location.reload();
+        else alert(res.message || '操作失败');
+    }).fail(function(xhr) {
+        alert((xhr.responseJSON && xhr.responseJSON.message) || '操作失败');
+    });
+});
+</script>
+{% endblock %}

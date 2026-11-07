@@ -86,21 +86,7 @@ def increment_view(post):
     # 实时更新 Redis 热度
     _sync_hot_score(post)
 
-    # Redis 异步队列（可用于批量更新分析）
-    try:
-        from .nosql_services import RedisService
-        RedisService.increment_view_async(post.id)
-    except Exception as e:
-        logger.debug(f'Redis 异步浏览记录失败: {e}')
-
-    # MongoDB 记录浏览行为
-    try:
-        from .nosql_services import MongoService
-        # 获取当前用户（可能未登录）
-        from Dashboard.common import get_user_context
-        # 这里只记录帖子浏览，用户信息由调用方传入更合适
-    except Exception:
-        pass
+    # 浏览行为由调用方按需写入 MongoDB；这里不再向无人消费的 Redis 队列堆积。
 
 
 # =============================================================================
@@ -268,6 +254,13 @@ def save_post(post, tags=None):
 
     # 新帖发布后清除所有推荐缓存，让旧帖的推荐包含新帖
     clear_recommendation_cache()
+
+
+def refresh_tag_counts(tags):
+    """重算指定标签的已发布帖子数，避免审核/编辑后计数过期。"""
+    for tag in tags:
+        tag.post_count = Post.objects.filter(tags=tag, status='published').count()
+        tag.save(update_fields=['post_count'])
 
 
 def delete_post_data(post_id):
