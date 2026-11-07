@@ -1,5 +1,21 @@
 from django.template.defaultfilters import register
 
+
+@register.filter(name='language_display_name')
+def language_display_name(obj):
+    """统一语言名称展示，空名称回退为「未命名语言 #<id>」。
+    Usage: {{ language|language_display_name }}"""
+    from Dashboard.common import display_language_name
+    return display_language_name(obj)
+
+
+@register.filter(name='name_source_display')
+def name_source_display(value):
+    """名称来源对外表述，隐藏 manual:unresolved 等内部标记。"""
+    from Dashboard.common import display_name_source
+    return display_name_source(value)
+
+
 @register.filter(name='get_item')
 def get_item(dictionary, key):
     """

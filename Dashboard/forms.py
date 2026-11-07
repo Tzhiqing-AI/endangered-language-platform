@@ -5,9 +5,10 @@ class LanguageForm(forms.ModelForm):
     class Meta:
         model = Language
         fields = [
-            'language_name', 'level_of_endangerment', 'number_of_speakers',
-            'speaker_trends', 'intergenerational_transmission',
-            'language_family', 'country', 'additional_notes'
+            'language_name', 'legacy_endangerment_level', 'level_of_endangerment',
+            'number_of_speakers', 'speaker_trends',
+            'intergenerational_transmission', 'language_family', 'country',
+            'additional_notes'
         ]
         widgets = {
             'additional_notes': forms.Textarea(attrs={'rows': 3}),
